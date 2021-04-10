@@ -6,3 +6,8 @@ libtool
 stamp-h1
 lrcalc.maple
 testsuite.trs
+
+config.log
+src/*.lo
+src/*.o
+src/*.la
