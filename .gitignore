@@ -1,0 +1,8 @@
+Makefile
+config.h
+config.status
+INSTALL
+libtool
+stamp-h1
+lrcalc.maple
+testsuite.trs

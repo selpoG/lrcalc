@@ -1,0 +1,13 @@
+lrcalc
+schubmult
+allparts
+allperms
+allstrings
+test_partiter
+test_schubmult
+test_lrmult
+test_lrcoef
+test_lrskew
+test_fusion
+.libs/
+.deps/
