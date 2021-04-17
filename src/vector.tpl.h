@@ -6,7 +6,7 @@
 
 typedef struct {
   SIZE_T length;
-  VALUE_T array[1];
+  VALUE_T array[];
 } VECTOR;
 
 #ifdef DEBUG
@@ -21,7 +21,7 @@ INLINE VALUE_T * PREFIX(pelem)(VECTOR *v, SIZE_T i)
 INLINE VECTOR * PREFIX(new) (SIZE_T length)
 {
   VECTOR *v = (VECTOR *)
-    ml_malloc(sizeof(VECTOR) + length * sizeof(VALUE_T) - sizeof(VALUE_T));
+    ml_malloc(sizeof(VECTOR) + length * sizeof(VALUE_T));
   if (v == NULL)
     return NULL;
   v->length = length;
@@ -31,7 +31,7 @@ INLINE VECTOR * PREFIX(new) (SIZE_T length)
 INLINE VECTOR * PREFIX(new_zero) (SIZE_T length)
 {
   VECTOR *v = (VECTOR *)
-    ml_calloc(1, sizeof(VECTOR) + length * sizeof(VALUE_T) - sizeof(VALUE_T));
+    ml_calloc(1, sizeof(VECTOR) + length * sizeof(VALUE_T));
   if (v == NULL)
     return NULL;
   v->length = length;

@@ -20,7 +20,7 @@ typedef struct {
   ivector *cont;
   int size;
   int array_len;
-  lrit_box array[1];
+  lrit_box array[0];
 } lrtab_iter;
 
 

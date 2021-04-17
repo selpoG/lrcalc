@@ -85,7 +85,7 @@ lrtab_iter *lrit_new(ivector *outer, ivector *inner, ivector *content,
     }
 
   /* Allocate array. */
-  lrit = ml_malloc(sizeof(lrtab_iter) + (array_len-1) * sizeof(lrit_box));
+  lrit = ml_malloc(sizeof(lrtab_iter) + array_len * sizeof(lrit_box));
   if (lrit == NULL)
     return NULL;
   lrit->array_len = array_len;
