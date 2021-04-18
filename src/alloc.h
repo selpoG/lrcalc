@@ -1,9 +1,8 @@
 #ifndef _ALLOC_H
 #define _ALLOC_H
 
-#include <stdlib.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 
 /* PINLINE: No compiled copy.  Can be used in many compilation units, but
             a compiled must be created with CINLINE in one unit.
@@ -18,7 +17,6 @@
 #endif
 #define INLINE PINLINE
 
-
 #ifdef DEBUG
 #define CLAIM
 #endif
@@ -28,11 +26,11 @@
    use a gdb.
 */
 #ifdef CLAIM
-#define claim(ex) ((void) ((ex) || (fprintf(stderr, "%s:%d: Claim `%s' failed\n", __FILE__, __LINE__, #ex), (*(char *)-1)=7)))
+#define claim(ex) \
+	((void)((ex) || (fprintf(stderr, "%s:%d: Claim `%s' failed\n", __FILE__, __LINE__, #ex), (*(char*)-1) = 7)))
 #else
-#define claim(ex) ((void) 0)
+#define claim(ex) ((void)0)
 #endif
-
 
 #ifdef DEBUG
 #define DEBUG_MEMORY
@@ -52,14 +50,14 @@
 #define alloc_set_trap(index)
 #define alloc_set_fail(N, sf)
 #define alloc_set_trap_number(N)
-#define alloc_test_oom(f,arg)
+#define alloc_test_oom(f, arg)
 
 #else /* DEBUG_MEMORY */
 
-void *ml_malloc(size_t size);
-void *ml_calloc(size_t num, size_t size);
-void *ml_realloc(void *p, size_t size);
-void ml_free(void *);
+void* ml_malloc(size_t size);
+void* ml_calloc(size_t num, size_t size);
+void* ml_realloc(void* p, size_t size);
+void ml_free(void*);
 
 void alloc_reset();
 void alloc_getenv();
@@ -68,7 +66,7 @@ void alloc_set_print(int prt);
 void alloc_set_trap(size_t index);
 void alloc_set_fail(size_t N, int segfault);
 void alloc_set_trap_number(size_t N);
-void alloc_test_oom(void (f)(void *), void *arg);
+void alloc_test_oom(void(f)(void*), void* arg);
 
 #endif /* DEBUG_MEMORY */
 

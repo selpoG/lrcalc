@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define VECTOR ivector
-#define PREFIX(name) iv_ ## name
+#define PREFIX(name) iv_##name
 #define VALUE_T int32_t
 #define SIZE_T uint32_t
 
@@ -20,9 +20,9 @@
 #define iv_length(v) ((v)->length)
 
 #ifdef DEBUG
-#define iv_elem(v,i) (*iv_pelem(v,i))
+#define iv_elem(v, i) (*iv_pelem(v, i))
 #else
-#define iv_elem(v,i) ((v)->array[i])
+#define iv_elem(v, i) ((v)->array[i])
 #endif
 
 #ifndef _IVECTOR_C

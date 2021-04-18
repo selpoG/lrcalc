@@ -4,53 +4,47 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-extern char *optarg;
+#include <unistd.h>
+extern char* optarg;
 
 #include "alloc.h"
 #include "part.h"
-
 
 #define PROGNAME "allparts"
 
 void print_usage()
 {
-  fprintf(stderr, "usage: " PROGNAME " rows cols\n");
-  exit(1);
+	fprintf(stderr, "usage: " PROGNAME " rows cols\n");
+	exit(1);
 }
 
 void out_of_memory()
 {
-  fprintf(stderr, PROGNAME ": out of memory.\n");
-  alloc_report();
-  exit(1);
+	fprintf(stderr, PROGNAME ": out of memory.\n");
+	alloc_report();
+	exit(1);
 }
 
-
-int main(int ac, char **av)
+int main(int ac, char** av)
 {
-  part_iter itr;
-  ivector *p;
-  int rows, cols;
+	part_iter itr;
+	ivector* p;
+	int rows, cols;
 
-  alloc_getenv();
+	alloc_getenv();
 
-  if (ac != 3)
-    print_usage();
-  rows = atoi(av[1]);
-  cols = atoi(av[2]);
-  if (rows <= 0 || cols <= 0)
-    print_usage();
+	if (ac != 3) print_usage();
+	rows = atoi(av[1]);
+	cols = atoi(av[2]);
+	if (rows <= 0 || cols <= 0) print_usage();
 
-  p = iv_new(rows);
-  if (p == NULL)
-    out_of_memory();
+	p = iv_new(rows);
+	if (p == NULL) out_of_memory();
 
-  pitr_first(&itr, p, rows, cols, NULL, NULL, 0, 0);
-  for (; pitr_good(&itr); pitr_next(&itr))
-    iv_printnl(p);
+	pitr_first(&itr, p, rows, cols, NULL, NULL, 0, 0);
+	for (; pitr_good(&itr); pitr_next(&itr)) iv_printnl(p);
 
-  iv_free(p);
-  alloc_report();
+	iv_free(p);
+	alloc_report();
 }

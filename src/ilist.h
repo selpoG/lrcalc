@@ -2,7 +2,7 @@
 #define _ILIST_H
 
 #define LIST ilist
-#define PREFIX(name) il_ ## name
+#define PREFIX(name) il_##name
 #define VALUE_T int
 #define SIZE_T size_t
 
@@ -16,9 +16,9 @@
 #define il_length(lst) ((lst)->length)
 
 #ifdef DEBUG
-#define il_elem(lst,i) (*il_pelem(lst,i))
+#define il_elem(lst, i) (*il_pelem(lst, i))
 #else
-#define il_elem(lst,i) ((lst)->array[i])
+#define il_elem(lst, i) ((lst)->array[i])
 #endif
 
 #ifndef _ILIST_C

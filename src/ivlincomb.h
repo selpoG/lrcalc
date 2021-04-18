@@ -6,8 +6,8 @@
 #include "ivector.h"
 
 #define HASHTAB ivlincomb
-#define PREFIX(name) ivlc_ ## name
-#define KEY_T ivector *
+#define PREFIX(name) ivlc_##name
+#define KEY_T ivector*
 #define HASH_T uint32_t
 #define VALUE_T int32_t
 #define SIZE_T uint32_t
