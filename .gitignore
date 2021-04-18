@@ -14,3 +14,7 @@ src/*.la
 
 testsuite.log
 test-suite.log
+
+/build/
+.envrc
+/.vscode/
