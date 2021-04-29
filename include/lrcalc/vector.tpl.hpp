@@ -10,65 +10,27 @@ typedef struct
 } VECTOR;
 
 #ifdef DEBUG
-INLINE VALUE_T* PREFIX(pelem)(VECTOR* v, SIZE_T i)
-{
-	claim(i >= 0);
-	claim(i < v->length);
-	return v->array + i;
-}
+VALUE_T* PREFIX(pelem)(VECTOR* v, SIZE_T i);
 #endif
 
-INLINE VECTOR* PREFIX(new)(SIZE_T length)
-{
-	auto v = static_cast<VECTOR*>(ml_malloc(sizeof(VECTOR) + length * sizeof(VALUE_T)));
-	if (v == nullptr) return nullptr;
-	v->length = length;
-	return v;
-}
+VECTOR* PREFIX(new)(SIZE_T length);
 
-INLINE VECTOR* PREFIX(new_zero)(SIZE_T length)
-{
-	auto v = static_cast<VECTOR*>(ml_calloc(1, sizeof(VECTOR) + length * sizeof(VALUE_T)));
-	if (v == nullptr) return nullptr;
-	v->length = length;
-	return v;
-}
+VECTOR* PREFIX(new_zero)(SIZE_T length);
 
 VECTOR* PREFIX(new_init)(SIZE_T length, ...);
 
-INLINE void PREFIX(free)(VECTOR* v) { ml_free(v); }
+void PREFIX(free)(VECTOR* v);
 
-INLINE VECTOR* PREFIX(new_copy)(const VECTOR* v)
-{
-	VECTOR* vc = PREFIX(new)(v->length);
-	if (vc == nullptr) return nullptr;
-	memcpy(vc->array, v->array, v->length * sizeof(VALUE_T));
-	return vc;
-}
+VECTOR* PREFIX(new_copy)(const VECTOR* v);
 
-INLINE void PREFIX(set_zero)(VECTOR* v) { memset(v->array, 0, v->length * sizeof(VALUE_T)); }
+void PREFIX(set_zero)(VECTOR* v);
 
-INLINE void PREFIX(copy)(VECTOR* d, const VECTOR* s)
-{
-	claim(d->length == s->length);
-	memcpy(d->array, s->array, d->length * sizeof(VALUE_T));
-}
+void PREFIX(copy)(VECTOR* d, const VECTOR* s);
 
-INLINE int PREFIX(cmp)(const VECTOR* v1, const VECTOR* v2)
-{
-	if (v1->length != v2->length) return int(v1->length) - int(v2->length);
-	for (SIZE_T i = 0; i < v1->length; i++)
-		if (v1->array[i] != v2->array[i]) return v1->array[i] - v2->array[i];
-	return 0;
-}
+int PREFIX(cmp)(const VECTOR* v1, const VECTOR* v2);
 
 #ifdef INTEGER_VALUE
-INLINE uint32_t PREFIX(hash)(const VECTOR* v)
-{
-	uint32_t h = v->length;
-	for (SIZE_T i = 0; i < v->length; i++) h = ((h << 5) ^ (h >> 27)) + uint32_t(v->array[i]);
-	return h;
-}
+uint32_t PREFIX(hash)(const VECTOR* v);
 #endif
 
 VALUE_T PREFIX(sum)(const VECTOR* v);

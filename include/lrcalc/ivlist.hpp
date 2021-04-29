@@ -1,5 +1,9 @@
 #ifndef LRCALC_IVLIST_H
 #define LRCALC_IVLIST_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include "lrcalc/ivector.hpp"
 
@@ -7,11 +11,6 @@
 #define PREFIX(name) ivl_##name
 #define VALUE_T ivector*
 #define SIZE_T size_t
-
-#ifdef LRCALC_IVLIST_C
-#undef INLINE
-#define INLINE CINLINE
-#endif
 
 #include "lrcalc/list.tpl.hpp"
 
@@ -32,4 +31,7 @@ void ivl_free_all(ivlist* lst);
 #undef SIZE_T
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

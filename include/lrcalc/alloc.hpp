@@ -1,26 +1,12 @@
 #ifndef LRCALC_ALLOC_H
 #define LRCALC_ALLOC_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifdef __GNUC_STDC_INLINE__
-#define MY_GNUC_STDC_INLINE_ __GNUC_STDC_INLINE__
-#else
-#define MY_GNUC_STDC_INLINE_ 0
-#endif
-/* PINLINE: No compiled copy.  Can be used in many compilation units, but
-            a compiled must be created with CINLINE in one unit.
-   CINLINE: Include compiled copy.  Should be used in exactly one unit.
-*/
-#if __GNUC__ && !MY_GNUC_STDC_INLINE_
-#define PINLINE extern inline
-#define CINLINE inline
-#else
-#define PINLINE inline
-#define CINLINE extern inline
-#endif
-#define INLINE PINLINE
 
 #ifdef DEBUG
 #define CLAIM
@@ -75,4 +61,7 @@ void alloc_test_oom(void(f)(void*), void* arg);
 
 #endif /* DEBUG_MEMORY */
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* LRCALC_ALLOC_H */

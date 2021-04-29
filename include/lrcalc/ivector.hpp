@@ -1,5 +1,9 @@
 #ifndef LRCALC_IVECTOR_H
 #define LRCALC_IVECTOR_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include <stdint.h>
 
@@ -7,11 +11,6 @@
 #define PREFIX(name) iv_##name
 #define VALUE_T int32_t
 #define SIZE_T uint32_t
-
-#ifdef LRCALC_IVECTOR_C
-#undef INLINE
-#define INLINE CINLINE
-#endif
 
 #define INTEGER_VALUE
 #include "lrcalc/vector.tpl.hpp"
@@ -32,4 +31,7 @@
 #undef SIZE_T
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

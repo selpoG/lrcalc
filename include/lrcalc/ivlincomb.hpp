@@ -1,5 +1,9 @@
 #ifndef LRCALC_IVLINCOMB_H
 #define LRCALC_IVLINCOMB_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include <stdint.h>
 
@@ -17,11 +21,6 @@
 #define KEY_PRINT iv_print
 #define VALUE_DEALLOC(v)
 #define HASHTAB_LINCOMB
-
-#ifdef LRCALC_IVLINCOMB_C
-#undef INLINE
-#define INLINE CINLINE
-#endif
 
 #include "lrcalc/hashtab.tpl.hpp"
 
@@ -46,4 +45,7 @@
 #define IVLC_ARRAY_SZ 100
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

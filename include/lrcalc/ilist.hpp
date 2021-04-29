@@ -1,15 +1,14 @@
 #ifndef LRCALC_ILIST_H
 #define LRCALC_ILIST_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #define LIST ilist
 #define PREFIX(name) il_##name
 #define VALUE_T int
 #define SIZE_T size_t
-
-#ifdef LRCALC_ILIST_C
-#undef INLINE
-#define INLINE CINLINE
-#endif
 
 #include "lrcalc/list.tpl.hpp"
 
@@ -28,4 +27,7 @@
 #undef SIZE_T
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

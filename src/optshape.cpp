@@ -778,3 +778,10 @@ coef_one:
 	ss->sign = 1;
 	return 0;
 }
+
+void sksh_dealloc(skew_shape* ss)
+{
+	if (ss->outer != nullptr) iv_free(ss->outer);
+	if (ss->inner != nullptr) iv_free(ss->inner);
+	if (ss->cont != nullptr) iv_free(ss->cont);
+}

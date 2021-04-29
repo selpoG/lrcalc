@@ -65,7 +65,7 @@ void alloc_trap(const void* p)
 	fprintf(stderr, "Alloc trap: %zu (%p)\n", index, p);
 }
 
-static inline int alloc_check_fail()
+static int alloc_check_fail()
 {
 	alloc_call_count++;
 	if (alloc_call_count == alloc_trap_number) alloc_trap(nullptr);
@@ -78,7 +78,7 @@ static inline int alloc_check_fail()
 	return 1;
 }
 
-static inline void alloc_print(char c, const void* p, const char* name)
+static void alloc_print(char c, const void* p, const char* name)
 {
 	size_t index = p - alloc_heap_base;
 	if (alloc_memory_print) fprintf(stderr, "#%c: %ld (%p) %s\n", c, index, p, name);

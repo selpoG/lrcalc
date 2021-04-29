@@ -92,13 +92,13 @@ int fusion_reduce(ivector* la, int level, ivector* tmp)
 	return (sign & 1) ? -1 : 1;
 }
 
-bool fusion_reduce_lc(ivlincomb* lc, int level)
+int fusion_reduce_lc(ivlincomb* lc, int level)
 {
 	/* Copy linear combination to lists. */
 	safe_ivl_ptr parts{ivl_new(ivlc_card(lc))};
-	if (!parts) return true;
+	if (!parts) return 1;
 	safe_il_ptr coefs{il_new(ivlc_card(lc))};
-	if (!coefs) return true;
+	if (!coefs) return 1;
 
 	ivlc_iter itr;
 	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
@@ -113,7 +113,7 @@ bool fusion_reduce_lc(ivlincomb* lc, int level)
 	{
 		const ivector* sh = ivl_elem(parts, 0);
 		tmp.reset(iv_new(iv_length(sh)));
-		if (!tmp) return true;
+		if (!tmp) return 1;
 	}
 
 	/* Reduce and reinsert terms. */
@@ -125,7 +125,7 @@ bool fusion_reduce_lc(ivlincomb* lc, int level)
 		if (ivlc_add_element(lc, sign * c, sh, iv_hash(sh), LC_FREE_KEY | LC_FREE_ZERO) != 0) return true;
 	}
 
-	return false;
+	return 0;
 }
 
 ivlincomb* schur_mult_fusion(ivector* sh1, ivector* sh2, int rows, int level)
@@ -200,7 +200,7 @@ ivlincomb* schur_skew(const ivector* outer, const ivector* inner, int rows, int 
 	return lc;
 }
 
-static inline int _schur_coprod_isredundant(const ivector* cont, int rows, int cols)
+static int _schur_coprod_isredundant(const ivector* cont, int rows, int cols)
 {
 	int sz1 = -rows * cols;
 	for (int i = 0; i < rows; i++) sz1 += iv_elem(cont, i);
@@ -215,7 +215,7 @@ static inline int _schur_coprod_isredundant(const ivector* cont, int rows, int c
 	return 0;
 }
 
-static inline ivlincomb* _schur_coprod_count(lrtab_iter* lrit, int rows, int cols)
+static ivlincomb* _schur_coprod_count(lrtab_iter* lrit, int rows, int cols)
 {
 	ivector* cont = lrit->cont;
 	ivlincomb* lc = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
