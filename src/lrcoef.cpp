@@ -2,7 +2,7 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
 
-typedef struct
+struct lrcoef_box
 {
 	int value;     /* integer in box of skew tableau */
 	int max;       /* upper bound for integer in box */
@@ -12,13 +12,13 @@ typedef struct
 	int se_sz;     /* number of boxes to the right and strictly below */
 	int west_sz;   /* number of boxes strictly to the left in same row */
 	int padding;   /* make size a power of 2, improves speed in x86_64 */
-} lrcoef_box;
+};
 
-typedef struct
+struct lrcoef_content
 {
 	int cont;   /* number of boxes containing a given integer */
 	int supply; /* total supply of given integer */
-} lrcoef_content;
+};
 
 static lrcoef_content* lrcoef_new_content(const ivector* mu)
 {

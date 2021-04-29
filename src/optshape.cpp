@@ -197,7 +197,7 @@ int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int row
 	return 0;
 }
 
-typedef struct
+struct partial_shape
 {
 	ivector* inn;
 	ivector* out; /* Build skew shape out/inn. */
@@ -205,7 +205,7 @@ typedef struct
 	int top;
 	int bot; /* Left edge of skew shape is (top,col)...(bot-1,col). */
 	int col;
-} partial_shape;
+};
 
 static void _add_comp(partial_shape* ps, const ivector* out0, const ivector* inn0, int c0, int r0t, int r0b, int c1,
                       int r1t, int r1b)
