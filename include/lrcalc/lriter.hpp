@@ -9,21 +9,21 @@
 #define INLINE CINLINE
 #endif
 
-struct lrit_box
+typedef struct
 {
 	int value;
 	int max;
 	int above;
 	int right;
-};
+} lrit_box;
 
-struct lrtab_iter
+typedef struct
 {
 	ivector* cont;
 	int size;
 	int array_len;
 	lrit_box array[];
-};
+} lrtab_iter;
 
 lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
                      int partsz);

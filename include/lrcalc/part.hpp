@@ -97,7 +97,7 @@ void part_qprint_lincomb(const ivlincomb* lc, int level);
  * is known at compile time.
  */
 
-struct part_iter
+typedef struct
 {
 	ivector* part;
 	const ivector* outer;
@@ -105,7 +105,7 @@ struct part_iter
 	int length;
 	int rows;
 	int opt;
-};
+} part_iter;
 
 #define PITR_USE_OUTER 1
 #define PITR_USE_INNER 2
@@ -113,8 +113,7 @@ struct part_iter
 
 INLINE int pitr_good(const part_iter* itr) { return itr->rows >= 0; }
 
-INLINE int pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* outer, const ivector* inner,
-                      int size, int opt)
+INLINE int pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* outer, const ivector* inner, int size, int opt)
 {
 	int use_outer = opt & PITR_USE_OUTER;
 	int use_inner = opt & PITR_USE_INNER;

@@ -14,12 +14,12 @@
 
 #include "lrcalc/alloc.hpp"
 
-struct LIST
+typedef struct
 {
 	VALUE_T* array;
 	SIZE_T allocated;
 	SIZE_T length;
-};
+} LIST;
 
 #ifdef DEBUG
 INLINE VALUE_T* PREFIX(pelem)(LIST* lst, SIZE_T i)

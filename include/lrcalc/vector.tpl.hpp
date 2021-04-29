@@ -3,11 +3,11 @@
 
 #include "lrcalc/alloc.hpp"
 
-struct VECTOR
+typedef struct
 {
 	SIZE_T length;
 	VALUE_T array[];
-};
+} VECTOR;
 
 #ifdef DEBUG
 INLINE VALUE_T* PREFIX(pelem)(VECTOR* v, SIZE_T i)

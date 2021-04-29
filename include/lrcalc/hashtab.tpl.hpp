@@ -7,15 +7,15 @@
    slow if lots of elements are first inserted and then removed.
 */
 
-struct PREFIX(keyval_t)
+typedef struct
 {
 	KEY_T key;
 	VALUE_T value;
 	HASH_T hash;
 	SIZE_T next;
-};
+} PREFIX(keyval_t);
 
-struct HASHTAB
+typedef struct
 {
 	SIZE_T* table;           /* Hash table. */
 	PREFIX(keyval_t) * elts; /* List of elements indexed by table. */
@@ -24,7 +24,7 @@ struct HASHTAB
 	SIZE_T elts_len;         /* Number of itmes used or on free_elts list. */
 	SIZE_T elts_sz;          /* Allocated items on elts. */
 	SIZE_T table_sz;         /* Allocated hash table size. */
-};
+} HASHTAB;
 
 /* Minimal number of table entries for each element. */
 #ifndef USE_FACTOR
@@ -172,12 +172,12 @@ int PREFIX(equals)(const HASHTAB* ht1, const HASHTAB* ht2, int opt_zero);
 
 void PREFIX(print_stat)(const HASHTAB* ht);
 
-struct PREFIX(iter)
+typedef struct
 {
 	const HASHTAB* ht;
 	size_t index;
 	size_t i;
-};
+} PREFIX(iter);
 
 INLINE int PREFIX(good)(const PREFIX(iter) * itr) { return (itr->i != 0); }
 
