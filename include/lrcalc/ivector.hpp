@@ -1,5 +1,5 @@
-#ifndef _IVECTOR_H
-#define _IVECTOR_H
+#ifndef LRCALC_IVECTOR_H
+#define LRCALC_IVECTOR_H
 
 #include <stdint.h>
 
@@ -8,7 +8,7 @@
 #define VALUE_T int32_t
 #define SIZE_T uint32_t
 
-#ifdef _IVECTOR_C
+#ifdef LRCALC_IVECTOR_C
 #undef INLINE
 #define INLINE CINLINE
 #endif
@@ -25,7 +25,7 @@
 #define iv_elem(v, i) ((v)->array[i])
 #endif
 
-#ifndef _IVECTOR_C
+#ifndef LRCALC_IVECTOR_C
 #undef VECTOR
 #undef VALUE_T
 #undef PREFIX

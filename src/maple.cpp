@@ -10,14 +10,13 @@
 
 #include "lrcalc/maple.hpp"
 
-static void _maple_print_term(int c, ivector* v, char* letter, int nz)
+static void _maple_print_term(int c, ivector* v, const char* letter, int nz)
 {
-	int i;
 	putchar((c < 0) ? '-' : '+');
 	c = abs(c);
 	printf("%d*%s[", c, letter);
 
-	for (i = 0; i < iv_length(v); i++)
+	for (uint32_t i = 0; i < iv_length(v); i++)
 	{
 		if (nz && iv_elem(v, i) == 0) break;
 		if (i > 0) putchar(',');
@@ -26,10 +25,10 @@ static void _maple_print_term(int c, ivector* v, char* letter, int nz)
 	putchar(']');
 }
 
-void maple_print_lincomb(ivlincomb* ht, char* letter, int nz)
+void maple_print_lincomb(ivlincomb* ht, const char* letter, int nz)
 {
-	ivlc_iter itr;
 	putchar('0');
+	ivlc_iter itr;
 	for (ivlc_first(ht, &itr); ivlc_good(&itr); ivlc_next(&itr))
 	{
 		if (ivlc_value(&itr) == 0) continue;
@@ -38,16 +37,15 @@ void maple_print_lincomb(ivlincomb* ht, char* letter, int nz)
 	putchar('\n');
 }
 
-static void _maple_qprint_term(int c, ivector* v, int level, char* letter)
+static void _maple_qprint_term(int c, ivector* v, int level, const char* letter)
 {
-	int d, x, i;
 	putchar((c < 0) ? '-' : '+');
 	c = abs(c);
-	d = part_qdegree(v, level);
+	int d = part_qdegree(v, level);
 	printf("%d*q^%d*%s[", c, d, letter);
-	for (i = 0; i < iv_length(v); i++)
+	for (uint32_t i = 0; i < iv_length(v); i++)
 	{
-		x = part_qentry(v, i, d, level);
+		int x = part_qentry(v, int(i), d, level);
 		if (x == 0) break;
 		if (i) putchar(',');
 		printf("%d", x);
@@ -55,7 +53,7 @@ static void _maple_qprint_term(int c, ivector* v, int level, char* letter)
 	putchar(']');
 }
 
-void maple_qprint_lincomb(ivlincomb* lc, int level, char* letter)
+void maple_qprint_lincomb(ivlincomb* lc, int level, const char* letter)
 {
 	ivlc_iter itr;
 	putchar('0');

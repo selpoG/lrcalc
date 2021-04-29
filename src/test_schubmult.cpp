@@ -16,123 +16,116 @@
 
 #define PROGNAME "test_schubmult"
 
-void print_usage()
+#include <memory>
+
+struct ivl_deleter
+{
+	void operator()(ivlist* p) const { ivl_free_all(p); }
+};
+struct ivlc_deleter
+{
+	void operator()(ivlincomb* p) const { ivlc_free_all(p); }
+};
+struct ivlc_slice_deleter
+{
+	void operator()(ivlincomb* p) const { ivlc_free(p); }
+};
+using safe_ivl_ptr = std::unique_ptr<ivlist, ivl_deleter>;
+using safe_ivlc_ptr = std::unique_ptr<ivlincomb, ivlc_deleter>;
+using safe_ivlc_slice = std::unique_ptr<ivlincomb, ivlc_slice_deleter>;
+
+[[noreturn]] static void print_usage()
 {
 	fprintf(stderr, "usage: " PROGNAME " rank\n");
 	exit(1);
 }
 
-void out_of_memory()
+[[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
 	alloc_report();
 	exit(1);
 }
 
-ivlincomb* get_rank(ivlincomb* lc, int rank)
+static ivlincomb* get_rank(ivlincomb* lc, int rank)
 {
+	safe_ivlc_slice res{ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)};
+	if (!res) return nullptr;
+
 	ivlc_iter itr;
-	ivlincomb* res;
-
-	res = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
-	if (res == NULL) return NULL;
-
 	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
 		if (rank == 0 || perm_group(ivlc_key(&itr)) <= rank)
 		{
 			ivlc_keyval_t* kv = ivlc_keyval(&itr);
-			if (ivlc_insert(res, kv->key, kv->hash, kv->value) == NULL)
-			{
-				ivlc_free(res);
-				return NULL;
-			}
+			if (ivlc_insert(res.get(), kv->key, kv->hash, kv->value) == nullptr) return nullptr;
 		}
-	return res;
+	return res.release();
 }
 
-int test_mult_schubert(ivector* w1, ivector* w2)
+static bool test_mult_schubert(ivector* w1, ivector* w2)
 {
-	ivlincomb *poly, *prd12, *prd21, *prd_sm, *prd_gr;
-	ivlc_iter itr;
-	int maxrank, r;
-
-	prd12 = prd21 = prd_sm = prd_gr = NULL;
-
-	poly = trans(w1, 0);
-	if (poly == NULL) goto out_of_mem;
-	prd12 = mult_poly_schubert(poly, w2, 0);
-	if (prd12 == NULL) goto out_of_mem;
-
-	poly = trans(w2, 0);
-	if (poly == NULL) goto out_of_mem;
-	prd21 = mult_poly_schubert(poly, w1, 0);
-	if (prd21 == NULL) goto out_of_mem;
-
-	assert(ivlc_equals(prd12, prd21, 0));
-	ivlc_free_all(prd21);
-	prd21 = NULL;
-
-	maxrank = 0;
-	for (ivlc_first(prd12, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	safe_ivlc_ptr prd12;
 	{
-		r = perm_group(ivlc_key(&itr));
+		safe_ivlc_ptr poly{trans(w1, 0)};
+		if (!poly) return true;
+		prd12.reset(mult_poly_schubert(poly.release(), w2, 0));
+		if (!prd12) return true;
+	}
+
+	{
+		safe_ivlc_ptr prd21;
+		{
+			safe_ivlc_ptr poly{trans(w2, 0)};
+			if (!poly) return true;
+			prd21.reset(mult_poly_schubert(poly.release(), w1, 0));
+			if (!prd21) return true;
+		}
+		assert(ivlc_equals(prd12.get(), prd21.get(), 0));
+		prd21.reset();
+	}
+
+	int maxrank = 0;
+	ivlc_iter itr;
+	for (ivlc_first(prd12.get(), &itr); ivlc_good(&itr); ivlc_next(&itr))
+	{
+		int r = perm_group(ivlc_key(&itr));
 		if (maxrank < r) maxrank = r;
 	}
 
-	for (r = 0; r <= maxrank; r++)
+	for (int r = 0; r <= maxrank; r++)
 	{
-		prd_sm = mult_schubert(w1, w2, r);
-		if (prd_sm == NULL) goto out_of_mem;
+		safe_ivlc_ptr prd_sm{mult_schubert(w1, w2, r)};
+		if (!prd_sm) return true;
 
-		prd_gr = get_rank(prd12, r);
-		if (prd_gr == NULL) goto out_of_mem;
-		assert(ivlc_equals(prd_sm, prd_gr, 0));
-		ivlc_free_all(prd_sm);
-		ivlc_free(prd_gr);
-		prd_sm = prd_gr = NULL;
+		safe_ivlc_slice prd_gr{get_rank(prd12.get(), r)};
+		if (!prd_gr) return true;
+		assert(ivlc_equals(prd_sm.get(), prd_gr.get(), 0));
 	}
 
-	ivlc_free_all(prd12);
-	return 0;
-
-out_of_mem:
-	if (prd12) ivlc_free_all(prd12);
-	if (prd21) ivlc_free_all(prd21);
-	if (prd_sm) ivlc_free_all(prd_sm);
-	if (prd_gr) ivlc_free(prd_gr);
-	return -1;
+	return false;
 }
 
 int main(int ac, char** av)
 {
-	ivlist* lst;
-	int n, i, j;
-
 	alloc_getenv();
 
 	if (ac != 2) print_usage();
-	n = atoi(av[1]);
+	int n = atoi(av[1]);
 	if (n < 0) print_usage();
 
-	lst = all_perms(n);
-	if (lst == NULL) out_of_memory();
+	safe_ivl_ptr lst{all_perms(n)};
+	if (lst == nullptr) out_of_memory();
 
-	for (i = 0; i < ivl_length(lst); i++)
-		for (j = 0; j < ivl_length(lst); j++)
+	for (uint32_t i = 0; i < ivl_length(lst); i++)
+		for (uint32_t j = 0; j < ivl_length(lst); j++)
 		{
-			ivector *w1, *w2;
-			w1 = ivl_elem(lst, i);
-			w2 = ivl_elem(lst, j);
-			if (test_mult_schubert(w1, w2) != 0)
-			{
-				ivl_free_all(lst);
-				out_of_memory();
-			}
-			assert(iv_length(w1) == n && iv_length(w2) == n);
+			ivector* w1 = ivl_elem(lst, i);
+			ivector* w2 = ivl_elem(lst, j);
+			if (test_mult_schubert(w1, w2)) out_of_memory();
+			assert(int(iv_length(w1)) == n && int(iv_length(w2)) == n);
 		}
 
 	puts("success");
-	ivl_free_all(lst);
 	alloc_report();
 	return 0;
 }

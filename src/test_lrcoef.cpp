@@ -17,92 +17,79 @@
 
 #define PROGNAME "test_lrcoef"
 
-void print_usage()
+#include <memory>
+
+struct iv_deleter
+{
+	void operator()(ivector* p) const { iv_free(p); }
+};
+struct ivlc_deleter
+{
+	void operator()(ivlincomb* p) const { ivlc_free_all(p); }
+};
+using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
+using safe_ivlc_ptr = std::unique_ptr<ivlincomb, ivlc_deleter>;
+
+[[noreturn]] static void print_usage()
 {
 	fprintf(stderr, "usage: " PROGNAME " rows cols\n");
 	exit(1);
 }
 
-void out_of_memory()
+[[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
 	alloc_report();
 	exit(1);
 }
 
-int test_schur_lrcoef(ivector* p1, ivector* p2, int rows, int cols)
+static bool test_schur_lrcoef(ivector* p1, ivector* p2, int rows, int cols)
 {
-	ivlincomb* prd;
+	safe_iv_ptr outer{iv_new(uint32_t(rows))};
+	if (!outer) return true;
+
+	safe_ivlc_ptr prd{schur_mult(p1, p2, rows, cols, rows)};
+	if (!prd) return true;
+
 	part_iter itr;
-	ivector* outer;
-
-	prd = NULL;
-	outer = iv_new(rows);
-	if (!outer) goto out_of_mem;
-
-	prd = schur_mult(p1, p2, rows, cols, rows);
-	if (!prd) goto out_of_mem;
-
-	pitr_box_first(&itr, outer, rows, cols);
+	pitr_box_first(&itr, outer.get(), rows, cols);
 	for (; pitr_good(&itr); pitr_next(&itr))
 	{
 		ivlc_keyval_t* kv;
-		int coef = schur_lrcoef(outer, p1, p2);
-		if (coef < 0) goto out_of_mem;
-		kv = ivlc_lookup(prd, outer, iv_hash(outer));
+		long long coef = schur_lrcoef(outer.get(), p1, p2);
+		if (coef < 0) return true;
+		kv = ivlc_lookup(prd.get(), outer.get(), iv_hash(outer.get()));
 		assert(coef == (kv ? kv->value : 0));
 	}
 
-	iv_free(outer);
-	ivlc_free_all(prd);
-	return 0;
-
-out_of_mem:
-	if (outer) iv_free(outer);
-	if (prd) ivlc_free_all(prd);
-	return -1;
+	return false;
 }
 
 int main(int ac, char** av)
 {
-	int rows, cols;
-	ivector *p1, *p2;
-	part_iter itr1, itr2;
-
 	alloc_getenv();
 
 	if (ac != 3) print_usage();
-	rows = atoi(av[1]);
-	cols = atoi(av[2]);
+	int rows = atoi(av[1]);
+	int cols = atoi(av[2]);
 	if (rows < 0 || cols < 0) print_usage();
 
-	p1 = iv_new(rows);
-	if (p1 == NULL) out_of_memory();
-	p2 = iv_new(rows);
-	if (p2 == NULL)
-	{
-		iv_free(p1);
-		out_of_memory();
-	}
+	safe_iv_ptr p1{iv_new(uint32_t(rows))};
+	if (!p1) out_of_memory();
+	safe_iv_ptr p2{iv_new(uint32_t(rows))};
+	if (!p2) out_of_memory();
 
-	pitr_box_first(&itr1, p1, rows, cols);
+	part_iter itr1;
+	pitr_box_first(&itr1, p1.get(), rows, cols);
 	for (; pitr_good(&itr1); pitr_next(&itr1))
 	{
-		pitr_box_first(&itr2, p2, rows, cols);
+		part_iter itr2;
+		pitr_box_first(&itr2, p2.get(), rows, cols);
 		for (; pitr_good(&itr2); pitr_next(&itr2))
-		{
-			if (test_schur_lrcoef(p1, p2, rows, cols) != 0)
-			{
-				iv_free(p1);
-				iv_free(p2);
-				out_of_memory();
-			}
-		}
+			if (test_schur_lrcoef(p1.get(), p2.get(), rows, cols)) out_of_memory();
 	}
 
 	puts("success");
-	iv_free(p1);
-	iv_free(p2);
 	alloc_report();
 	return 0;
 }

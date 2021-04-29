@@ -1,5 +1,5 @@
-#ifndef _VECTARG_H
-#define _VECTARG_H
+#ifndef LRCALC_VECTARG_H
+#define LRCALC_VECTARG_H
 
 #include "lrcalc/ivector.hpp"
 

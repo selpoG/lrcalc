@@ -1,10 +1,10 @@
-#ifndef _LRITER_H
-#define _LRITER_H
+#ifndef LRCALC_LRITER_H
+#define LRCALC_LRITER_H
 
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 
-#ifdef _LRITER_C
+#ifdef LRCALC_LRITER_C
 #undef INLINE
 #define INLINE CINLINE
 #endif
@@ -22,7 +22,7 @@ typedef struct
 	ivector* cont;
 	int size;
 	int array_len;
-	lrit_box array[0];
+	lrit_box array[];
 } lrtab_iter;
 
 lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxrows, int maxcols, int partsz);
@@ -42,15 +42,15 @@ INLINE int lrit_good(lrtab_iter* lrit) { return lrit->size >= 0; }
 INLINE void lrit_next(lrtab_iter* lrit)
 {
 	ivector* cont = lrit->cont;
-	lrit_box *box, *box_bound, *array = lrit->array;
+	lrit_box* array = lrit->array;
 	int size = lrit->size;
-	int max, x;
-	box_bound = array + size;
+	lrit_box* box_bound = array + size;
+	lrit_box* box;
 	for (box = array; box != box_bound; box++)
 	{
-		max = array[box->right].value;
+		int max = array[box->right].value;
 		if (max > box->max) max = box->max;
-		x = box->value;
+		int x = box->value;
 		iv_elem(cont, x)--;
 		x++;
 		while (x <= max && iv_elem(cont, x) == iv_elem(cont, x - 1)) x++;
@@ -75,12 +75,12 @@ INLINE ivlincomb* lrit_count(lrtab_iter* lrit)
 {
 	ivector* cont = lrit->cont;
 	ivlincomb* lc = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
-	if (lc == NULL) return NULL;
+	if (lc == nullptr) return nullptr;
 	for (; lrit_good(lrit); lrit_next(lrit))
 		if (ivlc_add_element(lc, 1, cont, iv_hash(cont), LC_COPY_KEY) != 0)
 		{
 			ivlc_free_all(lc);
-			return NULL;
+			return nullptr;
 		}
 	return lc;
 }

@@ -12,220 +12,193 @@
 
 #define PROGNAME "test_partiter"
 
-void out_of_memory()
+#include <memory>
+
+struct iv_deleter
+{
+	void operator()(ivector* p) const { iv_free(p); }
+};
+using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
+
+[[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory\n");
 	alloc_report();
 	exit(1);
 }
 
-int test_part_iter_box(int rows, int cols)
+static bool test_part_iter_box(int rows, int cols)
 {
+	safe_iv_ptr p{iv_new(uint32_t(rows))};
+	if (!p) return true;
+
+	int np = 1;
+	for (int i = 1; i <= rows; i++) np = np * (cols + i) / i;
+
+	int np1 = 0;
 	part_iter itr;
-	ivector* p;
-	int i, np, np1, size;
-
-	p = iv_new(rows);
-	if (!p) return -1;
-
-	np = 1;
-	for (i = 1; i <= rows; i++) np = np * (cols + i) / i;
-
-	np1 = 0;
-	pitr_box_first(&itr, p, rows, cols);
+	pitr_box_first(&itr, p.get(), rows, cols);
 	for (; pitr_good(&itr); pitr_next(&itr))
 	{
-		assert(part_valid(p));
+		assert(part_valid(p.get()));
 		np1++;
 	}
 	assert(np1 == np);
 
 	np1 = 0;
-	for (size = 0; size < rows * cols + 2; size++)
+	for (int size = 0; size < rows * cols + 2; size++)
 	{
-		pitr_box_sz_first(&itr, p, rows, cols, size);
+		pitr_box_sz_first(&itr, p.get(), rows, cols, size);
 		for (; pitr_good(&itr); pitr_next(&itr))
 		{
-			assert(part_valid(p));
-			assert(iv_sum(p) == size);
+			assert(part_valid(p.get()));
+			assert(iv_sum(p.get()) == size);
 			np1++;
 		}
 	}
 	assert(np1 == np);
-	iv_free(p);
-	return 0;
+	return false;
 }
 
-int test_part_iter_sub(int rows, int cols, ivector* outer)
+static bool test_part_iter_sub(int rows, int cols, ivector* outer)
 {
+	int size_bound = iv_sum(outer) + 2;
+	safe_iv_ptr count{iv_new_zero(uint32_t(size_bound))};
+	if (!count) return true;
+
+	safe_iv_ptr p{iv_new(uint32_t(rows))};
+	if (!p) return true;
+
 	part_iter itr;
-	ivector *p, *count;
-	int size_bound, size, np;
-
-	size_bound = iv_sum(outer) + 2;
-	count = iv_new_zero(size_bound);
-	if (!count) return -1;
-
-	p = iv_new(rows);
-	if (!p)
-	{
-		iv_free(count);
-		return -1;
-	}
-
-	pitr_box_first(&itr, p, rows, cols);
+	pitr_box_first(&itr, p.get(), rows, cols);
 	for (; pitr_good(&itr); pitr_next(&itr))
-		if (part_leq(p, outer))
+		if (part_leq(p.get(), outer))
 		{
-			int sz = iv_sum(p);
+			int sz = iv_sum(p.get());
 			iv_elem(count, sz)++;
 		}
 
-	np = 0;
-	pitr_first(&itr, p, rows, cols, outer, NULL, 0, PITR_USE_OUTER);
+	int np = 0;
+	pitr_first(&itr, p.get(), rows, cols, outer, nullptr, 0, PITR_USE_OUTER);
 	for (; pitr_good(&itr); pitr_next(&itr))
 	{
-		assert(part_valid(p));
-		assert(part_leq(p, outer));
+		assert(part_valid(p.get()));
+		assert(part_leq(p.get(), outer));
 		np++;
 	}
-	assert(np == iv_sum(count));
+	assert(np == iv_sum(count.get()));
 
-	for (size = 0; size < size_bound; size++)
+	for (int size = 0; size < size_bound; size++)
 	{
 		np = 0;
-		pitr_first(&itr, p, rows, cols, outer, NULL, size, PITR_USE_OUTER | PITR_USE_SIZE);
+		pitr_first(&itr, p.get(), rows, cols, outer, nullptr, size, PITR_USE_OUTER | PITR_USE_SIZE);
 		for (; pitr_good(&itr); pitr_next(&itr))
 		{
-			assert(part_valid(p));
-			assert(part_leq(p, outer));
-			assert(iv_sum(p) == size);
+			assert(part_valid(p.get()));
+			assert(part_leq(p.get(), outer));
+			assert(iv_sum(p.get()) == size);
 			np++;
 		}
 		assert(np == iv_elem(count, size));
 	}
 
-	iv_free(p);
-	iv_free(count);
-	return 0;
+	return false;
 }
 
-int test_part_iter_super(int rows, int cols, ivector* inner)
+static bool test_part_iter_super(int rows, int cols, ivector* inner)
 {
+	int size_bound = rows * cols + 2;
+	safe_iv_ptr count{iv_new_zero(uint32_t(size_bound))};
+	if (!count) return true;
+
+	safe_iv_ptr p{iv_new(uint32_t(rows))};
+	if (!p) return true;
+
 	part_iter itr;
-	ivector *p, *count;
-	int size_bound, size, np;
-
-	size_bound = rows * cols + 2;
-	count = iv_new_zero(size_bound);
-	if (!count) return -1;
-
-	p = iv_new(rows);
-	if (!p)
-	{
-		iv_free(count);
-		return -1;
-	}
-
-	pitr_box_first(&itr, p, rows, cols);
+	pitr_box_first(&itr, p.get(), rows, cols);
 	for (; pitr_good(&itr); pitr_next(&itr))
-		if (part_leq(inner, p))
+		if (part_leq(inner, p.get()))
 		{
-			int sz = iv_sum(p);
+			int sz = iv_sum(p.get());
 			iv_elem(count, sz)++;
 		}
 
-	np = 0;
-	pitr_first(&itr, p, rows, cols, NULL, inner, 0, PITR_USE_INNER);
+	int np = 0;
+	pitr_first(&itr, p.get(), rows, cols, nullptr, inner, 0, PITR_USE_INNER);
 	for (; pitr_good(&itr); pitr_next(&itr))
 	{
-		assert(part_valid(p));
-		assert(part_leq(inner, p));
+		assert(part_valid(p.get()));
+		assert(part_leq(inner, p.get()));
 		np++;
 	}
-	assert(np == iv_sum(count));
+	assert(np == iv_sum(count.get()));
 
-	for (size = 0; size < size_bound; size++)
+	for (int size = 0; size < size_bound; size++)
 	{
 		np = 0;
-		pitr_first(&itr, p, rows, cols, NULL, inner, size, PITR_USE_INNER | PITR_USE_SIZE);
+		pitr_first(&itr, p.get(), rows, cols, nullptr, inner, size, PITR_USE_INNER | PITR_USE_SIZE);
 		for (; pitr_good(&itr); pitr_next(&itr))
 		{
-			assert(part_valid(p));
-			assert(part_leq(inner, p));
-			assert(iv_sum(p) == size);
+			assert(part_valid(p.get()));
+			assert(part_leq(inner, p.get()));
+			assert(iv_sum(p.get()) == size);
 			np++;
 		}
 		assert(np == iv_elem(count, size));
 	}
 
-	iv_free(p);
-	iv_free(count);
-	return 0;
+	return false;
 }
 
-int test_part_iter_between(int rows, int cols, ivector* outer, ivector* inner)
+static bool test_part_iter_between(int rows, int cols, ivector* outer, ivector* inner)
 {
+	int size_bound = iv_sum(outer) + 2;
+	safe_iv_ptr count{iv_new_zero(uint32_t(size_bound))};
+	if (!count) return true;
+
+	safe_iv_ptr p{iv_new(uint32_t(rows))};
+	if (!p) return true;
+
 	part_iter itr;
-	ivector *p, *count;
-	int size_bound, size, np;
-
-	size_bound = iv_sum(outer) + 2;
-	count = iv_new_zero(size_bound);
-	if (!count) return -1;
-
-	p = iv_new(rows);
-	if (!p)
-	{
-		iv_free(count);
-		return -1;
-	}
-
-	pitr_box_first(&itr, p, rows, cols);
+	pitr_box_first(&itr, p.get(), rows, cols);
 	for (; pitr_good(&itr); pitr_next(&itr))
-		if (part_leq(inner, p) && part_leq(p, outer))
+		if (part_leq(inner, p.get()) && part_leq(p.get(), outer))
 		{
-			int sz = iv_sum(p);
+			int sz = iv_sum(p.get());
 			iv_elem(count, sz)++;
 		}
 
-	np = 0;
-	pitr_first(&itr, p, rows, cols, outer, inner, 0, PITR_USE_OUTER | PITR_USE_INNER);
+	int np = 0;
+	pitr_first(&itr, p.get(), rows, cols, outer, inner, 0, PITR_USE_OUTER | PITR_USE_INNER);
 	for (; pitr_good(&itr); pitr_next(&itr))
 	{
-		assert(part_valid(p));
-		assert(part_leq(inner, p));
-		assert(part_leq(p, outer));
+		assert(part_valid(p.get()));
+		assert(part_leq(inner, p.get()));
+		assert(part_leq(p.get(), outer));
 		np++;
 	}
-	assert(np == iv_sum(count));
+	assert(np == iv_sum(count.get()));
 
-	for (size = 0; size < size_bound; size++)
+	for (int size = 0; size < size_bound; size++)
 	{
 		np = 0;
-		pitr_first(&itr, p, rows, cols, outer, inner, size, PITR_USE_OUTER | PITR_USE_INNER | PITR_USE_SIZE);
+		pitr_first(&itr, p.get(), rows, cols, outer, inner, size, PITR_USE_OUTER | PITR_USE_INNER | PITR_USE_SIZE);
 		for (; pitr_good(&itr); pitr_next(&itr))
 		{
-			assert(part_valid(p));
-			assert(part_leq(inner, p));
-			assert(part_leq(p, outer));
-			assert(iv_sum(p) == size);
+			assert(part_valid(p.get()));
+			assert(part_leq(inner, p.get()));
+			assert(part_leq(p.get(), outer));
+			assert(iv_sum(p.get()) == size);
 			np++;
 		}
 		assert(np == iv_elem(count, size));
 	}
 
-	iv_free(p);
-	iv_free(count);
-	return 0;
+	return false;
 }
 
 int main(int ac, char** av)
 {
-	int rows, cols, rows0, cols0;
-	part_iter itr_p1, itr_p2;
-	ivector *p1, *p2;
-
 	alloc_getenv();
 
 	if (ac != 3)
@@ -233,59 +206,52 @@ int main(int ac, char** av)
 		fprintf(stderr, "usage: " PROGNAME " rows cols\n");
 		exit(1);
 	}
-	rows = atol(av[1]);
-	cols = atol(av[2]);
-	rows0 = rows ? rows - 1 : 0;
-	cols0 = cols ? cols - 1 : 0;
+	int rows = int(atol(av[1]));
+	int cols = int(atol(av[2]));
+	int rows0 = rows ? rows - 1 : 0;
+	int cols0 = cols ? cols - 1 : 0;
 
-	p1 = p2 = NULL;
+	safe_iv_ptr p1{iv_new(uint32_t(rows))};
+	if (!p1) out_of_memory();
+	safe_iv_ptr p2{iv_new(uint32_t(rows))};
+	if (!p2) out_of_memory();
 
-	p1 = iv_new(rows);
-	if (!p1) goto out_of_mem;
-	p2 = iv_new(rows);
-	if (!p2) goto out_of_mem;
+	if (test_part_iter_box(rows, cols)) out_of_memory();
 
-	if (test_part_iter_box(rows, cols)) goto out_of_mem;
-
-	pitr_first(&itr_p2, p2, rows, cols, NULL, NULL, 0, 0);
+	part_iter itr_p2;
+	pitr_first(&itr_p2, p2.get(), rows, cols, nullptr, nullptr, 0, 0);
 	for (; pitr_good(&itr_p2); pitr_next(&itr_p2))
 	{
-		int p2_len = iv_length(p2);
-		part_unchop(p2, rows);
+		uint32_t p2_len = iv_length(p2);
+		part_unchop(p2.get(), rows);
 
-		if (test_part_iter_sub(rows, cols, p2)) goto out_of_mem;
-		if (test_part_iter_sub(rows0, cols, p2)) goto out_of_mem;
-		if (test_part_iter_sub(rows, cols0, p2)) goto out_of_mem;
-		if (test_part_iter_sub(rows, cols + 1, p2)) goto out_of_mem;
-		if (test_part_iter_super(rows, cols, p2)) goto out_of_mem;
-		if (test_part_iter_super(rows0, cols, p2)) goto out_of_mem;
-		if (test_part_iter_super(rows, cols0, p2)) goto out_of_mem;
-		if (test_part_iter_super(rows, cols + 2, p2)) goto out_of_mem;
+		if (test_part_iter_sub(rows, cols, p2.get())) out_of_memory();
+		if (test_part_iter_sub(rows0, cols, p2.get())) out_of_memory();
+		if (test_part_iter_sub(rows, cols0, p2.get())) out_of_memory();
+		if (test_part_iter_sub(rows, cols + 1, p2.get())) out_of_memory();
+		if (test_part_iter_super(rows, cols, p2.get())) out_of_memory();
+		if (test_part_iter_super(rows0, cols, p2.get())) out_of_memory();
+		if (test_part_iter_super(rows, cols0, p2.get())) out_of_memory();
+		if (test_part_iter_super(rows, cols + 2, p2.get())) out_of_memory();
 
-		pitr_first(&itr_p1, p1, rows, cols, p2, NULL, 0, PITR_USE_OUTER);
+		part_iter itr_p1;
+		pitr_first(&itr_p1, p1.get(), rows, cols, p2.get(), nullptr, 0, PITR_USE_OUTER);
 		for (; pitr_good(&itr_p1); pitr_next(&itr_p1))
 		{
-			int p1_len = iv_length(p1);
-			part_unchop(p1, rows);
+			uint32_t p1_len = iv_length(p1);
+			part_unchop(p1.get(), rows);
 
-			if (test_part_iter_between(rows, cols, p2, p1)) goto out_of_mem;
-			if (test_part_iter_between(rows0, cols, p2, p1)) goto out_of_mem;
-			if (test_part_iter_between(rows, cols0, p2, p1)) goto out_of_mem;
-			if (test_part_iter_between(rows, cols + 2, p2, p1)) goto out_of_mem;
+			if (test_part_iter_between(rows, cols, p2.get(), p1.get())) out_of_memory();
+			if (test_part_iter_between(rows0, cols, p2.get(), p1.get())) out_of_memory();
+			if (test_part_iter_between(rows, cols0, p2.get(), p1.get())) out_of_memory();
+			if (test_part_iter_between(rows, cols + 2, p2.get(), p1.get())) out_of_memory();
 
 			iv_length(p1) = p1_len;
 		}
 		iv_length(p2) = p2_len;
 	}
-	iv_free(p1);
-	iv_free(p2);
 
 	puts("success");
 	alloc_report();
 	return 0;
-
-out_of_mem:
-	if (p1) iv_free(p1);
-	if (p2) iv_free(p2);
-	out_of_memory();
 }

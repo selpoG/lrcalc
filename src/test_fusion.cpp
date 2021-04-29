@@ -17,86 +17,73 @@
 
 #define PROGNAME "test_fusion"
 
-void print_usage()
+#include <memory>
+
+struct iv_deleter
+{
+	void operator()(ivector* p) const { iv_free(p); }
+};
+struct ivlc_deleter
+{
+	void operator()(ivlincomb* p) const { ivlc_free_all(p); }
+};
+using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
+using safe_ivlc_ptr = std::unique_ptr<ivlincomb, ivlc_deleter>;
+
+[[noreturn]] static void print_usage()
 {
 	fprintf(stderr, "usage: " PROGNAME " rows cols\n");
 	exit(1);
 }
 
-void out_of_memory()
+[[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
 	alloc_report();
 	exit(1);
 }
 
-int test_mult_fusion(ivector* sh1, ivector* sh2, int rows, int level)
+static bool test_mult_fusion(ivector* sh1, ivector* sh2, int rows, int level)
 {
-	ivlincomb *prd_f, *prd_s;
+	safe_ivlc_ptr prd_f{schur_mult_fusion(sh1, sh2, rows, level)};
+	if (!prd_f) return true;
 
-	prd_f = prd_s = NULL;
+	safe_ivlc_ptr prd_s{schur_mult(sh1, sh2, rows, -1, rows)};
+	if (!prd_s) return true;
 
-	prd_f = schur_mult_fusion(sh1, sh2, rows, level);
-	if (prd_f == NULL) goto out_of_mem;
+	if (fusion_reduce_lc(prd_s.get(), level)) return true;
 
-	prd_s = schur_mult(sh1, sh2, rows, -1, rows);
-	if (prd_s == NULL) goto out_of_mem;
+	assert(ivlc_equals(prd_f.get(), prd_s.get(), 0));
 
-	if (fusion_reduce_lc(prd_s, level) != 0) goto out_of_mem;
-
-	assert(ivlc_equals(prd_f, prd_s, 0));
-
-	ivlc_free_all(prd_f);
-	ivlc_free_all(prd_s);
-	return 0;
-
-out_of_mem:
-	if (prd_f) ivlc_free_all(prd_f);
-	if (prd_s) ivlc_free_all(prd_s);
-	return -1;
+	return false;
 }
 
 int main(int ac, char** av)
 {
-	int rows, cols, level;
-	ivector *sh1, *sh2;
-	part_iter itr1, itr2;
-
 	alloc_getenv();
 
 	if (ac != 3) print_usage();
-	rows = atoi(av[1]);
-	cols = atoi(av[2]);
+	int rows = atoi(av[1]);
+	int cols = atoi(av[2]);
 	if (rows < 0 || cols < 0) print_usage();
 
-	sh1 = iv_new(rows);
-	if (sh1 == NULL) out_of_memory();
-	sh2 = iv_new(rows);
-	if (sh2 == NULL)
-	{
-		iv_free(sh2);
-		out_of_memory();
-	}
+	safe_iv_ptr sh1{iv_new(uint32_t(rows))};
+	if (sh1 == nullptr) out_of_memory();
+	safe_iv_ptr sh2{iv_new(uint32_t(rows))};
+	if (sh2 == nullptr) out_of_memory();
 
-	pitr_box_first(&itr1, sh1, rows, cols);
+	part_iter itr1;
+	pitr_box_first(&itr1, sh1.get(), rows, cols);
 	for (; pitr_good(&itr1); pitr_next(&itr1))
 	{
-		pitr_box_first(&itr2, sh2, rows, cols);
+		part_iter itr2;
+		pitr_box_first(&itr2, sh2.get(), rows, cols);
 		for (; pitr_good(&itr2); pitr_next(&itr2))
-			for (level = 0; level <= cols; level++)
-			{
-				if (test_mult_fusion(sh1, sh2, rows, level) != 0)
-				{
-					iv_free(sh1);
-					iv_free(sh2);
-					out_of_memory();
-				}
-			}
+			for (int level = 0; level <= cols; level++)
+				if (test_mult_fusion(sh1.get(), sh2.get(), rows, level)) out_of_memory();
 	}
 
 	puts("success");
-	iv_free(sh1);
-	iv_free(sh2);
 	alloc_report();
 	return 0;
 }

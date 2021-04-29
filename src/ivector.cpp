@@ -7,7 +7,7 @@
 
 #include "lrcalc/alloc.hpp"
 
-#define _IVECTOR_C
+#define LRCALC_IVECTOR_C
 #include "lrcalc/ivector.hpp"
 
 #define MINVALUE INT_MIN

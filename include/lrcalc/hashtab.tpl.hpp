@@ -48,11 +48,11 @@ INLINE int PREFIX(init)(HASHTAB* ht, SIZE_T tabsz, SIZE_T eltsz)
 	ht->free_elts = 0;
 	ht->elts_len = 1;
 	ht->table_sz = tabsz;
-	ht->table = (SIZE_T*)(ml_calloc(tabsz, sizeof(SIZE_T)));
-	if (ht->table == NULL) return -1;
+	ht->table = static_cast<SIZE_T*>(ml_calloc(tabsz, sizeof(SIZE_T)));
+	if (ht->table == nullptr) return -1;
 	ht->elts_sz = eltsz;
-	ht->elts = (PREFIX(keyval_t)*)ml_malloc(eltsz * sizeof(PREFIX(keyval_t)));
-	if (ht->elts == NULL)
+	ht->elts = static_cast<PREFIX(keyval_t)*>(ml_malloc(eltsz * sizeof(PREFIX(keyval_t))));
+	if (ht->elts == nullptr)
 	{
 		ml_free(ht->table);
 		return -1;
@@ -62,12 +62,12 @@ INLINE int PREFIX(init)(HASHTAB* ht, SIZE_T tabsz, SIZE_T eltsz)
 
 INLINE HASHTAB* PREFIX(new)(SIZE_T tabsz, SIZE_T eltsz)
 {
-	HASHTAB* ht = (HASHTAB*)ml_malloc(sizeof(HASHTAB));
-	if (ht == NULL) return NULL;
+	auto ht = static_cast<HASHTAB*>(ml_malloc(sizeof(HASHTAB)));
+	if (ht == nullptr) return nullptr;
 	if (PREFIX(init)(ht, tabsz, eltsz) != 0)
 	{
 		ml_free(ht);
-		return NULL;
+		return nullptr;
 	}
 	return ht;
 }
@@ -110,27 +110,25 @@ INLINE int PREFIX(makeroom)(HASHTAB* ht, SIZE_T sz)
 	return 0;
 }
 
-/* Return pointer to keyval_t, NULL if key not in table. */
+/* Return pointer to keyval_t, nullptr if key not in table. */
 INLINE PREFIX(keyval_t) * PREFIX(lookup)(HASHTAB* ht, KEY_T key, HASH_T hash)
 {
 	PREFIX(keyval_t)* elts = ht->elts;
-	SIZE_T index, i;
-	index = hash % ht->table_sz;
-	i = ht->table[index];
+	SIZE_T index = hash % ht->table_sz;
+	SIZE_T i = ht->table[index];
 	while (i != 0 && KEY_CMP(key, elts[i].key) != 0) i = ht->elts[i].next;
-	return (i == 0) ? NULL : elts + i;
+	return (i == 0) ? nullptr : elts + i;
 }
 
 /* Call only if key is not in table.  Insert key into table and return
-   a pointer to new value variable, NULL if memory allocation
+   a pointer to new value variable, nullptr if memory allocation
    error. */
 INLINE PREFIX(keyval_t) * PREFIX(insert)(HASHTAB* ht, KEY_T key, HASH_T hash, VALUE_T value)
 {
-	PREFIX(keyval_t) * elts, *kvs;
-	SIZE_T index, i;
-	if (PREFIX(makeroom)(ht, ht->card + 1) != 0) return NULL;
+	if (PREFIX(makeroom)(ht, ht->card + 1) != 0) return nullptr;
 	ht->card++;
-	elts = ht->elts;
+	PREFIX(keyval_t)* elts = ht->elts;
+	SIZE_T i;
 	if (ht->free_elts != 0)
 	{
 		i = ht->free_elts;
@@ -140,29 +138,28 @@ INLINE PREFIX(keyval_t) * PREFIX(insert)(HASHTAB* ht, KEY_T key, HASH_T hash, VA
 	{
 		i = ht->elts_len++;
 	}
-	kvs = elts + i;
+	PREFIX(keyval_t)* kvs = elts + i;
 	kvs->key = key;
 	kvs->hash = hash;
 	kvs->value = value;
-	index = hash % ht->table_sz;
+	SIZE_T index = hash % ht->table_sz;
 	kvs->next = ht->table[index];
 	ht->table[index] = i;
 	return kvs;
 }
 
-/* Remove key from hashtable; return pointer to removed keyval_t, or NULL. */
+/* Remove key from hashtable; return pointer to removed keyval_t, or nullptr. */
 INLINE PREFIX(keyval_t) * PREFIX(remove)(HASHTAB* ht, KEY_T key, HASH_T hash)
 {
 	PREFIX(keyval_t)* elts = ht->elts;
-	SIZE_T i, *pi;
-	pi = ht->table + (hash % ht->table_sz);
-	i = *pi;
+	SIZE_T* pi = ht->table + (hash % ht->table_sz);
+	SIZE_T i = *pi;
 	while (i != 0 && KEY_CMP(key, elts[i].key) != 0)
 	{
 		pi = &elts[i].next;
 		i = *pi;
 	}
-	if (i == 0) return NULL;
+	if (i == 0) return nullptr;
 	ht->card--;
 	*pi = elts[i].next;
 	elts[i].next = ht->free_elts;
@@ -186,9 +183,8 @@ INLINE int PREFIX(good)(PREFIX(iter) * itr) { return (itr->i != 0); }
 
 INLINE void PREFIX(first)(HASHTAB* ht, PREFIX(iter) * itr)
 {
-	SIZE_T index;
 	itr->ht = ht;
-	index = 0;
+	SIZE_T index = 0;
 	while (index < ht->table_sz && ht->table[index] == 0) index++;
 	if (index == ht->table_sz)
 	{
@@ -203,13 +199,12 @@ INLINE void PREFIX(next)(PREFIX(iter) * itr)
 {
 	HASHTAB* ht = itr->ht;
 	PREFIX(keyval_t)* elts = ht->elts;
-	SIZE_T index;
 	if (elts[itr->i].next != 0)
 	{
 		itr->i = elts[itr->i].next;
 		return;
 	}
-	index = itr->index + 1;
+	SIZE_T index = SIZE_T(itr->index + 1);
 	while (index < ht->table_sz && ht->table[index] == 0) index++;
 	if (index == ht->table_sz)
 	{
@@ -259,14 +254,13 @@ INLINE void PREFIX(free_all)(HASHTAB* ht)
 
 INLINE int PREFIX(add_element)(HASHTAB* ht, VALUE_T c, KEY_T key, HASH_T hash, int opt)
 {
-	PREFIX(keyval_t) * kv;
 	if (c == 0)
 	{
 		if (!(opt & LC_COPY_KEY)) KEY_DEALLOC(key);
 		return 0;
 	}
-	kv = PREFIX(lookup)(ht, key, hash);
-	if (kv != NULL)
+	PREFIX(keyval_t)* kv = PREFIX(lookup)(ht, key, hash);
+	if (kv != nullptr)
 	{
 		if (!(opt & LC_COPY_KEY)) KEY_DEALLOC(key);
 		kv->value += c;
@@ -285,7 +279,7 @@ INLINE int PREFIX(add_element)(HASHTAB* ht, VALUE_T c, KEY_T key, HASH_T hash, i
 	if (opt & LC_COPY_KEY)
 	{
 		key = KEY_COPY(key);
-		if (key == NULL) return -1;
+		if (key == nullptr) return -1;
 	}
 	kv = PREFIX(insert)(ht, key, hash, c);
 	return 0;

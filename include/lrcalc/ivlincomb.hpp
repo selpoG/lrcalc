@@ -1,5 +1,5 @@
-#ifndef _IVLINCOMB_H
-#define _IVLINCOMB_H
+#ifndef LRCALC_IVLINCOMB_H
+#define LRCALC_IVLINCOMB_H
 
 #include <stdint.h>
 
@@ -18,14 +18,14 @@
 #define VALUE_DEALLOC(v)
 #define HASHTAB_LINCOMB
 
-#ifdef _IVLINCOMB_C
+#ifdef LRCALC_IVLINCOMB_C
 #undef INLINE
 #define INLINE CINLINE
 #endif
 
 #include "lrcalc/hashtab.tpl.hpp"
 
-#ifndef _IVLINCOMB_C
+#ifndef LRCALC_IVLINCOMB_C
 #undef HASHTAB
 #undef PREFIX
 #undef KEY_T

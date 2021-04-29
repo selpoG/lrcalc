@@ -6,7 +6,7 @@
 #include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
-#define _IVLINCOMB_C
+#define LRCALC_IVLINCOMB_C
 #include "lrcalc/ivlincomb.hpp"
 
 #include "hashtab.tpl.cpp"

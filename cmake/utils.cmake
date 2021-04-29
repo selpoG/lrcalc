@@ -35,7 +35,7 @@ function(set_default_property target dir)
 		${target} PROPERTIES
 		COMPILE_OPTIONS "${cxx_flags}"
 		CXX_EXTENSIONS OFF
-		CXX_STANDARD 17
+		CXX_STANDARD 20
 		CXX_STANDARD_REQUIRED ON
 	)
 endfunction()

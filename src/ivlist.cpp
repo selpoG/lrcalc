@@ -5,14 +5,13 @@
 
 #include "lrcalc/alloc.hpp"
 
-#define _IVLIST_C
+#define LRCALC_IVLIST_C
 #include "lrcalc/ivlist.hpp"
 
 #include "list.tpl.cpp"
 
 void ivl_free_all(ivlist* lst)
 {
-	int i;
-	for (i = 0; i < ivl_length(lst); i++) iv_free(ivl_elem(lst, i));
+	for (size_t i = 0; i < ivl_length(lst); i++) iv_free(ivl_elem(lst, i));
 	ivl_free(lst);
 }

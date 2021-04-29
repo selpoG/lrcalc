@@ -6,22 +6,20 @@
 #include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
-#define _PART_C
+#define LRCALC_PART_C
 #include "lrcalc/part.hpp"
 
 ivector* part_conj(ivector* p)
 {
-	int np, nc, j, jlim;
-	ivector* conj;
 	claim(part_valid(p));
-	np = part_length(p);
-	nc = (np == 0) ? 0 : iv_elem(p, 0);
-	conj = iv_new(nc);
-	if (conj == NULL) return NULL;
-	j = 0;
+	uint32_t np = part_length(p);
+	int nc = (np == 0) ? 0 : iv_elem(p, 0);
+	ivector* conj = iv_new(uint32_t(nc));
+	if (conj == nullptr) return nullptr;
+	uint32_t j = 0;
 	while (np > 0)
 	{
-		for (jlim = iv_elem(p, np - 1); j < jlim; j++) iv_elem(conj, j) = np;
+		for (int jlim = iv_elem(p, np - 1); int(j) < jlim; j++) iv_elem(conj, j) = int(np);
 		np--;
 	}
 	return conj;
@@ -29,9 +27,8 @@ ivector* part_conj(ivector* p)
 
 CINLINE void part_print(ivector* p)
 {
-	int i;
 	putchar('(');
-	for (i = 0; i < iv_length(p) && iv_elem(p, i) != 0; i++)
+	for (uint32_t i = 0; i < iv_length(p) && iv_elem(p, i) != 0; i++)
 	{
 		if (i) putchar(',');
 		printf("%d", iv_elem(p, i));
@@ -58,12 +55,11 @@ void part_print_lincomb(ivlincomb* lc)
 
 CINLINE void part_qprint(ivector* p, int level)
 {
-	int d, i, x;
-	d = part_qdegree(p, level);
+	int d = part_qdegree(p, level);
 	putchar('(');
-	for (i = 0; i < iv_length(p); i++)
+	for (uint32_t i = 0; i < iv_length(p); i++)
 	{
-		x = part_qentry(p, i, d, level);
+		int x = part_qentry(p, int(i), d, level);
 		if (x == 0) break;
 		if (i) putchar(',');
 		printf("%d", x);

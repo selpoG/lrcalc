@@ -1,5 +1,5 @@
-#ifndef _LRCOEF_H
-#define _LRCOEF_H
+#ifndef LRCALC_LRCOEF_H
+#define LRCALC_LRCOEF_H
 
 #include "lrcalc/ivector.hpp"
 

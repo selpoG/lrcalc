@@ -1,5 +1,5 @@
-#ifndef _IVLIST_H
-#define _IVLIST_H
+#ifndef LRCALC_IVLIST_H
+#define LRCALC_IVLIST_H
 
 #include "lrcalc/ivector.hpp"
 
@@ -8,7 +8,7 @@
 #define VALUE_T ivector*
 #define SIZE_T size_t
 
-#ifdef _IVLIST_C
+#ifdef LRCALC_IVLIST_C
 #undef INLINE
 #define INLINE CINLINE
 #endif
@@ -25,7 +25,7 @@
 
 void ivl_free_all(ivlist* lst);
 
-#ifndef _IVLIST_C
+#ifndef LRCALC_IVLIST_C
 #undef LIST
 #undef VALUE_T
 #undef PREFIX

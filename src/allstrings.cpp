@@ -17,13 +17,13 @@ extern char* optarg;
 
 #define PROGNAME "allstrings"
 
-void print_usage()
+[[noreturn]] static void print_usage()
 {
 	fprintf(stderr, "usage: " PROGNAME " dimvec\n");
 	exit(1);
 }
 
-void out_of_memory()
+[[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
 	alloc_report();
@@ -32,24 +32,20 @@ void out_of_memory()
 
 int main(int ac, char** av)
 {
-	ivector* dv;
-	ivlist* lst;
-	int i;
-
 	alloc_getenv();
 
-	dv = get_vect_arg(ac, av);
-	if (dv == NULL) print_usage();
+	ivector* dv = get_vect_arg(ac, av);
+	if (dv == nullptr) print_usage();
 	if (dimvec_valid(dv) == 0) print_usage();
 
-	lst = all_strings(dv);
-	if (lst == NULL)
+	ivlist* lst = all_strings(dv);
+	if (lst == nullptr)
 	{
 		iv_free(dv);
 		out_of_memory();
 	}
 
-	for (i = 0; i < ivl_length(lst); i++) iv_printnl(ivl_elem(lst, i));
+	for (uint32_t i = 0; i < ivl_length(lst); i++) iv_printnl(ivl_elem(lst, i));
 
 	iv_free(dv);
 	ivl_free_all(lst);

@@ -17,19 +17,19 @@ extern char* optarg;
 
 #define PROGNAME "schubmult"
 
-void print_usage()
+[[noreturn]] static void print_usage()
 {
 	fprintf(stderr, "usage: " PROGNAME " [-m] [-s] [-r rank] perm1 - perm2\n");
 	exit(1);
 }
 
-void error(char* msg)
+[[noreturn]] static void error(const char* msg)
 {
 	fprintf(stderr, PROGNAME ": %s\n", msg);
 	print_usage();
 }
 
-void out_of_memory()
+[[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
 	alloc_report();
@@ -38,17 +38,14 @@ void out_of_memory()
 
 int main(int ac, char** av)
 {
-	ivlincomb* lc;
-	ivector *w1, *w2;
-	int opt_maple = 0;
-	int opt_string = 0;
-	int rank = 0;
-	int c;
-
 	alloc_getenv();
 
 	if (ac == 1) print_usage();
 
+	int opt_maple = 0;
+	int opt_string = 0;
+	int rank = 0;
+	int c;
 	while ((c = getopt(ac, av, "msr:")) != EOF) switch (c)
 		{
 		case 'm': opt_maple = 1; break;
@@ -60,13 +57,14 @@ int main(int ac, char** av)
 		default: print_usage();
 		}
 
-	w1 = get_vect_arg(ac, av);
-	if (w1 == NULL) error("perm1 is missing.");
-	w2 = get_vect_arg(ac, av);
-	if (w2 == NULL) error("perm2 is missing.");
+	ivector* w1 = get_vect_arg(ac, av);
+	if (w1 == nullptr) error("perm1 is missing.");
+	ivector* w2 = get_vect_arg(ac, av);
+	if (w2 == nullptr) error("perm2 is missing.");
 
 	if (rank > 0 && opt_string) error("-s cannot be used with -r.");
 
+	ivlincomb* lc;
 	if (opt_string)
 	{
 		if (rank > 0) error("options -r and -s cannot be used together.");
@@ -80,7 +78,7 @@ int main(int ac, char** av)
 		lc = mult_schubert(w1, w2, rank);
 	}
 
-	if (lc == NULL)
+	if (lc == nullptr)
 	{
 		iv_free(w1);
 		iv_free(w2);

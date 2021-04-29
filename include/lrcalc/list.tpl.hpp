@@ -33,8 +33,8 @@ INLINE VALUE_T* PREFIX(pelem)(LIST* lst, SIZE_T i)
 /* Initialize list structure. */
 INLINE int PREFIX(init)(LIST* lst, SIZE_T sz)
 {
-	lst->array = (VALUE_T*)ml_malloc(sz * sizeof(VALUE_T));
-	if (lst->array == NULL) return -1;
+	lst->array = static_cast<VALUE_T*>(ml_malloc(sz * sizeof(VALUE_T)));
+	if (lst->array == nullptr) return -1;
 	lst->allocated = sz;
 	lst->length = 0;
 	return 0;
@@ -42,12 +42,12 @@ INLINE int PREFIX(init)(LIST* lst, SIZE_T sz)
 
 INLINE LIST* PREFIX(new)(SIZE_T sz)
 {
-	LIST* lst = (LIST*)ml_malloc(sizeof(LIST));
-	if (lst == NULL) return NULL;
+	auto lst = static_cast<LIST*>(ml_malloc(sizeof(LIST)));
+	if (lst == nullptr) return nullptr;
 	if (PREFIX(init)(lst, sz) != 0)
 	{
 		ml_free(lst);
-		return NULL;
+		return nullptr;
 	}
 	return lst;
 }
@@ -89,10 +89,9 @@ INLINE VALUE_T PREFIX(poplast)(LIST* lst)
 
 INLINE int PREFIX(insert)(LIST* lst, SIZE_T i, VALUE_T x)
 {
-	SIZE_T n;
 	claim(0 <= i && i <= lst->length);
 	if (PREFIX(makeroom)(lst, lst->length + 1) != 0) return -1;
-	n = lst->length - i;
+	SIZE_T n = lst->length - i;
 	lst->length++;
 	memmove(lst->array + i + 1, lst->array + i, n * sizeof(VALUE_T));
 	lst->array[i] = x;
@@ -101,21 +100,18 @@ INLINE int PREFIX(insert)(LIST* lst, SIZE_T i, VALUE_T x)
 
 INLINE VALUE_T PREFIX(delete)(LIST* lst, SIZE_T i)
 {
-	VALUE_T x;
-	SIZE_T n;
 	claim(0 <= i && i < lst->length);
-	x = lst->array[i];
+	VALUE_T x = lst->array[i];
 	lst->length--;
-	n = lst->length - i;
+	SIZE_T n = lst->length - i;
 	memmove(lst->array + i, lst->array + i + 1, n * sizeof(VALUE_T));
 	return x;
 }
 
 INLINE VALUE_T PREFIX(fastdelete)(LIST* lst, SIZE_T i)
 {
-	VALUE_T x;
 	claim(0 <= i && i < lst->length);
-	x = lst->array[i];
+	VALUE_T x = lst->array[i];
 	lst->array[i] = lst->array[lst->length - 1];
 	(lst->length)--;
 	return x;
@@ -141,7 +137,7 @@ INLINE int PREFIX(copy)(LIST* dst, LIST* src)
 INLINE LIST* PREFIX(new_copy)(LIST* lst)
 {
 	LIST* res = PREFIX(new)(lst->length);
-	if (res == NULL) return NULL;
+	if (res == nullptr) return nullptr;
 	res->length = lst->length;
 	memcpy(res->array, lst->array, res->length * sizeof(VALUE_T));
 	return res;

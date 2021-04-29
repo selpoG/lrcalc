@@ -14,40 +14,36 @@ extern int optind;
 
 ivector* get_vect_arg(int ac, char** av)
 {
-	int n, i, x;
-	int* tmp;
-	ivector* res;
-	char* endptr;
-	char ch;
+	if (optind == ac) return nullptr;
 
-	if (optind == ac) return NULL;
-
-	if (optind == 0) { optind++; }
+	if (optind == 0)
+		optind++;
 	else
 	{
 		/* skip any "-" or "/" argument */
-		ch = *(av[optind]);
+		char ch = *(av[optind]);
 		if ((ch == '-' || ch == '/') && *(av[optind] + 1) == '\0') optind++;
 	}
 
-	tmp = (int*)ml_malloc((ac - optind) * sizeof(int));
-	if (tmp == NULL) return NULL;
-	n = 0;
+	auto tmp = static_cast<int*>(ml_malloc(uint32_t(ac - optind) * sizeof(int)));
+	if (tmp == nullptr) return nullptr;
 
+	uint32_t n = 0;
 	while (optind < ac)
 	{
-		x = strtol(av[optind], &endptr, 10);
+		char* endptr;
+		auto x = int(strtol(av[optind], &endptr, 10));
 		if (endptr == av[optind] || *endptr != '\0') break;
 
 		tmp[n++] = x;
 		optind++;
 	}
 
-	if (n == 0) return NULL;
+	if (n == 0) return nullptr;
 
-	res = iv_new(n);
-	if (res == NULL) return NULL;
-	for (i = 0; i < n; i++) iv_elem(res, i) = tmp[i];
+	ivector* res = iv_new(n);
+	if (res == nullptr) return nullptr;
+	for (uint32_t i = 0; i < n; i++) iv_elem(res, i) = tmp[i];
 	ml_free(tmp);
 
 	return res;

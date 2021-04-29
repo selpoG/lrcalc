@@ -12,47 +12,42 @@
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
 
-#define _LRITER_C
+#define LRCALC_LRITER_C
 #include "lrcalc/lriter.hpp"
 
 lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxrows, int maxcols, int partsz)
 {
-	int len, ilen, clen, out0, inn0, out1, inn1, out2;
-	int size, maxdepth, c, r, s, array_len;
-	lrtab_iter* lrit;
-	ivector* cont;
-
 	claim(part_valid(outer));
-	claim(inner == NULL || part_valid(inner));
-	claim(content == NULL || part_decr(content));
+	claim(inner == nullptr || part_valid(inner));
+	claim(content == nullptr || part_decr(content));
 
 	/* Empty result if inner not contained in outer. */
-	if (inner != NULL && part_leq(inner, outer) == 0)
+	if (inner != nullptr && part_leq(inner, outer) == 0)
 	{
-		cont = iv_new(1);
-		if (cont == NULL) return NULL;
-		lrit = (lrtab_iter*)ml_malloc(sizeof(lrtab_iter));
-		if (lrit == NULL)
+		ivector* cont = iv_new(1);
+		if (cont == nullptr) return nullptr;
+		auto lrit = static_cast<lrtab_iter*>(ml_malloc(sizeof(lrtab_iter)));
+		if (lrit == nullptr)
 		{
 			iv_free(cont);
-			return NULL;
+			return nullptr;
 		}
 		lrit->cont = cont;
 		lrit->size = -1;
 		return lrit;
 	}
 
-	len = part_length(outer);
-	ilen = (inner == NULL) ? 0 : iv_length(inner);
+	uint32_t len = part_length(outer);
+	uint32_t ilen = (inner == nullptr) ? 0 : iv_length(inner);
 	if (ilen > len) ilen = len;
-	clen = (content == NULL) ? 0 : part_length(content);
-	out0 = (len == 0) ? 0 : iv_elem(outer, 0);
+	uint32_t clen = (content == nullptr) ? 0 : part_length(content);
+	int out0 = (len == 0) ? 0 : iv_elem(outer, 0);
 	claim(maxcols < 0 || ilen == 0 || iv_elem(inner, 0) == 0);
 
 	/* Find number of boxes and maximal tableau entry. */
-	size = 0;
-	maxdepth = clen;
-	for (r = 0; r < len; r++)
+	int size = 0;
+	auto maxdepth = int(clen);
+	for (uint32_t r = 0; r < len; r++)
 	{
 		int inn_r = (r < ilen) ? iv_elem(inner, r) : 0;
 		int rowsz = iv_elem(outer, r) - inn_r;
@@ -62,12 +57,12 @@ lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxro
 	if (maxrows < 0 || maxrows > maxdepth) maxrows = maxdepth;
 
 	/* Find size of array. */
-	array_len = size + 2;
+	int array_len = size + 2;
 	if (maxcols >= 0)
 	{
 		int clim = maxcols - out0;
 		int c1 = 0;
-		for (r = clen - 1; r >= 0; r--)
+		for (int r = int(clen - 1); r >= 0; r--)
 		{
 			int c0 = iv_elem(content, r);
 			if (c1 < c0 && c1 < maxcols && c0 > clim) array_len++;
@@ -77,47 +72,53 @@ lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxro
 	}
 
 	/* Allocate array. */
-	lrit = (lrtab_iter*)ml_malloc(sizeof(lrtab_iter) + array_len * sizeof(lrit_box));
-	if (lrit == NULL) return NULL;
+	auto lrit = static_cast<lrtab_iter*>(ml_malloc(sizeof(lrtab_iter) + uint32_t(array_len) * sizeof(lrit_box)));
+	if (lrit == nullptr) return nullptr;
 	lrit->array_len = array_len;
 
 	/* Allocate and copy content. */
 	if (partsz < maxrows) partsz = maxrows;
-	cont = lrit->cont = iv_new(partsz);
-	if (cont == NULL)
+	auto partsz_u = uint32_t(partsz);
+	ivector* cont = (lrit->cont = iv_new(partsz_u));
+	if (cont == nullptr)
 	{
 		ml_free(lrit);
-		return NULL;
+		return nullptr;
 	}
 	lrit->size = -1;
-	if (maxrows < clen) return lrit; /* empty result. */
-	for (r = 0; r < clen; r++) iv_elem(cont, r) = iv_elem(content, r);
-	for (; r < partsz; r++) iv_elem(cont, r) = 0;
+	if (maxrows < int(clen)) return lrit; /* empty result. */
+	{
+		uint32_t r;
+		for (r = 0; r < clen; r++) iv_elem(cont, r) = iv_elem(content, r);
+		for (; r < partsz_u; r++) iv_elem(cont, r) = 0;
+	}
 
 	/* Check for empty result. */
 	if (maxcols >= 0 && clen > 0 && iv_elem(cont, 0) > maxcols) return lrit; /* empty result. */
 	if (maxcols >= 0 && out0 > maxcols) return lrit;                         /* empty result. */
 
 	/* Initialize box structure. */
-	s = 0;
-	out1 = 0;
-	inn0 = (len == 0) ? out0 : (len <= ilen ? iv_elem(inner, len - 1) : 0);
-	for (r = len - 1; r >= 0; r--)
 	{
-		out2 = out1;
-		inn1 = inn0;
-		out1 = iv_elem(outer, r);
-		inn0 = (r == 0) ? out0 : (r <= ilen ? iv_elem(inner, r - 1) : 0);
-		if (inn1 < out1) maxdepth--;
-		for (c = inn1; c < out1; c++)
+		int s = 0;
+		int out1 = 0;
+		int inn0 = (len == 0) ? out0 : (len <= ilen ? iv_elem(inner, len - 1) : 0);
+		for (auto r = int(len - 1); r >= 0; r--)
 		{
-			lrit_box* box = lrit->array + s;
-			int max;
-			box->right = (c + 1 < out1) ? (s + 1) : (array_len - 1);
-			box->above = (c >= inn0) ? (s + out1 - inn0) : size;
-			max = (c < out2) ? (lrit->array[s - out2 + inn1].max - 1) : (maxrows - 1);
-			box->max = (max < maxdepth) ? max : maxdepth;
-			s++;
+			int out2 = out1;
+			int inn1 = inn0;
+			out1 = iv_elem(outer, r);
+			inn0 = (r == 0) ? out0 : (r <= int(ilen) ? iv_elem(inner, r - 1) : 0);
+			if (inn1 < out1) maxdepth--;
+			for (int c = inn1; c < out1; c++)
+			{
+				lrit_box* box = lrit->array + s;
+				int max;
+				box->right = (c + 1 < out1) ? (s + 1) : (array_len - 1);
+				box->above = (c >= inn0) ? (s + out1 - inn0) : size;
+				max = (c < out2) ? (lrit->array[s - out2 + inn1].max - 1) : (maxrows - 1);
+				box->max = (max < maxdepth) ? max : maxdepth;
+				s++;
+			}
 		}
 	}
 	claim(maxdepth == clen);
@@ -131,7 +132,7 @@ lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxro
 		int c1 = 0;
 		int s = array_len - 2;
 		int i = out0;
-		for (r = clen - 1; r >= 0; r--)
+		for (auto r = int(clen - 1); r >= 0; r--)
 		{
 			int c0 = iv_elem(content, r);
 			if (c1 < c0 && c1 < maxcols && c0 > clim)
@@ -145,7 +146,7 @@ lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxro
 	}
 
 	/* Minimal LR tableau. */
-	for (s = size - 1; s >= 0; s--)
+	for (int s = size - 1; s >= 0; s--)
 	{
 		lrit_box* box = lrit->array + s;
 		int x = lrit->array[box->above].value + 1;
@@ -162,16 +163,15 @@ void lrit_print_skewtab(lrtab_iter* lrit, ivector* outer, ivector* inner)
 {
 	lrit_box* array = lrit->array;
 	int size = lrit->size;
-	int ilen, len, col_first, r;
 
-	ilen = (inner == NULL) ? 0 : iv_length(inner);
-	len = part_length(outer);
+	uint32_t ilen = (inner == nullptr) ? 0 : iv_length(inner);
+	uint32_t len = part_length(outer);
 	if (len <= ilen)
 		while (len > 0 && iv_elem(inner, len - 1) == iv_elem(outer, len - 1)) len--;
 	if (len == 0) return;
 
-	col_first = (ilen < len) ? 0 : iv_elem(inner, len - 1);
-	r = 0;
+	int col_first = (ilen < len) ? 0 : iv_elem(inner, len - 1);
+	uint32_t r = 0;
 	while (r < ilen && iv_elem(inner, r) == iv_elem(outer, r)) r++;
 	for (; r < len; r++)
 	{
@@ -188,11 +188,10 @@ void lrit_print_skewtab(lrtab_iter* lrit, ivector* outer, ivector* inner)
 
 void lrit_dump(lrtab_iter* lrit)
 {
-	int r;
 	printf("cont = ");
 	iv_printnl(lrit->cont);
 	printf("size = %d\n", lrit->size);
-	for (r = 0; r < lrit->array_len; r++)
+	for (int r = 0; r < lrit->array_len; r++)
 	{
 		lrit_box* box = lrit->array + r;
 		printf("%d: value=%d, max=%d, above=%d (%d), right=%d (%d)\n", r, box->value, box->max, box->above,
@@ -203,23 +202,22 @@ void lrit_dump(lrtab_iter* lrit)
 void lrit_dump_skew(lrtab_iter* lrit, ivector* outer, ivector* inner)
 {
 	lrit_box* array = lrit->array;
-	int size, ilen, len, col_first, r, s, array_len;
 
 	printf("cont = ");
 	iv_printnl(lrit->cont);
 	printf("size = %d\n", lrit->size);
 
-	ilen = (inner == NULL) ? 0 : iv_length(inner);
-	len = part_length(outer);
+	uint32_t ilen = (inner == nullptr) ? 0 : iv_length(inner);
+	uint32_t len = part_length(outer);
 	if (len <= ilen)
 		while (len > 0 && iv_elem(inner, len - 1) == iv_elem(outer, len - 1)) len--;
 
-	col_first = (len == 0 || ilen < len) ? 0 : iv_elem(inner, len - 1);
-	r = 0;
+	int col_first = (len == 0 || ilen < len) ? 0 : iv_elem(inner, len - 1);
+	uint32_t r = 0;
 	while (r < ilen && iv_elem(inner, r) == iv_elem(outer, r)) r++;
-	size = iv_sum(outer) - iv_sum(inner);
-	array_len = lrit->array_len;
-	for (s = size; s < array_len; s++) printf("  %02d:[%02d]", s, array[s].value);
+	int size = iv_sum(outer) - iv_sum(inner);
+	int array_len = lrit->array_len;
+	for (int s = size; s < array_len; s++) printf("  %02d:[%02d]", s, array[s].value);
 	putchar('\n');
 	for (; r < len; r++)
 	{
@@ -241,11 +239,9 @@ void lrit_dump_skew(lrtab_iter* lrit, ivector* outer, ivector* inner)
 
 ivlincomb* lrit_expand(ivector* outer, ivector* inner, ivector* content, int maxrows, int maxcols, int partsz)
 {
-	lrtab_iter* lrit;
-	ivlincomb* lc;
-	lrit = lrit_new(outer, inner, content, maxrows, maxcols, partsz);
-	if (lrit == NULL) return NULL;
-	lc = lrit_count(lrit);
+	lrtab_iter* lrit = lrit_new(outer, inner, content, maxrows, maxcols, partsz);
+	if (lrit == nullptr) return nullptr;
+	ivlincomb* lc = lrit_count(lrit);
 	lrit_free(lrit);
 	return lc;
 }

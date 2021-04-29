@@ -13,13 +13,13 @@ extern char* optarg;
 
 #define PROGNAME "allparts"
 
-void print_usage()
+[[noreturn]] static void print_usage()
 {
 	fprintf(stderr, "usage: " PROGNAME " rows cols\n");
 	exit(1);
 }
 
-void out_of_memory()
+[[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
 	alloc_report();
@@ -28,21 +28,18 @@ void out_of_memory()
 
 int main(int ac, char** av)
 {
-	part_iter itr;
-	ivector* p;
-	int rows, cols;
-
 	alloc_getenv();
 
 	if (ac != 3) print_usage();
-	rows = atoi(av[1]);
-	cols = atoi(av[2]);
+	int rows = atoi(av[1]);
+	int cols = atoi(av[2]);
 	if (rows <= 0 || cols <= 0) print_usage();
 
-	p = iv_new(rows);
-	if (p == NULL) out_of_memory();
+	ivector* p = iv_new(uint32_t(rows));
+	if (p == nullptr) out_of_memory();
 
-	pitr_first(&itr, p, rows, cols, NULL, NULL, 0, 0);
+	part_iter itr;
+	pitr_first(&itr, p, rows, cols, nullptr, nullptr, 0, 0);
 	for (; pitr_good(&itr); pitr_next(&itr)) iv_printnl(p);
 
 	iv_free(p);

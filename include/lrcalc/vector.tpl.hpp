@@ -20,16 +20,16 @@ INLINE VALUE_T* PREFIX(pelem)(VECTOR* v, SIZE_T i)
 
 INLINE VECTOR* PREFIX(new)(SIZE_T length)
 {
-	VECTOR* v = (VECTOR*)ml_malloc(sizeof(VECTOR) + length * sizeof(VALUE_T));
-	if (v == NULL) return NULL;
+	auto v = static_cast<VECTOR*>(ml_malloc(sizeof(VECTOR) + length * sizeof(VALUE_T)));
+	if (v == nullptr) return nullptr;
 	v->length = length;
 	return v;
 }
 
 INLINE VECTOR* PREFIX(new_zero)(SIZE_T length)
 {
-	VECTOR* v = (VECTOR*)ml_calloc(1, sizeof(VECTOR) + length * sizeof(VALUE_T));
-	if (v == NULL) return NULL;
+	auto v = static_cast<VECTOR*>(ml_calloc(1, sizeof(VECTOR) + length * sizeof(VALUE_T)));
+	if (v == nullptr) return nullptr;
 	v->length = length;
 	return v;
 }
@@ -41,7 +41,7 @@ INLINE void PREFIX(free)(VECTOR* v) { ml_free(v); }
 INLINE VECTOR* PREFIX(new_copy)(VECTOR* v)
 {
 	VECTOR* vc = PREFIX(new)(v->length);
-	if (vc == NULL) return NULL;
+	if (vc == nullptr) return nullptr;
 	memcpy(vc->array, v->array, v->length * sizeof(VALUE_T));
 	return vc;
 }
@@ -56,20 +56,17 @@ INLINE void PREFIX(copy)(VECTOR* d, VECTOR* s)
 
 INLINE int PREFIX(cmp)(VECTOR* v1, VECTOR* v2)
 {
-	SIZE_T i;
-	if (v1->length != v2->length) return v1->length - v2->length;
-	for (i = 0; i < v1->length; i++)
+	if (v1->length != v2->length) return int(v1->length) - int(v2->length);
+	for (SIZE_T i = 0; i < v1->length; i++)
 		if (v1->array[i] != v2->array[i]) return v1->array[i] - v2->array[i];
 	return 0;
 }
 
 #ifdef INTEGER_VALUE
-INLINE int32_t PREFIX(hash)(VECTOR* v)
+INLINE uint32_t PREFIX(hash)(VECTOR* v)
 {
-	SIZE_T i;
-	uint32_t h;
-	h = v->length;
-	for (i = 0; i < v->length; i++) h = ((h << 5) ^ (h >> 27)) + v->array[i];
+	uint32_t h = v->length;
+	for (SIZE_T i = 0; i < v->length; i++) h = ((h << 5) ^ (h >> 27)) + uint32_t(v->array[i]);
 	return h;
 }
 #endif

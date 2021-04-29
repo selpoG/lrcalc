@@ -5,7 +5,7 @@
 
 #include "lrcalc/alloc.hpp"
 
-#define _ILIST_C
+#define LRCALC_ILIST_C
 #include "lrcalc/ilist.hpp"
 
 #include "list.tpl.cpp"
