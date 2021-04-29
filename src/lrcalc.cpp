@@ -52,7 +52,7 @@ static usage_t mult_usage = {.name = "mult",
                                  "[-m] [-r rows] [-c cols] [-q rows,cols] [-f rows,level] "
                                  "part1 - part2"};
 
-static void mult_main(int ac, char** av)
+static void mult_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(&mult_usage);
 
@@ -120,7 +120,7 @@ static usage_t skew_usage = {
     .args = "[-m] [-r rows] outer / inner",
 };
 
-static void skew_main(int ac, char** av)
+static void skew_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(&skew_usage);
 
@@ -158,7 +158,7 @@ static void skew_main(int ac, char** av)
 
 static usage_t coprod_usage = {.name = "coprod", .args = "[-a] part"};
 
-static void coprod_main(int ac, char** av)
+static void coprod_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(&mult_usage);
 
@@ -210,7 +210,7 @@ static void coprod_main(int ac, char** av)
 
 static usage_t coef_usage = {.name = "coef", .args = "outer - inner1 - inner2"};
 
-static void coef_main(int ac, char** av)
+static void coef_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(&coef_usage);
 
@@ -245,7 +245,7 @@ static void coef_main(int ac, char** av)
 
 static usage_t tab_usage = {.name = "tab", .args = "[-r rows] outer / inner"};
 
-static void tab_main(int ac, char** av)
+static void tab_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(&tab_usage);
 
@@ -284,12 +284,12 @@ static void tab_main(int ac, char** av)
 
 /***************  MAIN FUNCTION  ***************/
 
-static usage_t* lrcalc_commands[] = {&mult_usage, &skew_usage, &coprod_usage, &coef_usage, &tab_usage, nullptr};
+static const usage_t* lrcalc_commands[] = {&mult_usage, &skew_usage, &coprod_usage, &coef_usage, &tab_usage, nullptr};
 
 [[noreturn]] static void main_usage()
 {
 	fprintf(stderr, "Usage:\n");
-	for (usage_t** cmd = lrcalc_commands; *cmd != nullptr; cmd++)
+	for (const usage_t* const* cmd = lrcalc_commands; *cmd != nullptr; cmd++)
 		fprintf(stderr, PROGNAME " %s %s\n", (*cmd)->name, (*cmd)->args);
 	exit(1);
 }
@@ -300,7 +300,7 @@ int main(int ac, char** av)
 
 	if (ac < 2) main_usage();
 
-	char* cmd = av[1];
+	const char* cmd = av[1];
 	if (cmd[0] == 'l' && cmd[1] == 'r') cmd += 2;
 
 	if (strcmp(cmd, "mult") == 0)

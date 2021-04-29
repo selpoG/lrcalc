@@ -39,7 +39,7 @@ typedef struct
 #define INIT_ELT_SIZE 100
 #endif
 
-INLINE SIZE_T PREFIX(card)(HASHTAB* ht) { return ht->card; }
+INLINE SIZE_T PREFIX(card)(const HASHTAB* ht) { return ht->card; }
 
 /* Initialize hash table structure. */
 INLINE int PREFIX(init)(HASHTAB* ht, SIZE_T tabsz, SIZE_T eltsz)
@@ -111,7 +111,7 @@ INLINE int PREFIX(makeroom)(HASHTAB* ht, SIZE_T sz)
 }
 
 /* Return pointer to keyval_t, nullptr if key not in table. */
-INLINE PREFIX(keyval_t) * PREFIX(lookup)(HASHTAB* ht, KEY_T key, HASH_T hash)
+INLINE PREFIX(keyval_t) * PREFIX(lookup)(const HASHTAB* ht, const KEY_T key, HASH_T hash)
 {
 	PREFIX(keyval_t)* elts = ht->elts;
 	SIZE_T index = hash % ht->table_sz;
@@ -149,7 +149,7 @@ INLINE PREFIX(keyval_t) * PREFIX(insert)(HASHTAB* ht, KEY_T key, HASH_T hash, VA
 }
 
 /* Remove key from hashtable; return pointer to removed keyval_t, or nullptr. */
-INLINE PREFIX(keyval_t) * PREFIX(remove)(HASHTAB* ht, KEY_T key, HASH_T hash)
+INLINE PREFIX(keyval_t) * PREFIX(remove)(HASHTAB* ht, const KEY_T key, HASH_T hash)
 {
 	PREFIX(keyval_t)* elts = ht->elts;
 	SIZE_T* pi = ht->table + (hash % ht->table_sz);
@@ -168,20 +168,20 @@ INLINE PREFIX(keyval_t) * PREFIX(remove)(HASHTAB* ht, KEY_T key, HASH_T hash)
 }
 
 /* Return 1 if equal; ignore zero values unless opt_zero != 0. */
-int PREFIX(equals)(HASHTAB* ht1, HASHTAB* ht2, int opt_zero);
+int PREFIX(equals)(const HASHTAB* ht1, const HASHTAB* ht2, int opt_zero);
 
-void PREFIX(print_stat)(HASHTAB* ht);
+void PREFIX(print_stat)(const HASHTAB* ht);
 
 typedef struct
 {
-	HASHTAB* ht;
+	const HASHTAB* ht;
 	size_t index;
 	size_t i;
 } PREFIX(iter);
 
-INLINE int PREFIX(good)(PREFIX(iter) * itr) { return (itr->i != 0); }
+INLINE int PREFIX(good)(const PREFIX(iter) * itr) { return (itr->i != 0); }
 
-INLINE void PREFIX(first)(HASHTAB* ht, PREFIX(iter) * itr)
+INLINE void PREFIX(first)(const HASHTAB* ht, PREFIX(iter) * itr)
 {
 	itr->ht = ht;
 	SIZE_T index = 0;
@@ -197,8 +197,8 @@ INLINE void PREFIX(first)(HASHTAB* ht, PREFIX(iter) * itr)
 
 INLINE void PREFIX(next)(PREFIX(iter) * itr)
 {
-	HASHTAB* ht = itr->ht;
-	PREFIX(keyval_t)* elts = ht->elts;
+	const HASHTAB* ht = itr->ht;
+	const PREFIX(keyval_t)* elts = ht->elts;
 	if (elts[itr->i].next != 0)
 	{
 		itr->i = elts[itr->i].next;
@@ -215,11 +215,11 @@ INLINE void PREFIX(next)(PREFIX(iter) * itr)
 	itr->i = ht->table[index];
 }
 
-INLINE KEY_T PREFIX(key)(PREFIX(iter) * itr) { return itr->ht->elts[itr->i].key; }
+INLINE KEY_T PREFIX(key)(const PREFIX(iter) * itr) { return itr->ht->elts[itr->i].key; }
 
-INLINE VALUE_T PREFIX(value)(PREFIX(iter) * itr) { return itr->ht->elts[itr->i].value; }
+INLINE VALUE_T PREFIX(value)(const PREFIX(iter) * itr) { return itr->ht->elts[itr->i].value; }
 
-INLINE PREFIX(keyval_t) * PREFIX(keyval)(PREFIX(iter) * itr) { return itr->ht->elts + itr->i; }
+INLINE PREFIX(keyval_t) * PREFIX(keyval)(const PREFIX(iter) * itr) { return itr->ht->elts + itr->i; }
 
 INLINE void PREFIX(dealloc_refs)(HASHTAB* ht)
 {
@@ -285,7 +285,7 @@ INLINE int PREFIX(add_element)(HASHTAB* ht, VALUE_T c, KEY_T key, HASH_T hash, i
 	return 0;
 }
 
-INLINE int PREFIX(add_multiple)(HASHTAB* dst, VALUE_T c, HASHTAB* src, int opt)
+INLINE int PREFIX(add_multiple)(HASHTAB* dst, VALUE_T c, const HASHTAB* src, int opt)
 {
 	PREFIX(iter) itr;
 	for (PREFIX(first)(src, &itr); PREFIX(good)(&itr); PREFIX(next)(&itr))
@@ -296,6 +296,6 @@ INLINE int PREFIX(add_multiple)(HASHTAB* dst, VALUE_T c, HASHTAB* src, int opt)
 	return 0;
 }
 
-void PREFIX(print)(HASHTAB* ht, int opt_zero);
+void PREFIX(print)(const HASHTAB* ht, int opt_zero);
 
 #endif

@@ -9,7 +9,7 @@
 #define LRCALC_PERM_C
 #include "lrcalc/perm.hpp"
 
-ivlist* all_strings(ivector* dimvec)
+ivlist* all_strings(const ivector* dimvec)
 {
 	claim(dimvec_valid(dimvec));
 
@@ -106,7 +106,7 @@ ivlist* all_perms(int n)
 	return res;
 }
 
-ivector* string2perm(ivector* str)
+ivector* string2perm(const ivector* str)
 {
 	uint32_t n = iv_length(str);
 
@@ -138,7 +138,7 @@ ivector* string2perm(ivector* str)
 	return perm;
 }
 
-ivector* str2dimvec(ivector* str)
+ivector* str2dimvec(const ivector* str)
 {
 	uint32_t n = 0;
 	for (uint32_t i = 0; i < iv_length(str); i++)
@@ -153,7 +153,7 @@ ivector* str2dimvec(ivector* str)
 	return res;
 }
 
-int str_iscompat(ivector* str1, ivector* str2)
+int str_iscompat(const ivector* str1, const ivector* str2)
 {
 	if (iv_length(str1) != iv_length(str2)) return 0;
 	ivector* dv1 = str2dimvec(str1);

@@ -10,7 +10,7 @@
 #define INLINE CINLINE
 #endif
 
-INLINE int part_valid(ivector* p)
+INLINE int part_valid(const ivector* p)
 {
 	int x = 0;
 	for (auto i = int(iv_length(p) - 1); i >= 0; i--)
@@ -22,21 +22,21 @@ INLINE int part_valid(ivector* p)
 	return 1;
 }
 
-INLINE int part_decr(ivector* p)
+INLINE int part_decr(const ivector* p)
 {
 	for (uint32_t i = 1; i < iv_length(p); i++)
 		if (iv_elem(p, i - 1) < iv_elem(p, i)) return 0;
 	return 1;
 }
 
-INLINE uint32_t part_length(ivector* p)
+INLINE uint32_t part_length(const ivector* p)
 {
 	uint32_t len = iv_length(p);
 	while (len > 0 && iv_elem(p, len - 1) == 0) len--;
 	return len;
 }
 
-INLINE int part_entry(ivector* p, int i) { return (uint32_t(i) < iv_length(p)) ? iv_elem(p, i) : 0; }
+INLINE int part_entry(const ivector* p, int i) { return (uint32_t(i) < iv_length(p)) ? iv_elem(p, i) : 0; }
 
 INLINE void part_chop(ivector* p) { iv_length(p) = part_length(p); }
 
@@ -50,7 +50,7 @@ INLINE void part_unchop(ivector* p, int len_)
 	memset(p->array + len0, 0, (len - len0) * sizeof(p->array[0]));
 }
 
-INLINE int part_leq(ivector* p1, ivector* p2)
+INLINE int part_leq(const ivector* p1, const ivector* p2)
 {
 	uint32_t len = part_length(p1);
 	if (len > part_length(p2)) return 0;
@@ -59,16 +59,16 @@ INLINE int part_leq(ivector* p1, ivector* p2)
 	return 1;
 }
 
-ivector* part_conj(ivector* p);
+ivector* part_conj(const ivector* p);
 
-void part_print(ivector* p);
-void part_printnl(ivector* p);
+void part_print(const ivector* p);
+void part_printnl(const ivector* p);
 
-void part_print_lincomb(ivlincomb* lc);
+void part_print_lincomb(const ivlincomb* lc);
 
 /* Translate fusion algebra partitions to quantum cohomology notation. */
 
-INLINE int part_qdegree(ivector* p, int level)
+INLINE int part_qdegree(const ivector* p, int level)
 {
 	int n = int(iv_length(p)) + level;
 	int d = 0;
@@ -81,17 +81,17 @@ INLINE int part_qdegree(ivector* p, int level)
 	return d;
 }
 
-INLINE int part_qentry(ivector* p, int i, int d, int level)
+INLINE int part_qentry(const ivector* p, int i, int d, int level)
 {
 	int rows = int(iv_length(p));
 	int k = (i + d) % rows;
 	return iv_elem(p, k) - ((i + d) / rows) * level - d;
 }
 
-void part_qprint(ivector* p, int level);
-void part_qprintnl(ivector* p, int level);
+void part_qprint(const ivector* p, int level);
+void part_qprintnl(const ivector* p, int level);
 
-void part_qprint_lincomb(ivlincomb* lc, int level);
+void part_qprint_lincomb(const ivlincomb* lc, int level);
 
 /* General partition iterator that the compiler will optimize when opt
  * is known at compile time.
@@ -100,8 +100,8 @@ void part_qprint_lincomb(ivlincomb* lc, int level);
 typedef struct
 {
 	ivector* part;
-	ivector* outer;
-	ivector* inner;
+	const ivector* outer;
+	const ivector* inner;
 	int length;
 	int rows;
 	int opt;
@@ -111,9 +111,9 @@ typedef struct
 #define PITR_USE_INNER 2
 #define PITR_USE_SIZE 4
 
-INLINE int pitr_good(part_iter* itr) { return itr->rows >= 0; }
+INLINE int pitr_good(const part_iter* itr) { return itr->rows >= 0; }
 
-INLINE int pitr_first(part_iter* itr, ivector* p, int rows, int cols, ivector* outer, ivector* inner, int size, int opt)
+INLINE int pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* outer, const ivector* inner, int size, int opt)
 {
 	int use_outer = opt & PITR_USE_OUTER;
 	int use_inner = opt & PITR_USE_INNER;
@@ -192,7 +192,7 @@ empty_result:
 }
 
 /* INLINE int pitr_first(part_iter *itr, ivector *p, int rows, int cols,
- *                         ivector *outer, ivector *inner, int size, int opt)
+ *                         const ivector *outer, const ivector *inner, int size, int opt)
  */
 
 INLINE void pitr_box_first(part_iter* itr, ivector* p, int rows, int cols)
@@ -205,28 +205,28 @@ INLINE void pitr_box_sz_first(part_iter* itr, ivector* p, int rows, int cols, in
 	pitr_first(itr, p, rows, cols, nullptr, nullptr, size, PITR_USE_SIZE);
 }
 
-INLINE void pitr_sub_first(part_iter* itr, ivector* p, ivector* outer)
+INLINE void pitr_sub_first(part_iter* itr, ivector* p, const ivector* outer)
 {
 	int rows = int(iv_length(outer));
 	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
 	pitr_first(itr, p, rows, cols, outer, nullptr, 0, PITR_USE_OUTER);
 }
 
-INLINE void pitr_sub_sz_first(part_iter* itr, ivector* p, ivector* outer, int size)
+INLINE void pitr_sub_sz_first(part_iter* itr, ivector* p, const ivector* outer, int size)
 {
 	int rows = int(iv_length(outer));
 	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
 	pitr_first(itr, p, rows, cols, outer, nullptr, size, PITR_USE_OUTER | PITR_USE_SIZE);
 }
 
-INLINE void pitr_between_first(part_iter* itr, ivector* p, ivector* outer, ivector* inner)
+INLINE void pitr_between_first(part_iter* itr, ivector* p, const ivector* outer, const ivector* inner)
 {
 	int rows = int(iv_length(outer));
 	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
 	pitr_first(itr, p, rows, cols, outer, inner, 0, PITR_USE_OUTER | PITR_USE_INNER);
 }
 
-INLINE void pitr_between_sz_first(part_iter* itr, ivector* p, ivector* outer, ivector* inner, int size)
+INLINE void pitr_between_sz_first(part_iter* itr, ivector* p, const ivector* outer, const ivector* inner, int size)
 {
 	int rows = int(iv_length(outer));
 	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
@@ -236,8 +236,8 @@ INLINE void pitr_between_sz_first(part_iter* itr, ivector* p, ivector* outer, iv
 INLINE void pitr_next(part_iter* itr)
 {
 	ivector* p = itr->part;
-	ivector* outer = itr->outer;
-	ivector* inner = itr->inner;
+	const ivector* outer = itr->outer;
+	const ivector* inner = itr->inner;
 	int rows = itr->rows;
 	int opt = itr->opt;
 

@@ -40,7 +40,7 @@ int PREFIX(_grow_elts)(HASHTAB* ht, SIZE_T sz)
 	return 0;
 }
 
-int PREFIX(equals)(HASHTAB* ht1, HASHTAB* ht2, int opt_zero)
+int PREFIX(equals)(const HASHTAB* ht1, const HASHTAB* ht2, int opt_zero)
 {
 	PREFIX(iter) itr;
 	PREFIX(keyval_t) * kv1, *kv2;
@@ -62,7 +62,7 @@ int PREFIX(equals)(HASHTAB* ht1, HASHTAB* ht2, int opt_zero)
 }
 
 #ifdef HASHTAB_LINCOMB
-void PREFIX(print)(HASHTAB* ht, int opt_zero)
+void PREFIX(print)(const HASHTAB* ht, int opt_zero)
 {
 	PREFIX(iter) itr;
 	for (PREFIX(first)(ht, &itr); PREFIX(good)(&itr); PREFIX(next)(&itr))
@@ -75,7 +75,7 @@ void PREFIX(print)(HASHTAB* ht, int opt_zero)
 }
 #endif
 
-void PREFIX(print_stat)(HASHTAB* ht)
+void PREFIX(print_stat)(const HASHTAB* ht)
 {
 	constexpr SIZE_T range = 20;
 	SIZE_T stat[range];

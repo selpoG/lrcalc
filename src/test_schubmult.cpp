@@ -47,7 +47,7 @@ using safe_ivlc_slice = std::unique_ptr<ivlincomb, ivlc_slice_deleter>;
 	exit(1);
 }
 
-static ivlincomb* get_rank(ivlincomb* lc, int rank)
+static ivlincomb* get_rank(const ivlincomb* lc, int rank)
 {
 	safe_ivlc_slice res{ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)};
 	if (!res) return nullptr;

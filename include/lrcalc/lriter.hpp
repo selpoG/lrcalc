@@ -25,7 +25,8 @@ typedef struct
 	lrit_box array[];
 } lrtab_iter;
 
-lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxrows, int maxcols, int partsz);
+lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
+                     int partsz);
 
 INLINE void lrit_free(lrtab_iter* lrit)
 {
@@ -33,11 +34,11 @@ INLINE void lrit_free(lrtab_iter* lrit)
 	ml_free(lrit);
 }
 
-void lrit_print_skewtab(lrtab_iter* lrit, ivector* outer, ivector* inner);
-void lrit_dump(lrtab_iter* lrit);
-void lrit_dump_skew(lrtab_iter* lrit, ivector* outer, ivector* inner);
+void lrit_print_skewtab(const lrtab_iter* lrit, const ivector* outer, const ivector* inner);
+void lrit_dump(const lrtab_iter* lrit);
+void lrit_dump_skew(const lrtab_iter* lrit, const ivector* outer, const ivector* inner);
 
-INLINE int lrit_good(lrtab_iter* lrit) { return lrit->size >= 0; }
+INLINE int lrit_good(const lrtab_iter* lrit) { return lrit->size >= 0; }
 
 INLINE void lrit_next(lrtab_iter* lrit)
 {
@@ -85,6 +86,7 @@ INLINE ivlincomb* lrit_count(lrtab_iter* lrit)
 	return lc;
 }
 
-ivlincomb* lrit_expand(ivector* outer, ivector* inner, ivector* content, int maxrows, int maxcols, int partsz);
+ivlincomb* lrit_expand(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
+                       int partsz);
 
 #endif

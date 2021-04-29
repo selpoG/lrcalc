@@ -117,7 +117,7 @@ INLINE VALUE_T PREFIX(fastdelete)(LIST* lst, SIZE_T i)
 	return x;
 }
 
-INLINE int PREFIX(extend)(LIST* dst, LIST* src)
+INLINE int PREFIX(extend)(LIST* dst, const LIST* src)
 {
 	SIZE_T dlen = dst->length;
 	SIZE_T slen = src->length;
@@ -126,7 +126,7 @@ INLINE int PREFIX(extend)(LIST* dst, LIST* src)
 	return 0;
 }
 
-INLINE int PREFIX(copy)(LIST* dst, LIST* src)
+INLINE int PREFIX(copy)(LIST* dst, const LIST* src)
 {
 	if (PREFIX(makeroom)(dst, src->length) != 0) return -1;
 	dst->length = src->length;
@@ -134,7 +134,7 @@ INLINE int PREFIX(copy)(LIST* dst, LIST* src)
 	return 0;
 }
 
-INLINE LIST* PREFIX(new_copy)(LIST* lst)
+INLINE LIST* PREFIX(new_copy)(const LIST* lst)
 {
 	LIST* res = PREFIX(new)(lst->length);
 	if (res == nullptr) return nullptr;
@@ -143,6 +143,6 @@ INLINE LIST* PREFIX(new_copy)(LIST* lst)
 	return res;
 }
 
-int PREFIX(reverse)(LIST* dst, LIST* src);
+int PREFIX(reverse)(LIST* dst, const LIST* src);
 
 /* eof */

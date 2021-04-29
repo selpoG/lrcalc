@@ -60,7 +60,7 @@ static bool test_part_iter_box(int rows, int cols)
 	return false;
 }
 
-static bool test_part_iter_sub(int rows, int cols, ivector* outer)
+static bool test_part_iter_sub(int rows, int cols, const ivector* outer)
 {
 	int size_bound = iv_sum(outer) + 2;
 	safe_iv_ptr count{iv_new_zero(uint32_t(size_bound))};
@@ -105,7 +105,7 @@ static bool test_part_iter_sub(int rows, int cols, ivector* outer)
 	return false;
 }
 
-static bool test_part_iter_super(int rows, int cols, ivector* inner)
+static bool test_part_iter_super(int rows, int cols, const ivector* inner)
 {
 	int size_bound = rows * cols + 2;
 	safe_iv_ptr count{iv_new_zero(uint32_t(size_bound))};
@@ -150,7 +150,7 @@ static bool test_part_iter_super(int rows, int cols, ivector* inner)
 	return false;
 }
 
-static bool test_part_iter_between(int rows, int cols, ivector* outer, ivector* inner)
+static bool test_part_iter_between(int rows, int cols, const ivector* outer, const ivector* inner)
 {
 	int size_bound = iv_sum(outer) + 2;
 	safe_iv_ptr count{iv_new_zero(uint32_t(size_bound))};

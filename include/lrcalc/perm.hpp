@@ -22,7 +22,7 @@ INLINE int perm_valid(ivector* w)
 	return 1;
 }
 
-INLINE int perm_length(ivector* w)
+INLINE int perm_length(const ivector* w)
 {
 	uint32_t n = iv_length(w);
 	int res = 0;
@@ -32,14 +32,14 @@ INLINE int perm_length(ivector* w)
 	return res;
 }
 
-INLINE int perm_group(ivector* w)
+INLINE int perm_group(const ivector* w)
 {
 	int i = int(iv_length(w));
 	while (i > 0 && iv_elem(w, i - 1) == i) i--;
 	return i;
 }
 
-INLINE int dimvec_valid(ivector* dv)
+INLINE int dimvec_valid(const ivector* dv)
 {
 	uint32_t ld = iv_length(dv);
 	if (ld == 0) return 0;
@@ -50,7 +50,7 @@ INLINE int dimvec_valid(ivector* dv)
 }
 
 /* Return 1 if w1 <= w2. */
-INLINE int bruhat_leq(ivector* w1, ivector* w2)
+INLINE int bruhat_leq(const ivector* w1, const ivector* w2)
 {
 	int n = perm_group(w1);
 	if (n > perm_group(w2)) return 0;
@@ -69,14 +69,14 @@ INLINE int bruhat_leq(ivector* w1, ivector* w2)
 }
 
 /* Return 1 if S_w1 * S_w2 = 0 in H^*(Fl(rank)). */
-INLINE int bruhat_zero(ivector* w1, ivector* w2, int rank)
+INLINE int bruhat_zero(const ivector* w1, const ivector* w2, int rank)
 {
 	int n1 = perm_group(w1);
 	int n2 = perm_group(w2);
 	if (n1 > rank || n2 > rank) return 1;
 	if (n1 > n2)
 	{
-		ivector* tmp = w1;
+		const ivector* tmp = w1;
 		w1 = w2;
 		w2 = tmp;
 		n1 = n2;
@@ -96,13 +96,13 @@ INLINE int bruhat_zero(ivector* w1, ivector* w2, int rank)
 	return 0;
 }
 
-int str_iscompat(ivector* str1, ivector* str2);
+int str_iscompat(const ivector* str1, const ivector* str2);
 
-ivlist* all_strings(ivector* dimvec);
+ivlist* all_strings(const ivector* dimvec);
 ivlist* all_perms(int n);
 
-ivector* string2perm(ivector* str);
-ivector* str2dimvec(ivector* str);
+ivector* string2perm(const ivector* str);
+ivector* str2dimvec(const ivector* str);
 ivector* perm2string(const ivector* perm, const ivector* dimvec);
 
 #endif

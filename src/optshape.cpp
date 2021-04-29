@@ -19,7 +19,7 @@ struct iv_deleter
 using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
 static safe_iv_ptr iv_create(uint32_t N) { return safe_iv_ptr{iv_new(N)}; }
 
-void sksh_print(ivector* outer, ivector* inner, ivector* cont)
+void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
 {
 	uint32_t len = part_length(outer);
 	uint32_t ilen = (inner == nullptr) ? 0 : iv_length(inner);
@@ -66,7 +66,7 @@ void sksh_print(ivector* outer, ivector* inner, ivector* cont)
  *    columns.
  */
 
-int optim_mult(skew_shape* ss, ivector* sh1, ivector* sh2, int maxrows, int maxcols)
+int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols)
 {
 	/* DEBUG: Check valid input. */
 	claim(part_valid(sh1));
@@ -136,7 +136,7 @@ int optim_mult(skew_shape* ss, ivector* sh1, ivector* sh2, int maxrows, int maxc
 
 /* Find optimal shape for fusion product. */
 
-int optim_fusion(skew_shape* ss, ivector* sh1, ivector* sh2, int rows, int level)
+int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int rows, int level)
 {
 	/* DEBUG: Check valid input. */
 	claim(part_valid(sh1));
@@ -207,8 +207,8 @@ typedef struct
 	int col;
 } partial_shape;
 
-static void _add_comp(partial_shape* ps, ivector* out0, ivector* inn0, int c0, int r0t, int r0b, int c1, int r1t,
-                      int r1b)
+static void _add_comp(partial_shape* ps, const ivector* out0, const ivector* inn0, int c0, int r0t, int r0b, int c1,
+                      int r1t, int r1b)
 {
 	int x = ps->top + ps->rows + r1t - r1b;
 	if (x > ps->bot) x = ps->bot;
@@ -250,7 +250,7 @@ static void _add_comp(partial_shape* ps, ivector* out0, ivector* inn0, int c0, i
  *    plus all columns of height maxrows.
  */
 
-int optim_skew(skew_shape* ss, ivector* outer, ivector* inner, ivector* content, int maxrows)
+int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const ivector* content, int maxrows)
 {
 	/* Handle case in other function. */
 	if (inner == nullptr) return optim_mult(ss, outer, content, maxrows, -1);
@@ -439,7 +439,7 @@ int optim_skew(skew_shape* ss, ivector* outer, ivector* inner, ivector* content,
 	return 0;
 }
 
-int optim_coef(skew_shape* ss, ivector* out, ivector* sh1, ivector* sh2)
+int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ivector* sh2)
 {
 	// int N, Nla, Nmu, sum, r, s, N0, nu0, la0, mu0, nur, lar, mur;
 	// int lar1, mur1, nur1, c, ca, Inu, Ila, Imu;

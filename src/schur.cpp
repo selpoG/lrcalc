@@ -33,7 +33,7 @@ using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
 using safe_il_ptr = std::unique_ptr<ilist, il_deleter>;
 using safe_ivl_ptr = std::unique_ptr<ivlist, ivl_deleter>;
 
-ivlincomb* schur_mult(ivector* sh1, ivector* sh2, int rows, int cols, int partsz)
+ivlincomb* schur_mult(const ivector* sh1, const ivector* sh2, int rows, int cols, int partsz)
 {
 	skew_shape ss;
 	if (optim_mult(&ss, sh1, sh2, rows, cols) != 0) return nullptr;
@@ -111,7 +111,7 @@ bool fusion_reduce_lc(ivlincomb* lc, int level)
 	safe_iv_ptr tmp;
 	if (ivl_length(parts) > 0)
 	{
-		ivector* sh = ivl_elem(parts, 0);
+		const ivector* sh = ivl_elem(parts, 0);
 		tmp.reset(iv_new(iv_length(sh)));
 		if (!tmp) return true;
 	}
@@ -187,7 +187,7 @@ ivlincomb* schur_mult_fusion(ivector* sh1, ivector* sh2, int rows, int level)
 	return lc;
 }
 
-ivlincomb* schur_skew(ivector* outer, ivector* inner, int rows, int partsz)
+ivlincomb* schur_skew(const ivector* outer, const ivector* inner, int rows, int partsz)
 {
 	skew_shape ss;
 	if (optim_skew(&ss, outer, inner, nullptr, rows) != 0) return nullptr;
@@ -200,7 +200,7 @@ ivlincomb* schur_skew(ivector* outer, ivector* inner, int rows, int partsz)
 	return lc;
 }
 
-static inline int _schur_coprod_isredundant(ivector* cont, int rows, int cols)
+static inline int _schur_coprod_isredundant(const ivector* cont, int rows, int cols)
 {
 	int sz1 = -rows * cols;
 	for (int i = 0; i < rows; i++) sz1 += iv_elem(cont, i);
@@ -232,7 +232,7 @@ static inline ivlincomb* _schur_coprod_count(lrtab_iter* lrit, int rows, int col
 	return lc;
 }
 
-static ivlincomb* _schur_coprod_expand(ivector* outer, ivector* content, int rows, int cols, int partsz)
+static ivlincomb* _schur_coprod_expand(const ivector* outer, const ivector* content, int rows, int cols, int partsz)
 {
 	lrtab_iter* lrit = lrit_new(outer, nullptr, content, -1, -1, partsz);
 	if (lrit == nullptr) return nullptr;
@@ -241,7 +241,7 @@ static ivlincomb* _schur_coprod_expand(ivector* outer, ivector* content, int row
 	return lc;
 }
 
-ivlincomb* schur_coprod(ivector* sh, int rows, int cols, int partsz, int all)
+ivlincomb* schur_coprod(const ivector* sh, int rows, int cols, int partsz, int all)
 {
 	safe_iv_ptr box{iv_new(uint32_t(rows))};
 	if (!box) return nullptr;
@@ -257,7 +257,7 @@ ivlincomb* schur_coprod(ivector* sh, int rows, int cols, int partsz, int all)
 	return lc;
 }
 
-long long schur_lrcoef(ivector* outer, ivector* inner1, ivector* inner2)
+long long schur_lrcoef(const ivector* outer, const ivector* inner1, const ivector* inner2)
 {
 	skew_shape ss;
 	if (optim_coef(&ss, outer, inner1, inner2) != 0) return -1;

@@ -48,7 +48,7 @@ using safe_ivlc_slice = std::unique_ptr<ivlincomb, ivlc_slice_deleter>;
 	exit(1);
 }
 
-static ivlincomb* get_strip(ivlincomb* lc, int rows)
+static ivlincomb* get_strip(const ivlincomb* lc, int rows)
 {
 	safe_ivlc_ptr res{ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)};
 	if (!res) return nullptr;
@@ -62,7 +62,7 @@ static ivlincomb* get_strip(ivlincomb* lc, int rows)
 	return res.release();
 }
 
-static bool test_schur_lrskew(ivector* out, ivector* inn, int rows, int cols)
+static bool test_schur_lrskew(const ivector* out, const ivector* inn, int rows, int cols)
 {
 	safe_iv_ptr sh{iv_new(uint32_t(rows))};
 	if (!sh) return true;
@@ -76,7 +76,7 @@ static bool test_schur_lrskew(ivector* out, ivector* inn, int rows, int cols)
 	{
 		long long coef = schur_lrcoef(out, inn, sh.get());
 		if (coef < 0) return true;
-		ivlc_keyval_t* kv = ivlc_lookup(lc.get(), sh.get(), iv_hash(sh.get()));
+		const ivlc_keyval_t* kv = ivlc_lookup(lc.get(), sh.get(), iv_hash(sh.get()));
 		assert(coef == (kv ? kv->value : 0));
 	}
 

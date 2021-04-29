@@ -38,7 +38,7 @@ VECTOR* PREFIX(new_init)(SIZE_T length, ...);
 
 INLINE void PREFIX(free)(VECTOR* v) { ml_free(v); }
 
-INLINE VECTOR* PREFIX(new_copy)(VECTOR* v)
+INLINE VECTOR* PREFIX(new_copy)(const VECTOR* v)
 {
 	VECTOR* vc = PREFIX(new)(v->length);
 	if (vc == nullptr) return nullptr;
@@ -48,13 +48,13 @@ INLINE VECTOR* PREFIX(new_copy)(VECTOR* v)
 
 INLINE void PREFIX(set_zero)(VECTOR* v) { memset(v->array, 0, v->length * sizeof(VALUE_T)); }
 
-INLINE void PREFIX(copy)(VECTOR* d, VECTOR* s)
+INLINE void PREFIX(copy)(VECTOR* d, const VECTOR* s)
 {
 	claim(d->length == s->length);
 	memcpy(d->array, s->array, d->length * sizeof(VALUE_T));
 }
 
-INLINE int PREFIX(cmp)(VECTOR* v1, VECTOR* v2)
+INLINE int PREFIX(cmp)(const VECTOR* v1, const VECTOR* v2)
 {
 	if (v1->length != v2->length) return int(v1->length) - int(v2->length);
 	for (SIZE_T i = 0; i < v1->length; i++)
@@ -63,7 +63,7 @@ INLINE int PREFIX(cmp)(VECTOR* v1, VECTOR* v2)
 }
 
 #ifdef INTEGER_VALUE
-INLINE uint32_t PREFIX(hash)(VECTOR* v)
+INLINE uint32_t PREFIX(hash)(const VECTOR* v)
 {
 	uint32_t h = v->length;
 	for (SIZE_T i = 0; i < v->length; i++) h = ((h << 5) ^ (h >> 27)) + uint32_t(v->array[i]);
@@ -71,17 +71,17 @@ INLINE uint32_t PREFIX(hash)(VECTOR* v)
 }
 #endif
 
-VALUE_T PREFIX(sum)(VECTOR* v);
-int PREFIX(lesseq)(VECTOR* v1, VECTOR* v2);
-void PREFIX(mult)(VECTOR* dst, VALUE_T c, VECTOR* src);
-void PREFIX(div)(VECTOR* dst, VECTOR* src, VALUE_T c);
-VALUE_T PREFIX(max)(VECTOR* v);
-VALUE_T PREFIX(min)(VECTOR* v);
-void PREFIX(reverse)(VECTOR* dst, VECTOR* src);
+VALUE_T PREFIX(sum)(const VECTOR* v);
+int PREFIX(lesseq)(const VECTOR* v1, const VECTOR* v2);
+void PREFIX(mult)(VECTOR* dst, VALUE_T c, const VECTOR* src);
+void PREFIX(div)(VECTOR* dst, const VECTOR* src, VALUE_T c);
+VALUE_T PREFIX(max)(const VECTOR* v);
+VALUE_T PREFIX(min)(const VECTOR* v);
+void PREFIX(reverse)(VECTOR* dst, const VECTOR* src);
 
 #ifdef INTEGER_VALUE
-VALUE_T PREFIX(gcd)(VECTOR* v);
+VALUE_T PREFIX(gcd)(const VECTOR* v);
 #endif
 
-void PREFIX(print)(VECTOR* v);
-void PREFIX(printnl)(VECTOR* v);
+void PREFIX(print)(const VECTOR* v);
+void PREFIX(printnl)(const VECTOR* v);

@@ -9,7 +9,7 @@
 #define LRCALC_PART_C
 #include "lrcalc/part.hpp"
 
-ivector* part_conj(ivector* p)
+ivector* part_conj(const ivector* p)
 {
 	claim(part_valid(p));
 	uint32_t np = part_length(p);
@@ -25,7 +25,7 @@ ivector* part_conj(ivector* p)
 	return conj;
 }
 
-CINLINE void part_print(ivector* p)
+CINLINE void part_print(const ivector* p)
 {
 	putchar('(');
 	for (uint32_t i = 0; i < iv_length(p) && iv_elem(p, i) != 0; i++)
@@ -36,13 +36,13 @@ CINLINE void part_print(ivector* p)
 	putchar(')');
 }
 
-void part_printnl(ivector* p)
+void part_printnl(const ivector* p)
 {
 	part_print(p);
 	putchar('\n');
 }
 
-void part_print_lincomb(ivlincomb* lc)
+void part_print_lincomb(const ivlincomb* lc)
 {
 	ivlc_iter itr;
 	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
@@ -53,7 +53,7 @@ void part_print_lincomb(ivlincomb* lc)
 	}
 }
 
-CINLINE void part_qprint(ivector* p, int level)
+CINLINE void part_qprint(const ivector* p, int level)
 {
 	int d = part_qdegree(p, level);
 	putchar('(');
@@ -67,13 +67,13 @@ CINLINE void part_qprint(ivector* p, int level)
 	putchar(')');
 }
 
-void part_qprintnl(ivector* p, int level)
+void part_qprintnl(const ivector* p, int level)
 {
 	part_qprint(p, level);
 	putchar('\n');
 }
 
-void part_qprint_lincomb(ivlincomb* lc, int level)
+void part_qprint_lincomb(const ivlincomb* lc, int level)
 {
 	ivlc_iter itr;
 	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))

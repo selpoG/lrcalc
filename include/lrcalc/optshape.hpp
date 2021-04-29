@@ -13,7 +13,7 @@
 #define DEBUG_OPTSHAPE
 #endif
 
-void sksh_print(ivector* outer, ivector* inner, ivector* cont);
+void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont);
 
 typedef struct
 {
@@ -23,13 +23,13 @@ typedef struct
 	int sign;
 } skew_shape;
 
-int optim_mult(skew_shape* ss, ivector* sh1, ivector* sh2, int maxrows, int maxcols);
+int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols);
 
-int optim_fusion(skew_shape* ss, ivector* sh1, ivector* sh2, int maxrows, int maxcols);
+int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols);
 
-int optim_skew(skew_shape* ss, ivector* outer, ivector* inner, ivector* content, int maxrows);
+int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const ivector* content, int maxrows);
 
-int optim_coef(skew_shape* ss, ivector* out, ivector* sh1, ivector* sh2);
+int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ivector* sh2);
 
 INLINE void sksh_dealloc(skew_shape* ss)
 {

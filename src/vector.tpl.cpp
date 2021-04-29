@@ -20,14 +20,14 @@ VECTOR* PREFIX(new_init)(SIZE_T length, ...)
 	return v;
 }
 
-VALUE_T PREFIX(sum)(VECTOR* v)
+VALUE_T PREFIX(sum)(const VECTOR* v)
 {
 	VALUE_T res = 0;
 	for (SIZE_T i = 0; i < v->length; i++) res += v->array[i];
 	return res;
 }
 
-int PREFIX(lesseq)(VECTOR* v1, VECTOR* v2)
+int PREFIX(lesseq)(const VECTOR* v1, const VECTOR* v2)
 {
 	SIZE_T i = 0;
 	claim(v1->length == v2->length);
@@ -35,19 +35,19 @@ int PREFIX(lesseq)(VECTOR* v1, VECTOR* v2)
 	return (i == v1->length);
 }
 
-void PREFIX(mult)(VECTOR* dst, VALUE_T c, VECTOR* src)
+void PREFIX(mult)(VECTOR* dst, VALUE_T c, const VECTOR* src)
 {
 	claim(dst->length == src->length);
 	for (SIZE_T i = 0; i < dst->length; i++) dst->array[i] = c * src->array[i];
 }
 
-void PREFIX(div)(VECTOR* dst, VECTOR* src, VALUE_T c)
+void PREFIX(div)(VECTOR* dst, const VECTOR* src, VALUE_T c)
 {
 	claim(dst->length == src->length);
 	for (SIZE_T i = 0; i < dst->length; i++) dst->array[i] = src->array[i] / c;
 }
 
-VALUE_T PREFIX(max)(VECTOR* v)
+VALUE_T PREFIX(max)(const VECTOR* v)
 {
 	SIZE_T n = v->length;
 	if (n == 0) return MINVALUE;
@@ -57,7 +57,7 @@ VALUE_T PREFIX(max)(VECTOR* v)
 	return m;
 }
 
-VALUE_T PREFIX(min)(VECTOR* v)
+VALUE_T PREFIX(min)(const VECTOR* v)
 {
 	SIZE_T n = v->length;
 	if (n == 0) return MAXVALUE;
@@ -67,7 +67,7 @@ VALUE_T PREFIX(min)(VECTOR* v)
 	return m;
 }
 
-void PREFIX(reverse)(VECTOR* dst, VECTOR* src)
+void PREFIX(reverse)(VECTOR* dst, const VECTOR* src)
 {
 	claim(dst->length == src->length);
 	SIZE_T n = dst->length;
@@ -82,7 +82,7 @@ void PREFIX(reverse)(VECTOR* dst, VECTOR* src)
 }
 
 #ifdef INTEGER_VALUE
-VALUE_T PREFIX(gcd)(VECTOR* v)
+VALUE_T PREFIX(gcd)(const VECTOR* v)
 {
 	VALUE_T x = 0;
 	for (SIZE_T i = 0; i < v->length; i++)
@@ -100,7 +100,7 @@ VALUE_T PREFIX(gcd)(VECTOR* v)
 }
 #endif
 
-CINLINE void PREFIX(print)(VECTOR* v)
+CINLINE void PREFIX(print)(const VECTOR* v)
 {
 	putchar('(');
 	for (SIZE_T i = 0; i < v->length; i++)
@@ -111,7 +111,7 @@ CINLINE void PREFIX(print)(VECTOR* v)
 	putchar(')');
 }
 
-void PREFIX(printnl)(VECTOR* v)
+void PREFIX(printnl)(const VECTOR* v)
 {
 	PREFIX(print)(v);
 	putchar('\n');

@@ -48,7 +48,7 @@ using safe_ivlc_slice = std::unique_ptr<ivlincomb, ivlc_slice_deleter>;
 	exit(1);
 }
 
-static ivector* part2string(ivector* p, int rows, int cols)
+static ivector* part2string(const ivector* p, int rows, int cols)
 {
 	safe_iv_ptr s{iv_new(uint32_t(rows + cols))};
 	if (!s) return nullptr;
@@ -57,7 +57,7 @@ static ivector* part2string(ivector* p, int rows, int cols)
 	return s.release();
 }
 
-static ivector* string2part(ivector* s, int rows)
+static ivector* string2part(const ivector* s, int rows)
 {
 	safe_iv_ptr p{iv_new(uint32_t(rows))};
 	if (!p) return nullptr;
@@ -71,7 +71,7 @@ static ivector* string2part(ivector* s, int rows)
 	return p.release();
 }
 
-static ivlincomb* string2part_lc(ivlincomb* lc, int rows)
+static ivlincomb* string2part_lc(const ivlincomb* lc, int rows)
 {
 	ivlc_iter itr;
 	safe_ivlc_ptr res{ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)};
@@ -86,7 +86,7 @@ static ivlincomb* string2part_lc(ivlincomb* lc, int rows)
 	return res.release();
 }
 
-static ivlincomb* get_box(ivlincomb* lc, int rows, int cols)
+static ivlincomb* get_box(const ivlincomb* lc, int rows, int cols)
 {
 	safe_ivlc_ptr res{ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)};
 	if (!res) return nullptr;
@@ -102,7 +102,7 @@ static ivlincomb* get_box(ivlincomb* lc, int rows, int cols)
 	return res.release();
 }
 
-static bool test_schur_mult(ivector* p1, ivector* p2)
+static bool test_schur_mult(const ivector* p1, const ivector* p2)
 {
 	auto rows = int(part_length(p1) + part_length(p2));
 	int cols = part_entry(p1, 0) + part_entry(p2, 0);

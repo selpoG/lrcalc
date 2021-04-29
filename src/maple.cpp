@@ -10,7 +10,7 @@
 
 #include "lrcalc/maple.hpp"
 
-static void _maple_print_term(int c, ivector* v, const char* letter, int nz)
+static void _maple_print_term(int c, const ivector* v, const char* letter, int nz)
 {
 	putchar((c < 0) ? '-' : '+');
 	c = abs(c);
@@ -25,7 +25,7 @@ static void _maple_print_term(int c, ivector* v, const char* letter, int nz)
 	putchar(']');
 }
 
-void maple_print_lincomb(ivlincomb* ht, const char* letter, int nz)
+void maple_print_lincomb(const ivlincomb* ht, const char* letter, int nz)
 {
 	putchar('0');
 	ivlc_iter itr;
@@ -37,7 +37,7 @@ void maple_print_lincomb(ivlincomb* ht, const char* letter, int nz)
 	putchar('\n');
 }
 
-static void _maple_qprint_term(int c, ivector* v, int level, const char* letter)
+static void _maple_qprint_term(int c, const ivector* v, int level, const char* letter)
 {
 	putchar((c < 0) ? '-' : '+');
 	c = abs(c);
@@ -53,7 +53,7 @@ static void _maple_qprint_term(int c, ivector* v, int level, const char* letter)
 	putchar(']');
 }
 
-void maple_qprint_lincomb(ivlincomb* lc, int level, const char* letter)
+void maple_qprint_lincomb(const ivlincomb* lc, int level, const char* letter)
 {
 	ivlc_iter itr;
 	putchar('0');

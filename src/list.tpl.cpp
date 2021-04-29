@@ -27,7 +27,7 @@ int PREFIX(_realloc_array)(LIST* lst, SIZE_T sz)
 	return 0;
 }
 
-int PREFIX(reverse)(LIST* dst, LIST* src)
+int PREFIX(reverse)(LIST* dst, const LIST* src)
 {
 	SIZE_T n = src->length;
 	if (dst != src && PREFIX(makeroom)(dst, n) != 0) return -1;

@@ -121,9 +121,9 @@ static int _trans(ivector* w, int vars, ivlincomb* res)
 	return 0;
 }
 
-static int _monk_add(uint32_t i, ivlincomb* slc, int rank, ivlincomb* res);
+static int _monk_add(uint32_t i, const ivlincomb* slc, int rank, ivlincomb* res);
 
-ivlincomb* monk(uint32_t i, ivlincomb* slc, int rank)
+ivlincomb* monk(uint32_t i, const ivlincomb* slc, int rank)
 {
 	ivlincomb* res = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
 	if (res == nullptr) return nullptr;
@@ -136,12 +136,12 @@ ivlincomb* monk(uint32_t i, ivlincomb* slc, int rank)
 	return res;
 }
 
-static int _monk_add(uint32_t i, ivlincomb* slc, int rank, ivlincomb* res)
+static int _monk_add(uint32_t i, const ivlincomb* slc, int rank, ivlincomb* res)
 {
 	ivlc_iter itr;
 	for (ivlc_first(slc, &itr); ivlc_good(&itr); ivlc_next(&itr))
 	{
-		ivector* w = ivlc_key(&itr);
+		const ivector* w = ivlc_key(&itr);
 		int c = ivlc_value(&itr);
 		uint32_t n = iv_length(w);
 		int wi = (i <= n) ? iv_elem(w, i - 1) : int(i);
@@ -212,7 +212,7 @@ static int _monk_add(uint32_t i, ivlincomb* slc, int rank, ivlincomb* res)
 	return 0;
 }
 
-static int _mult_ps(void** poly, uint32_t n, uint32_t maxvar, ivector* perm, int rank, ivlincomb* res);
+static int _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlincomb* res);
 
 ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 {
@@ -260,7 +260,7 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 	return poly;
 }
 
-static int _mult_ps(void** poly, uint32_t n, uint32_t maxvar, ivector* perm, int rank, ivlincomb* res)
+static int _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlincomb* res)
 {
 	if (maxvar == 0)
 	{
@@ -339,7 +339,7 @@ free_return:
 	return lc;
 }
 
-ivlincomb* mult_schubert_str(ivector* str1, ivector* str2)
+ivlincomb* mult_schubert_str(const ivector* str1, const ivector* str2)
 {
 	claim(str_iscompat(str1, str2));
 

@@ -59,7 +59,7 @@ void alloc_set_fail(size_t N, int segfault)
 
 void alloc_set_trap_number(size_t N) { alloc_trap_number = N; }
 
-void alloc_trap(void* p)
+void alloc_trap(const void* p)
 {
 	size_t index = p - alloc_heap_base;
 	fprintf(stderr, "Alloc trap: %zu (%p)\n", index, p);
@@ -78,7 +78,7 @@ static inline int alloc_check_fail()
 	return 1;
 }
 
-static inline void alloc_print(char c, void* p, char* name)
+static inline void alloc_print(char c, const void* p, const char* name)
 {
 	size_t index = p - alloc_heap_base;
 	if (alloc_memory_print) fprintf(stderr, "#%c: %ld (%p) %s\n", c, index, p, name);
@@ -107,10 +107,10 @@ static void init_storage(void* p, size_t size)
 	for (size_t idx = size + ADD_TO_PTR; idx < size + ADD_TO_SIZE; idx++) s[idx] = 0xa5;
 }
 
-static void check_storage(void* p)
+static void check_storage(const void* p)
 {
-	size_t size = *((size_t*)p);
-	unsigned char* s = p;
+	size_t size = *((const size_t*)p);
+	const unsigned char* s = p;
 	for (size_t idx = sizeof(size_t); idx < ADD_TO_PTR; idx++)
 		if (s[idx] != 0xa5)
 		{

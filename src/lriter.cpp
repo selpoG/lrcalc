@@ -15,7 +15,8 @@
 #define LRCALC_LRITER_C
 #include "lrcalc/lriter.hpp"
 
-lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxrows, int maxcols, int partsz)
+lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
+                     int partsz)
 {
 	claim(part_valid(outer));
 	claim(inner == nullptr || part_valid(inner));
@@ -159,9 +160,9 @@ lrtab_iter* lrit_new(ivector* outer, ivector* inner, ivector* content, int maxro
 	return lrit;
 }
 
-void lrit_print_skewtab(lrtab_iter* lrit, ivector* outer, ivector* inner)
+void lrit_print_skewtab(const lrtab_iter* lrit, const ivector* outer, const ivector* inner)
 {
-	lrit_box* array = lrit->array;
+	const lrit_box* array = lrit->array;
 	int size = lrit->size;
 
 	uint32_t ilen = (inner == nullptr) ? 0 : iv_length(inner);
@@ -186,22 +187,22 @@ void lrit_print_skewtab(lrtab_iter* lrit, ivector* outer, ivector* inner)
 	}
 }
 
-void lrit_dump(lrtab_iter* lrit)
+void lrit_dump(const lrtab_iter* lrit)
 {
 	printf("cont = ");
 	iv_printnl(lrit->cont);
 	printf("size = %d\n", lrit->size);
 	for (int r = 0; r < lrit->array_len; r++)
 	{
-		lrit_box* box = lrit->array + r;
+		const lrit_box* box = lrit->array + r;
 		printf("%d: value=%d, max=%d, above=%d (%d), right=%d (%d)\n", r, box->value, box->max, box->above,
 		       lrit->array[box->above].value, box->right, lrit->array[box->right].value);
 	}
 }
 
-void lrit_dump_skew(lrtab_iter* lrit, ivector* outer, ivector* inner)
+void lrit_dump_skew(const lrtab_iter* lrit, const ivector* outer, const ivector* inner)
 {
-	lrit_box* array = lrit->array;
+	const lrit_box* array = lrit->array;
 
 	printf("cont = ");
 	iv_printnl(lrit->cont);
@@ -229,7 +230,7 @@ void lrit_dump_skew(lrtab_iter* lrit, ivector* outer, ivector* inner)
 		for (c = col_first; c < inn_r; c++) fputs("                  ", stdout);
 		for (c = 0; c < row_sz; c++)
 		{
-			lrit_box* box = array + size + c;
+			const lrit_box* box = array + size + c;
 			printf("  %02d:[%02d,%02d,%02d,%02d]", size + c, box->value, box->max, box->right, box->above);
 			if (box->right >= array_len) array_len = box->right + 1;
 		}
@@ -237,7 +238,8 @@ void lrit_dump_skew(lrtab_iter* lrit, ivector* outer, ivector* inner)
 	}
 }
 
-ivlincomb* lrit_expand(ivector* outer, ivector* inner, ivector* content, int maxrows, int maxcols, int partsz)
+ivlincomb* lrit_expand(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
+                       int partsz)
 {
 	lrtab_iter* lrit = lrit_new(outer, inner, content, maxrows, maxcols, partsz);
 	if (lrit == nullptr) return nullptr;

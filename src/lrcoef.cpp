@@ -20,7 +20,7 @@ typedef struct
 	int supply; /* total supply of given integer */
 } lrcoef_content;
 
-static lrcoef_content* lrcoef_new_content(ivector* mu)
+static lrcoef_content* lrcoef_new_content(const ivector* mu)
 {
 	claim(part_valid(mu));
 	claim(part_length(mu) > 0);
@@ -34,7 +34,7 @@ static lrcoef_content* lrcoef_new_content(ivector* mu)
 	return res;
 }
 
-static lrcoef_box* lrcoef_new_skewtab(ivector* nu, ivector* la, int max_value)
+static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int max_value)
 {
 	claim(part_valid(nu));
 	claim(part_valid(la));
@@ -79,7 +79,7 @@ static lrcoef_box* lrcoef_new_skewtab(ivector* nu, ivector* la, int max_value)
 }
 
 #ifdef DEBUG
-void dump_content(lrcoef_content* C, uint32_t n)
+void dump_content(const lrcoef_content* C, uint32_t n)
 {
 	printf("cont:");
 	for (uint32_t i = 0; i < n; i++) printf(" %d", C[i].cont);
@@ -88,7 +88,7 @@ void dump_content(lrcoef_content* C, uint32_t n)
 	putchar('\n');
 }
 
-void dump_skewtab(lrcoef_box* T, uint32_t n)
+void dump_skewtab(const lrcoef_box* T, uint32_t n)
 {
 	printf("id: vl mx no es sp ss ws\n");
 	for (uint32_t i = 0; i < n; i++)
@@ -101,7 +101,7 @@ void dump_skewtab(lrcoef_box* T, uint32_t n)
 #endif
 
 /* This is a low level function called from schur_lrcoef(). */
-long long lrcoef_count(ivector* outer, ivector* inner, ivector* content)
+long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector* content)
 {
 	claim(iv_sum(outer) == iv_sum(inner) + iv_sum(content));
 	claim(iv_sum(content) > 1);

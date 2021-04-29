@@ -12,7 +12,7 @@ extern int optind;
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/vectarg.hpp"
 
-ivector* get_vect_arg(int ac, char** av)
+ivector* get_vect_arg(int ac, const char* const* av)
 {
 	if (optind == ac) return nullptr;
 

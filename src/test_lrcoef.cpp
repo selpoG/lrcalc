@@ -43,7 +43,7 @@ using safe_ivlc_ptr = std::unique_ptr<ivlincomb, ivlc_deleter>;
 	exit(1);
 }
 
-static bool test_schur_lrcoef(ivector* p1, ivector* p2, int rows, int cols)
+static bool test_schur_lrcoef(const ivector* p1, const ivector* p2, int rows, int cols)
 {
 	safe_iv_ptr outer{iv_new(uint32_t(rows))};
 	if (!outer) return true;
@@ -55,10 +55,9 @@ static bool test_schur_lrcoef(ivector* p1, ivector* p2, int rows, int cols)
 	pitr_box_first(&itr, outer.get(), rows, cols);
 	for (; pitr_good(&itr); pitr_next(&itr))
 	{
-		ivlc_keyval_t* kv;
 		long long coef = schur_lrcoef(outer.get(), p1, p2);
 		if (coef < 0) return true;
-		kv = ivlc_lookup(prd.get(), outer.get(), iv_hash(outer.get()));
+		ivlc_keyval_t* kv = ivlc_lookup(prd.get(), outer.get(), iv_hash(outer.get()));
 		assert(coef == (kv ? kv->value : 0));
 	}
 
