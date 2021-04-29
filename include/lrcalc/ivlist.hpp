@@ -10,7 +10,6 @@ extern "C"
 #define LIST ivlist
 #define PREFIX(name) ivl_##name
 #define VALUE_T ivector*
-#define SIZE_T size_t
 
 #include "lrcalc/list.tpl.hpp"
 
@@ -22,13 +21,12 @@ extern "C"
 #define ivl_elem(lst, i) ((lst)->array[i])
 #endif
 
-void ivl_free_all(ivlist* lst);
+	void ivl_free_all(ivlist* lst);
 
 #ifndef LRCALC_IVLIST_C
 #undef LIST
 #undef VALUE_T
 #undef PREFIX
-#undef SIZE_T
 #endif
 
 #ifdef __cplusplus

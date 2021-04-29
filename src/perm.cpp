@@ -6,7 +6,6 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlist.hpp"
 
-#define LRCALC_PERM_C
 #include "lrcalc/perm.hpp"
 
 int perm_valid(ivector* w)

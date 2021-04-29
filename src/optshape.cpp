@@ -6,7 +6,6 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
 
-#define LRCALC_OPTSHAPE_C
 #include "lrcalc/optshape.hpp"
 
 #include <memory>

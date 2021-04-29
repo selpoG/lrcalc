@@ -45,7 +45,6 @@ add_library(${MY_TARGET} STATIC
 	src/schur.cpp
 	src/vectarg.cpp
 	include/lrcalc/alloc.hpp
-	include/lrcalc/hashtab.tpl.hpp
 	include/lrcalc/ilist.hpp
 	include/lrcalc/ivector.hpp
 	include/lrcalc/ivlincomb.hpp
@@ -60,7 +59,6 @@ add_library(${MY_TARGET} STATIC
 	include/lrcalc/schublib.hpp
 	include/lrcalc/schur.hpp
 	include/lrcalc/vectarg.hpp
-	include/lrcalc/vector.tpl.hpp
 )
 
 if(NOT MSVC)

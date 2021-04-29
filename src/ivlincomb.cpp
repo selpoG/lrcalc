@@ -6,7 +6,341 @@
 #include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
-#define LRCALC_IVLINCOMB_C
 #include "lrcalc/ivlincomb.hpp"
 
-#include "hashtab.tpl.cpp"
+uint32_t ivlc_card(const ivlincomb* ht) { return ht->card; }
+
+/* Initialize hash table structure. */
+int ivlc_init(ivlincomb* ht, uint32_t tabsz, uint32_t eltsz)
+{
+	ht->card = 0;
+	ht->free_elts = 0;
+	ht->elts_len = 1;
+	ht->table_sz = tabsz;
+	ht->table = static_cast<uint32_t*>(ml_calloc(tabsz, sizeof(uint32_t)));
+	if (ht->table == nullptr) return -1;
+	ht->elts_sz = eltsz;
+	ht->elts = static_cast<ivlc_keyval_t*>(ml_malloc(eltsz * sizeof(ivlc_keyval_t)));
+	if (ht->elts == nullptr)
+	{
+		ml_free(ht->table);
+		return -1;
+	}
+	return 0;
+}
+
+ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz)
+{
+	auto ht = static_cast<ivlincomb*>(ml_malloc(sizeof(ivlincomb)));
+	if (ht == nullptr) return nullptr;
+	if (ivlc_init(ht, tabsz, eltsz) != 0)
+	{
+		ml_free(ht);
+		return nullptr;
+	}
+	return ht;
+}
+
+void ivlc_dealloc(ivlincomb* ht)
+{
+	ml_free(ht->table);
+	ml_free(ht->elts);
+}
+
+void ivlc_free(ivlincomb* ht)
+{
+	ml_free(ht->table);
+	ml_free(ht->elts);
+	ml_free(ht);
+}
+
+void ivlc_reset(ivlincomb* ht)
+{
+	memset(ht->table, 0, ht->table_sz * sizeof(uint32_t));
+	ht->card = 0;
+	ht->free_elts = 0;
+	ht->elts_len = 1;
+}
+
+int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
+{
+	uint32_t newsz = 2 * USE_FACTOR * sz + 1;
+	if (newsz % 3 == 0) newsz += 2;
+	if (newsz % 5 == 0) newsz += 6;
+	if (newsz % 7 == 0) newsz += 30;
+	auto newtab = static_cast<uint32_t*>(ml_calloc(newsz, sizeof(uint32_t)));
+	if (newtab == nullptr) return -1;
+
+	uint32_t* oldtab = ht->table;
+	ivlc_keyval_t* elts = ht->elts;
+	uint32_t next;
+	for (uint32_t index = 0; index < ht->table_sz; index++)
+		for (uint32_t i = oldtab[index]; i != 0; i = next)
+		{
+			uint32_t newidx = elts[i].hash % newsz;
+			next = elts[i].next;
+			elts[i].next = newtab[newidx];
+			newtab[newidx] = i;
+		}
+
+	ht->table_sz = newsz;
+	ht->table = newtab;
+	ml_free(oldtab);
+	return 0;
+}
+
+int ivlc__grow_elts(ivlincomb* ht, uint32_t sz)
+{
+	uint32_t newsz = 2 * sz;
+	auto elts = static_cast<ivlc_keyval_t*>(ml_realloc(ht->elts, newsz * sizeof(ivlc_keyval_t)));
+	if (elts == nullptr) return -1;
+	ht->elts_sz = newsz;
+	ht->elts = elts;
+	return 0;
+}
+
+int ivlc_makeroom(ivlincomb* ht, uint32_t sz)
+{
+	if (USE_FACTOR * sz > ht->table_sz)
+	{
+		if (ivlc__grow_table(ht, sz) != 0) return -1;
+	}
+	/* First entry of ht->elts not used. */
+	if (sz + 1 > ht->elts_sz)
+	{
+		if (ivlc__grow_elts(ht, sz + 1) != 0) return -1;
+	}
+	return 0;
+}
+
+/* Return pointer to keyval_t, nullptr if key not in table. */
+ivlc_keyval_t* ivlc_lookup(const ivlincomb* ht, const ivector* key, uint32_t hash)
+{
+	ivlc_keyval_t* elts = ht->elts;
+	uint32_t index = hash % ht->table_sz;
+	uint32_t i = ht->table[index];
+	while (i != 0 && iv_cmp(key, elts[i].key) != 0) i = ht->elts[i].next;
+	return (i == 0) ? nullptr : elts + i;
+}
+
+/* Call only if key is not in table.  Insert key into table and return
+   a pointer to new value variable, nullptr if memory allocation
+   error. */
+ivlc_keyval_t* ivlc_insert(ivlincomb* ht, ivector* key, uint32_t hash, int32_t value)
+{
+	if (ivlc_makeroom(ht, ht->card + 1) != 0) return nullptr;
+	ht->card++;
+	ivlc_keyval_t* elts = ht->elts;
+	uint32_t i;
+	if (ht->free_elts != 0)
+	{
+		i = ht->free_elts;
+		ht->free_elts = elts[i].next;
+	}
+	else
+	{
+		i = ht->elts_len++;
+	}
+	ivlc_keyval_t* kvs = elts + i;
+	kvs->key = key;
+	kvs->hash = hash;
+	kvs->value = value;
+	uint32_t index = hash % ht->table_sz;
+	kvs->next = ht->table[index];
+	ht->table[index] = i;
+	return kvs;
+}
+
+/* Remove key from hashtable; return pointer to removed keyval_t, or nullptr. */
+ivlc_keyval_t* ivlc_remove(ivlincomb* ht, const ivector* key, uint32_t hash)
+{
+	ivlc_keyval_t* elts = ht->elts;
+	uint32_t* pi = ht->table + (hash % ht->table_sz);
+	uint32_t i = *pi;
+	while (i != 0 && iv_cmp(key, elts[i].key) != 0)
+	{
+		pi = &elts[i].next;
+		i = *pi;
+	}
+	if (i == 0) return nullptr;
+	ht->card--;
+	*pi = elts[i].next;
+	elts[i].next = ht->free_elts;
+	ht->free_elts = i;
+	return elts + i;
+}
+
+int ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2, int opt_zero)
+{
+	ivlc_iter itr;
+	ivlc_keyval_t *kv1, *kv2;
+	for (ivlc_first(ht1, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	{
+		kv1 = ivlc_keyval(&itr);
+		if (kv1->value == 0 && opt_zero == 0) continue;
+		kv2 = ivlc_lookup(ht2, kv1->key, kv1->hash);
+		if (kv2 == nullptr || kv1->value != kv2->value) return 0;
+	}
+	for (ivlc_first(ht2, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	{
+		kv2 = ivlc_keyval(&itr);
+		if (kv2->value == 0 && opt_zero == 0) continue;
+		kv1 = ivlc_lookup(ht1, kv2->key, kv2->hash);
+		if (kv1 == nullptr || kv1->value != kv2->value) return 0;
+	}
+	return 1;
+}
+
+int ivlc_good(const ivlc_iter* itr) { return (itr->i != 0); }
+
+void ivlc_first(const ivlincomb* ht, ivlc_iter* itr)
+{
+	itr->ht = ht;
+	uint32_t index = 0;
+	while (index < ht->table_sz && ht->table[index] == 0) index++;
+	if (index == ht->table_sz)
+	{
+		itr->i = 0;
+		return;
+	}
+	itr->index = index;
+	itr->i = ht->table[index];
+}
+
+void ivlc_next(ivlc_iter* itr)
+{
+	const ivlincomb* ht = itr->ht;
+	const ivlc_keyval_t* elts = ht->elts;
+	if (elts[itr->i].next != 0)
+	{
+		itr->i = elts[itr->i].next;
+		return;
+	}
+	uint32_t index = uint32_t(itr->index + 1);
+	while (index < ht->table_sz && ht->table[index] == 0) index++;
+	if (index == ht->table_sz)
+	{
+		itr->i = 0;
+		return;
+	}
+	itr->index = index;
+	itr->i = ht->table[index];
+}
+
+ivector* ivlc_key(const ivlc_iter* itr) { return itr->ht->elts[itr->i].key; }
+
+int32_t ivlc_value(const ivlc_iter* itr) { return itr->ht->elts[itr->i].value; }
+
+ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr) { return itr->ht->elts + itr->i; }
+
+void ivlc_dealloc_refs(ivlincomb* ht)
+{
+	ivlc_iter itr;
+	for (ivlc_first(ht, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	{
+		ivlc_keyval_t* kv = ivlc_keyval(&itr);
+		iv_free(kv->key);
+	}
+}
+
+void ivlc_dealloc_all(ivlincomb* ht)
+{
+	ivlc_dealloc_refs(ht);
+	ivlc_dealloc(ht);
+}
+
+void ivlc_free_all(ivlincomb* ht)
+{
+	ivlc_dealloc_refs(ht);
+	ivlc_free(ht);
+}
+
+int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt)
+{
+	if (c == 0)
+	{
+		if (!(opt & LC_COPY_KEY)) iv_free(key);
+		return 0;
+	}
+	ivlc_keyval_t* kv = ivlc_lookup(ht, key, hash);
+	if (kv != nullptr)
+	{
+		if (!(opt & LC_COPY_KEY)) iv_free(key);
+		kv->value += c;
+		if (kv->value == 0 && (opt & LC_FREE_ZERO))
+		{
+			ivlc_remove(ht, kv->key, hash);
+			iv_free(kv->key);
+		}
+		return 0;
+	}
+	if (ivlc_makeroom(ht, ht->card + 1) != 0)
+	{
+		if (!(opt & LC_COPY_KEY)) iv_free(key);
+		return -1;
+	}
+	if (opt & LC_COPY_KEY)
+	{
+		key = iv_new_copy(key);
+		if (key == nullptr) return -1;
+	}
+	kv = ivlc_insert(ht, key, hash, c);
+	return 0;
+}
+
+int ivlc_add_multiple(ivlincomb* dst, int32_t c, const ivlincomb* src, int opt)
+{
+	ivlc_iter itr;
+	for (ivlc_first(src, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	{
+		ivlc_keyval_t* kv = ivlc_keyval(&itr);
+		if (ivlc_add_element(dst, c * kv->value, kv->key, kv->hash, opt) != 0) return -1;
+	}
+	return 0;
+}
+
+void ivlc_print(const ivlincomb* ht, int opt_zero)
+{
+	ivlc_iter itr;
+	for (ivlc_first(ht, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	{
+		if (ivlc_value(&itr) == 0 && opt_zero == 0) continue;
+		printf("%d  ", ivlc_value(&itr));
+		iv_print(ivlc_key(&itr));
+		putchar('\n');
+	}
+}
+
+void ivlc_print_stat(const ivlincomb* ht)
+{
+	constexpr uint32_t range = 20;
+	uint32_t stat[range];
+
+	memset(stat, 0, range * sizeof(uint32_t));
+
+	uint32_t cmp = 0;
+	uint32_t used = 0;
+	for (uint32_t index = 0; index < ht->table_sz; index++)
+	{
+		uint32_t i = ht->table[index];
+		if (i == 0) continue;
+		used++;
+		uint32_t count = 0;
+		while (i != 0)
+		{
+			count++;
+			i = ht->elts[i].next;
+		}
+		cmp += (count + 1) * count / 2;
+		uint32_t c = (count > range) ? range : count;
+		stat[c - 1] += count;
+	}
+
+	printf("Hash table size: %lu\n", static_cast<unsigned long>(ht->table_sz));
+	printf("Hash table used: %lu\n", static_cast<unsigned long>(used));
+	printf("Total elements: %lu\n", static_cast<unsigned long>(ht->card));
+	if (ht->card != 0) printf("Average compares: %f\n", double(cmp) / ht->card);
+	printf("Table distribution:");
+	for (uint32_t i = 0; i < range; i++) printf(" %d", stat[i]);
+	putchar('\n');
+}

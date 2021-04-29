@@ -6,7 +6,6 @@
 #include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
-#define LRCALC_PART_C
 #include "lrcalc/part.hpp"
 
 int part_valid(const ivector* p)

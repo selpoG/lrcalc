@@ -6,7 +6,7 @@
 #include <stdarg.h>
 
 #ifdef DEBUG
-VALUE_T* PREFIX(pelem)(LIST* lst, SIZE_T i)
+VALUE_T* PREFIX(pelem)(LIST* lst, size_t i)
 {
 	claim(i >= 0);
 	claim(i < lst->length);
@@ -14,7 +14,7 @@ VALUE_T* PREFIX(pelem)(LIST* lst, SIZE_T i)
 }
 #endif
 
-int PREFIX(init)(LIST* lst, SIZE_T sz)
+int PREFIX(init)(LIST* lst, size_t sz)
 {
 	lst->array = static_cast<VALUE_T*>(ml_malloc(sz * sizeof(VALUE_T)));
 	if (lst->array == nullptr) return -1;
@@ -23,7 +23,7 @@ int PREFIX(init)(LIST* lst, SIZE_T sz)
 	return 0;
 }
 
-LIST* PREFIX(new)(SIZE_T sz)
+LIST* PREFIX(new)(size_t sz)
 {
 	auto lst = static_cast<LIST*>(ml_malloc(sizeof(LIST)));
 	if (lst == nullptr) return nullptr;
@@ -35,13 +35,13 @@ LIST* PREFIX(new)(SIZE_T sz)
 	return lst;
 }
 
-LIST* PREFIX(new_init)(SIZE_T sz, SIZE_T num, ...)
+LIST* PREFIX(new_init)(size_t sz, size_t num, ...)
 {
 	va_list ap;
 
 	LIST* lst = PREFIX(new)(sz);
 	va_start(ap, num);
-	for (SIZE_T i = 0; i < num; i++) PREFIX(append)(lst, va_arg(ap, VALUE_T));
+	for (size_t i = 0; i < num; i++) PREFIX(append)(lst, va_arg(ap, VALUE_T));
 	va_end(ap);
 
 	return lst;
@@ -57,7 +57,7 @@ void PREFIX(free)(LIST* v)
 
 void PREFIX(reset)(LIST* lst) { lst->length = 0; }
 
-int PREFIX(_realloc_array)(LIST* lst, SIZE_T sz)
+int PREFIX(_realloc_array)(LIST* lst, size_t sz)
 {
 	sz *= 2;
 	auto array = static_cast<VALUE_T*>(ml_realloc(lst->array, sz * sizeof(VALUE_T)));
@@ -67,7 +67,7 @@ int PREFIX(_realloc_array)(LIST* lst, SIZE_T sz)
 	return 0;
 }
 
-int PREFIX(makeroom)(LIST* lst, SIZE_T sz)
+int PREFIX(makeroom)(LIST* lst, size_t sz)
 {
 	if (sz <= lst->allocated)
 		return 0;
@@ -88,28 +88,28 @@ VALUE_T PREFIX(poplast)(LIST* lst)
 	return lst->array[--(lst->length)];
 }
 
-int PREFIX(insert)(LIST* lst, SIZE_T i, VALUE_T x)
+int PREFIX(insert)(LIST* lst, size_t i, VALUE_T x)
 {
 	claim(0 <= i && i <= lst->length);
 	if (PREFIX(makeroom)(lst, lst->length + 1) != 0) return -1;
-	SIZE_T n = lst->length - i;
+	size_t n = lst->length - i;
 	lst->length++;
 	memmove(lst->array + i + 1, lst->array + i, n * sizeof(VALUE_T));
 	lst->array[i] = x;
 	return 0;
 }
 
-VALUE_T PREFIX(delete)(LIST* lst, SIZE_T i)
+VALUE_T PREFIX(delete)(LIST* lst, size_t i)
 {
 	claim(0 <= i && i < lst->length);
 	VALUE_T x = lst->array[i];
 	lst->length--;
-	SIZE_T n = lst->length - i;
+	size_t n = lst->length - i;
 	memmove(lst->array + i, lst->array + i + 1, n * sizeof(VALUE_T));
 	return x;
 }
 
-VALUE_T PREFIX(fastdelete)(LIST* lst, SIZE_T i)
+VALUE_T PREFIX(fastdelete)(LIST* lst, size_t i)
 {
 	claim(0 <= i && i < lst->length);
 	VALUE_T x = lst->array[i];
@@ -120,8 +120,8 @@ VALUE_T PREFIX(fastdelete)(LIST* lst, SIZE_T i)
 
 int PREFIX(extend)(LIST* dst, const LIST* src)
 {
-	SIZE_T dlen = dst->length;
-	SIZE_T slen = src->length;
+	size_t dlen = dst->length;
+	size_t slen = src->length;
 	if (PREFIX(makeroom)(dst, dst->length + src->length) != 0) return -1;
 	memmove(dst->array + dlen, src->array, slen * sizeof(VALUE_T));
 	return 0;
@@ -146,10 +146,10 @@ LIST* PREFIX(new_copy)(const LIST* lst)
 
 int PREFIX(reverse)(LIST* dst, const LIST* src)
 {
-	SIZE_T n = src->length;
+	size_t n = src->length;
 	if (dst != src && PREFIX(makeroom)(dst, n) != 0) return -1;
-	SIZE_T n2 = n / 2;
-	for (SIZE_T i = 0; i < n2; i++)
+	size_t n2 = n / 2;
+	for (size_t i = 0; i < n2; i++)
 	{
 		VALUE_T tmp = src->array[i];
 		dst->array[i] = src->array[n - 1 - i];

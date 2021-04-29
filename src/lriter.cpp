@@ -12,7 +12,6 @@
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
 
-#define LRCALC_LRITER_C
 #include "lrcalc/lriter.hpp"
 
 lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
