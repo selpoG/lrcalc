@@ -8,6 +8,7 @@
 #include <unistd.h>
 extern char* optarg;
 
+#include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/maple.hpp"
 #include "lrcalc/perm.hpp"

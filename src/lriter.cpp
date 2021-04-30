@@ -3,17 +3,17 @@
  *  See the file LICENSE for license information.
  */
 
+#include "lrcalc/lriter.hpp"
+
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
-
-#include "lrcalc/lriter.hpp"
 
 lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
                      int partsz)

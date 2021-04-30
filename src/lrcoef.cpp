@@ -1,8 +1,11 @@
 #include "lrcalc/lrcoef.hpp"
-#include "lrcalc/ivector.hpp"
-#include "lrcalc/part.hpp"
 
 #include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include "lrcalc/ivector.hpp"
+#include "lrcalc/part.hpp"
 
 struct lrcoef_box
 {

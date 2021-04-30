@@ -3,6 +3,13 @@
  *  See the file LICENSE for license information.
  */
 
+#include "lrcalc/schur.hpp"
+
+#include <assert.h>
+#include <stdint.h>
+
+#include <memory>
+
 #include "lrcalc/ilist.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
@@ -11,11 +18,6 @@
 #include "lrcalc/lriter.hpp"
 #include "lrcalc/optshape.hpp"
 #include "lrcalc/part.hpp"
-
-#include "lrcalc/schur.hpp"
-
-#include <assert.h>
-#include <memory>
 
 struct iv_deleter
 {

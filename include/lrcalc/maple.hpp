@@ -1,6 +1,8 @@
 #ifndef LRCALC_MAPLE_H
 #define LRCALC_MAPLE_H
 
+#include "lrcalc/ivlincomb.hpp"
+
 #ifdef __cplusplus
 extern "C"
 {

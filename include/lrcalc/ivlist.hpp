@@ -1,6 +1,8 @@
 #ifndef LRCALC_IVLIST_H
 #define LRCALC_IVLIST_H
 
+#include <stddef.h>
+
 #include "lrcalc/ivector.hpp"
 
 #ifdef __cplusplus

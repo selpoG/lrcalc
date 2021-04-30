@@ -3,6 +3,7 @@
  *  See the file LICENSE for license information.
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +14,6 @@ extern int optind;
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/lriter.hpp"
 #include "lrcalc/maple.hpp"
-#include "lrcalc/optshape.hpp"
 #include "lrcalc/part.hpp"
 #include "lrcalc/schur.hpp"
 #include "lrcalc/vectarg.hpp"

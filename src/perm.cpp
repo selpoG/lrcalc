@@ -3,12 +3,14 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/ivector.hpp"
-#include "lrcalc/ivlist.hpp"
-
 #include "lrcalc/perm.hpp"
 
 #include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include "lrcalc/ivector.hpp"
+#include "lrcalc/ivlist.hpp"
 
 int perm_valid(ivector* w)
 {

@@ -3,14 +3,18 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/ivector.hpp"
-#include "lrcalc/part.hpp"
-
 #include "lrcalc/optshape.hpp"
 
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
 #include <memory>
 #include <utility>
+
+#include "lrcalc/ivector.hpp"
+#include "lrcalc/part.hpp"
 
 struct iv_deleter
 {

@@ -3,13 +3,14 @@
  *  See the file LICENSE for license information.
  */
 
-#include <ctype.h>
+#include "lrcalc/vectarg.hpp"
+
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 extern int optind;
 
 #include "lrcalc/ivector.hpp"
-#include "lrcalc/vectarg.hpp"
 
 ivector* get_vect_arg(int ac, const char* const* av)
 {

@@ -3,10 +3,9 @@
  *  See the file LICENSE for license information.
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-extern char* optarg;
 
 #include "lrcalc/part.hpp"
 

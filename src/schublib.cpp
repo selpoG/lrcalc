@@ -3,15 +3,17 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/ivector.hpp"
-#include "lrcalc/ivlincomb.hpp"
-#include "lrcalc/perm.hpp"
-
 #include "lrcalc/schublib.hpp"
 
 #include <assert.h>
+#include <stdint.h>
+
 #include <memory>
 #include <utility>
+
+#include "lrcalc/ivector.hpp"
+#include "lrcalc/ivlincomb.hpp"
+#include "lrcalc/perm.hpp"
 
 struct iv_deleter
 {

@@ -3,15 +3,13 @@
  *  See the file LICENSE for license information.
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-extern char* optarg;
 
-#include "lrcalc/ivlincomb.hpp"
-#include "lrcalc/maple.hpp"
+#include "lrcalc/ivector.hpp"
+#include "lrcalc/ivlist.hpp"
 #include "lrcalc/perm.hpp"
-#include "lrcalc/schublib.hpp"
 #include "lrcalc/vectarg.hpp"
 
 #define PROGNAME "allstrings"

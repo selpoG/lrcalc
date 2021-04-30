@@ -3,12 +3,16 @@
  *  See the file LICENSE for license information.
  */
 
-#include <assert.h>
-#include <limits.h>
-#include <limits>
-#include <stdio.h>
-
 #include "lrcalc/ivector.hpp"
+
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <limits>
 
 ivector* iv_new(uint32_t length)
 {

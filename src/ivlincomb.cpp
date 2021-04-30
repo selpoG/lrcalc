@@ -3,9 +3,14 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/ivector.hpp"
-
 #include "lrcalc/ivlincomb.hpp"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "lrcalc/ivector.hpp"
 
 uint32_t ivlc_card(const ivlincomb* ht) { return ht->card; }
 

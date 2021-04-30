@@ -6,6 +6,7 @@
 #include "lrcalc/ilist.hpp"
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 

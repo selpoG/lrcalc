@@ -1,6 +1,9 @@
 #ifndef LRCALC_SCHUR_H
 #define LRCALC_SCHUR_H
 
+#include "lrcalc/ivector.hpp"
+#include "lrcalc/ivlincomb.hpp"
+
 #ifdef __cplusplus
 extern "C"
 {

@@ -1,6 +1,8 @@
 #ifndef LRCALC_SCHUBLIB_H
 #define LRCALC_SCHUBLIB_H
 
+#include <stdint.h>
+
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 

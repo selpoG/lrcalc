@@ -4,19 +4,18 @@
  */
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
+#include <memory>
+
+#include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
-#include "lrcalc/perm.hpp"
-#include "lrcalc/schublib.hpp"
 #include "lrcalc/schur.hpp"
 
 #define PROGNAME "test_lrskew"
-
-#include <memory>
 
 struct iv_deleter
 {

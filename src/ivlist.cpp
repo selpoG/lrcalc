@@ -6,6 +6,11 @@
 #include "lrcalc/ivlist.hpp"
 
 #include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "lrcalc/ivector.hpp"
 
 int ivl_init(ivlist* lst, size_t sz)
 {

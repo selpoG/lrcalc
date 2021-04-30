@@ -4,14 +4,15 @@
  */
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
+
+#include <memory>
 
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
 
 #define PROGNAME "test_partiter"
-
-#include <memory>
 
 struct iv_deleter
 {

@@ -3,12 +3,15 @@
  *  See the file LICENSE for license information.
  */
 
+#include "lrcalc/maple.hpp"
+
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
-
-#include "lrcalc/maple.hpp"
 
 static void _maple_print_term(int c, const ivector* v, const char* letter, int nz)
 {

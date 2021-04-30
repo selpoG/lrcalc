@@ -1,6 +1,8 @@
 #ifndef LRCALC_PART_H
 #define LRCALC_PART_H
 
+#include <stdint.h>
+
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 

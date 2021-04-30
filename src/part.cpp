@@ -3,11 +3,15 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/ivector.hpp"
-
 #include "lrcalc/part.hpp"
 
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "lrcalc/ivector.hpp"
+#include "lrcalc/ivlincomb.hpp"
 
 int part_valid(const ivector* p)
 {
