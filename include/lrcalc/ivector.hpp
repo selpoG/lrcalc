@@ -9,11 +9,11 @@
 extern "C"
 {
 #endif
-	typedef struct
+	struct ivector
 	{
 		uint32_t length;
 		int32_t* array;
-	} ivector;
+	};
 
 	ivector* iv_new(uint32_t length);
 

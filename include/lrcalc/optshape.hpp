@@ -9,13 +9,13 @@ extern "C"
 #endif
 	void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont);
 
-	typedef struct
+	struct skew_shape
 	{
 		ivector* outer;
 		ivector* inner;
 		ivector* cont;
 		int sign;
-	} skew_shape;
+	};
 
 	int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols);
 

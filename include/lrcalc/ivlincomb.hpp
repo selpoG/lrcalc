@@ -14,15 +14,15 @@ extern "C"
 	   Remove is less optimized.  Iterating through the table will be
 	   slow if lots of elements are first inserted and then removed.
 	*/
-	typedef struct
+	struct ivlc_keyval_t
 	{
 		ivector* key;
 		int32_t value;
 		uint32_t hash;
 		uint32_t next;
-	} ivlc_keyval_t;
+	};
 
-	typedef struct
+	struct ivlincomb
 	{
 		uint32_t* table;     /* Hash table. */
 		ivlc_keyval_t* elts; /* List of elements indexed by table. */
@@ -31,7 +31,7 @@ extern "C"
 		uint32_t elts_len;   /* Number of itmes used or on free_elts list. */
 		uint32_t elts_sz;    /* Allocated items on elts. */
 		uint32_t table_sz;   /* Allocated hash table size. */
-	} ivlincomb;
+	};
 
 	/* Minimal number of table entries for each element. */
 	constexpr uint32_t USE_FACTOR = 2;
@@ -74,12 +74,12 @@ extern "C"
 
 	void ivlc_print_stat(const ivlincomb* ht);
 
-	typedef struct
+	struct ivlc_iter
 	{
 		const ivlincomb* ht;
 		size_t index;
 		size_t i;
-	} ivlc_iter;
+	};
 
 	int ivlc_good(const ivlc_iter* itr);
 

@@ -7,12 +7,12 @@
 extern "C"
 {
 #endif
-	typedef struct
+	struct ilist
 	{
 		int* array;
 		size_t allocated;
 		size_t length;
-	} ilist;
+	};
 
 	/* Initialize list structure. */
 	int il_init(ilist* lst, size_t sz);

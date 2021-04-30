@@ -45,7 +45,7 @@ extern "C"
 	 * is known at compile time.
 	 */
 
-	typedef struct
+	struct part_iter
 	{
 		ivector* part;
 		const ivector* outer;
@@ -53,7 +53,7 @@ extern "C"
 		int length;
 		int rows;
 		int opt;
-	} part_iter;
+	};
 
 	constexpr int PITR_USE_OUTER = 1;
 	constexpr int PITR_USE_INNER = 2;

@@ -7,12 +7,12 @@
 extern "C"
 {
 #endif
-	typedef struct
+	struct ivlist
 	{
 		ivector** array;
 		size_t allocated;
 		size_t length;
-	} ivlist;
+	};
 
 	/* Initialize list structure. */
 	int ivl_init(ivlist* lst, size_t sz);
