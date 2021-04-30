@@ -47,7 +47,6 @@ add_library(${MY_TARGET} STATIC
 	include/lrcalc/ivector.hpp
 	include/lrcalc/ivlincomb.hpp
 	include/lrcalc/ivlist.hpp
-	include/lrcalc/list.tpl.hpp
 	include/lrcalc/lrcoef.hpp
 	include/lrcalc/lriter.hpp
 	include/lrcalc/maple.hpp
