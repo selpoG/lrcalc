@@ -52,25 +52,6 @@ int dimvec_valid(const ivector* dv)
 	return 1;
 }
 
-/* Return 1 if w1 <= w2. */
-int bruhat_leq(const ivector* w1, const ivector* w2)
-{
-	int n = perm_group(w1);
-	if (n > perm_group(w2)) return 0;
-	for (int q = 1; q < n; q++)
-	{
-		int r1 = 0;
-		int r2 = 0;
-		for (int p = 0; p < n - 1; p++)
-		{
-			if (iv_elem(w1, p) <= q) r1++;
-			if (iv_elem(w2, p) <= q) r2++;
-			if (r1 < r2) return 0;
-		}
-	}
-	return 1;
-}
-
 /* Return 1 if S_w1 * S_w2 = 0 in H^*(Fl(rank)). */
 int bruhat_zero(const ivector* w1, const ivector* w2, int rank)
 {

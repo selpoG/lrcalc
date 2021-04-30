@@ -15,7 +15,7 @@
 uint32_t ivlc_card(const ivlincomb* ht) { return ht->card; }
 
 /* Initialize hash table structure. */
-int ivlc_init(ivlincomb* ht, uint32_t tabsz, uint32_t eltsz)
+static int ivlc_init(ivlincomb* ht, uint32_t tabsz, uint32_t eltsz)
 {
 	ht->card = 0;
 	ht->free_elts = 0;
@@ -45,12 +45,6 @@ ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz)
 	return ht;
 }
 
-void ivlc_dealloc(ivlincomb* ht)
-{
-	free(ht->table);
-	free(ht->elts);
-}
-
 void ivlc_free(ivlincomb* ht)
 {
 	free(ht->table);
@@ -66,7 +60,7 @@ void ivlc_reset(ivlincomb* ht)
 	ht->elts_len = 1;
 }
 
-int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
+static int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
 {
 	uint32_t newsz = 2 * USE_FACTOR * sz + 1;
 	if (newsz % 3 == 0) newsz += 2;
@@ -93,7 +87,7 @@ int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
 	return 0;
 }
 
-int ivlc__grow_elts(ivlincomb* ht, uint32_t sz)
+static int ivlc__grow_elts(ivlincomb* ht, uint32_t sz)
 {
 	uint32_t newsz = 2 * sz;
 	auto elts = static_cast<ivlc_keyval_t*>(realloc(ht->elts, newsz * sizeof(ivlc_keyval_t)));
@@ -103,7 +97,7 @@ int ivlc__grow_elts(ivlincomb* ht, uint32_t sz)
 	return 0;
 }
 
-int ivlc_makeroom(ivlincomb* ht, uint32_t sz)
+static int ivlc_makeroom(ivlincomb* ht, uint32_t sz)
 {
 	if (USE_FACTOR * sz > ht->table_sz)
 	{
@@ -156,7 +150,7 @@ ivlc_keyval_t* ivlc_insert(ivlincomb* ht, ivector* key, uint32_t hash, int32_t v
 }
 
 /* Remove key from hashtable; return pointer to removed keyval_t, or nullptr. */
-ivlc_keyval_t* ivlc_remove(ivlincomb* ht, const ivector* key, uint32_t hash)
+static ivlc_keyval_t* ivlc_remove(ivlincomb* ht, const ivector* key, uint32_t hash)
 {
 	ivlc_keyval_t* elts = ht->elts;
 	uint32_t* pi = ht->table + (hash % ht->table_sz);
@@ -237,7 +231,7 @@ int32_t ivlc_value(const ivlc_iter* itr) { return itr->ht->elts[itr->i].value; }
 
 ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr) { return itr->ht->elts + itr->i; }
 
-void ivlc_dealloc_refs(ivlincomb* ht)
+static void ivlc_dealloc_refs(ivlincomb* ht)
 {
 	ivlc_iter itr;
 	for (ivlc_first(ht, &itr); ivlc_good(&itr); ivlc_next(&itr))
@@ -245,12 +239,6 @@ void ivlc_dealloc_refs(ivlincomb* ht)
 		ivlc_keyval_t* kv = ivlc_keyval(&itr);
 		iv_free(kv->key);
 	}
-}
-
-void ivlc_dealloc_all(ivlincomb* ht)
-{
-	ivlc_dealloc_refs(ht);
-	ivlc_dealloc(ht);
 }
 
 void ivlc_free_all(ivlincomb* ht)

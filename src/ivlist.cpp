@@ -12,7 +12,8 @@
 
 #include "lrcalc/ivector.hpp"
 
-int ivl_init(ivlist* lst, size_t sz)
+/* Initialize list structure. */
+static int ivl_init(ivlist* lst, size_t sz)
 {
 	lst->array = static_cast<ivector**>(malloc(sz * sizeof(ivector*)));
 	if (lst->array == nullptr) return -1;
@@ -33,17 +34,13 @@ ivlist* ivl_new(size_t sz)
 	return lst;
 }
 
-void ivl_dealloc(ivlist* v) { free(v->array); }
-
-void ivl_free(ivlist* v)
+static void ivl_free(ivlist* v)
 {
 	free(v->array);
 	free(v);
 }
 
-void ivl_reset(ivlist* lst) { lst->length = 0; }
-
-int ivl__realloc_array(ivlist* lst, size_t sz)
+static int ivl__realloc_array(ivlist* lst, size_t sz)
 {
 	sz *= 2;
 	auto array = static_cast<ivector**>(realloc(lst->array, sz * sizeof(ivector*)));
@@ -53,7 +50,7 @@ int ivl__realloc_array(ivlist* lst, size_t sz)
 	return 0;
 }
 
-int ivl_makeroom(ivlist* lst, size_t sz)
+static int ivl_makeroom(ivlist* lst, size_t sz)
 {
 	if (sz <= lst->allocated)
 		return 0;
@@ -72,77 +69,6 @@ ivector* ivl_poplast(ivlist* lst)
 {
 	assert(lst->length > 0);
 	return lst->array[--(lst->length)];
-}
-
-int ivl_insert(ivlist* lst, size_t i, ivector* x)
-{
-	assert(i <= lst->length);
-	if (ivl_makeroom(lst, lst->length + 1) != 0) return -1;
-	size_t n = lst->length - i;
-	lst->length++;
-	memmove(lst->array + i + 1, lst->array + i, n * sizeof(ivector*));
-	lst->array[i] = x;
-	return 0;
-}
-
-ivector* ivl_delete(ivlist* lst, size_t i)
-{
-	assert(i < lst->length);
-	ivector* x = lst->array[i];
-	lst->length--;
-	size_t n = lst->length - i;
-	memmove(lst->array + i, lst->array + i + 1, n * sizeof(ivector*));
-	return x;
-}
-
-ivector* ivl_fastdelete(ivlist* lst, size_t i)
-{
-	assert(i < lst->length);
-	ivector* x = lst->array[i];
-	lst->array[i] = lst->array[lst->length - 1];
-	(lst->length)--;
-	return x;
-}
-
-int ivl_extend(ivlist* dst, const ivlist* src)
-{
-	size_t dlen = dst->length;
-	size_t slen = src->length;
-	if (ivl_makeroom(dst, dst->length + src->length) != 0) return -1;
-	memmove(dst->array + dlen, src->array, slen * sizeof(ivector*));
-	return 0;
-}
-
-int ivl_copy(ivlist* dst, const ivlist* src)
-{
-	if (ivl_makeroom(dst, src->length) != 0) return -1;
-	dst->length = src->length;
-	memcpy(dst->array, src->array, dst->length * sizeof(ivector*));
-	return 0;
-}
-
-ivlist* ivl_new_copy(const ivlist* lst)
-{
-	ivlist* res = ivl_new(lst->length);
-	if (res == nullptr) return nullptr;
-	res->length = lst->length;
-	memcpy(res->array, lst->array, res->length * sizeof(ivector*));
-	return res;
-}
-
-int ivl_reverse(ivlist* dst, const ivlist* src)
-{
-	size_t n = src->length;
-	if (dst != src && ivl_makeroom(dst, n) != 0) return -1;
-	size_t n2 = n / 2;
-	for (size_t i = 0; i < n2; i++)
-	{
-		ivector* tmp = src->array[i];
-		dst->array[i] = src->array[n - 1 - i];
-		dst->array[n - 1 - i] = tmp;
-	}
-	if (n & 1) dst->array[n2] = src->array[n2];
-	return 0;
 }
 
 void ivl_free_all(ivlist* lst)

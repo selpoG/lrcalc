@@ -41,8 +41,6 @@ uint32_t part_length(const ivector* p)
 
 int part_entry(const ivector* p, int i) { return (uint32_t(i) < iv_length(p)) ? iv_elem(p, i) : 0; }
 
-void part_chop(ivector* p) { iv_length(p) = part_length(p); }
-
 /* Must have len >= iv_length(p) and p was allocated with enough space. */
 void part_unchop(ivector* p, int len_)
 {
@@ -60,22 +58,6 @@ int part_leq(const ivector* p1, const ivector* p2)
 	for (auto i = int(len - 1); i >= 0; i--)
 		if (iv_elem(p1, i) > iv_elem(p2, i)) return 0;
 	return 1;
-}
-
-ivector* part_conj(const ivector* p)
-{
-	assert(part_valid(p));
-	uint32_t np = part_length(p);
-	int nc = (np == 0) ? 0 : iv_elem(p, 0);
-	ivector* conj = iv_new(uint32_t(nc));
-	if (conj == nullptr) return nullptr;
-	uint32_t j = 0;
-	while (np > 0)
-	{
-		for (int jlim = iv_elem(p, np - 1); int(j) < jlim; j++) iv_elem(conj, j) = int(np);
-		np--;
-	}
-	return conj;
 }
 
 void part_print(const ivector* p)
@@ -246,34 +228,6 @@ void pitr_box_first(part_iter* itr, ivector* p, int rows, int cols)
 void pitr_box_sz_first(part_iter* itr, ivector* p, int rows, int cols, int size)
 {
 	pitr_first(itr, p, rows, cols, nullptr, nullptr, size, PITR_USE_SIZE);
-}
-
-void pitr_sub_first(part_iter* itr, ivector* p, const ivector* outer)
-{
-	int rows = int(iv_length(outer));
-	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
-	pitr_first(itr, p, rows, cols, outer, nullptr, 0, PITR_USE_OUTER);
-}
-
-void pitr_sub_sz_first(part_iter* itr, ivector* p, const ivector* outer, int size)
-{
-	int rows = int(iv_length(outer));
-	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
-	pitr_first(itr, p, rows, cols, outer, nullptr, size, PITR_USE_OUTER | PITR_USE_SIZE);
-}
-
-void pitr_between_first(part_iter* itr, ivector* p, const ivector* outer, const ivector* inner)
-{
-	int rows = int(iv_length(outer));
-	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
-	pitr_first(itr, p, rows, cols, outer, inner, 0, PITR_USE_OUTER | PITR_USE_INNER);
-}
-
-void pitr_between_sz_first(part_iter* itr, ivector* p, const ivector* outer, const ivector* inner, int size)
-{
-	int rows = int(iv_length(outer));
-	int cols = (rows == 0) ? 0 : iv_elem(outer, 0);
-	pitr_first(itr, p, rows, cols, outer, inner, size, PITR_USE_OUTER | PITR_USE_INNER | PITR_USE_SIZE);
 }
 
 void pitr_next(part_iter* itr)

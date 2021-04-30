@@ -13,15 +13,17 @@
 #include <string.h>
 
 #include <limits>
+#include <new>
+#include <numeric>
 
 ivector* iv_new(uint32_t length)
 {
-	auto arr = static_cast<int32_t*>(malloc(length * sizeof(int32_t)));
+	auto arr = new (std::nothrow) int32_t[length];
 	if (arr == nullptr) return nullptr;
-	auto v = static_cast<ivector*>(malloc(sizeof(ivector)));
+	auto v = new (std::nothrow) ivector;
 	if (v == nullptr)
 	{
-		free(arr);
+		delete[] arr;
 		return nullptr;
 	}
 	v->length = length;
@@ -31,12 +33,12 @@ ivector* iv_new(uint32_t length)
 
 ivector* iv_new_zero(uint32_t length)
 {
-	auto arr = static_cast<int32_t*>(calloc(length, sizeof(int32_t)));
+	auto arr = new (std::nothrow) int32_t[length]();
 	if (arr == nullptr) return nullptr;
-	auto v = static_cast<ivector*>(malloc(sizeof(ivector)));
+	auto v = new (std::nothrow) ivector;
 	if (v == nullptr)
 	{
-		free(arr);
+		delete[] arr;
 		return nullptr;
 	}
 	v->length = length;
@@ -46,8 +48,8 @@ ivector* iv_new_zero(uint32_t length)
 
 void iv_free(ivector* v)
 {
-	free(v->array);
-	free(v);
+	delete[] v->array;
+	delete v;
 }
 
 ivector* iv_new_copy(const ivector* v)
@@ -59,12 +61,6 @@ ivector* iv_new_copy(const ivector* v)
 }
 
 void iv_set_zero(ivector* v) { memset(v->array, 0, v->length * sizeof(int32_t)); }
-
-void iv_copy(ivector* d, const ivector* s)
-{
-	assert(d->length == s->length);
-	memcpy(d->array, s->array, d->length * sizeof(int32_t));
-}
 
 int iv_cmp(const ivector* v1, const ivector* v2)
 {
@@ -81,83 +77,7 @@ uint32_t iv_hash(const ivector* v)
 	return h;
 }
 
-int32_t iv_sum(const ivector* v)
-{
-	int32_t res = 0;
-	for (uint32_t i = 0; i < v->length; i++) res += v->array[i];
-	return res;
-}
-
-int iv_lesseq(const ivector* v1, const ivector* v2)
-{
-	uint32_t i = 0;
-	assert(v1->length == v2->length);
-	while (i < v1->length && v1->array[i] <= v2->array[i]) i++;
-	return (i == v1->length);
-}
-
-void iv_mult(ivector* dst, int32_t c, const ivector* src)
-{
-	assert(dst->length == src->length);
-	for (uint32_t i = 0; i < dst->length; i++) dst->array[i] = c * src->array[i];
-}
-
-void iv_div(ivector* dst, const ivector* src, int32_t c)
-{
-	assert(dst->length == src->length);
-	for (uint32_t i = 0; i < dst->length; i++) dst->array[i] = src->array[i] / c;
-}
-
-int32_t iv_max(const ivector* v)
-{
-	uint32_t n = v->length;
-	if (n == 0) return std::numeric_limits<int32_t>::min();
-	int32_t m = v->array[n - 1];
-	for (auto i = int(n - 2); i >= 0; i--)
-		if (m < v->array[i]) m = v->array[i];
-	return m;
-}
-
-int32_t iv_min(const ivector* v)
-{
-	uint32_t n = v->length;
-	if (n == 0) return std::numeric_limits<int32_t>::max();
-	int32_t m = v->array[n - 1];
-	for (auto i = int(n - 2); i >= 0; i--)
-		if (m > v->array[i]) m = v->array[i];
-	return m;
-}
-
-void iv_reverse(ivector* dst, const ivector* src)
-{
-	assert(dst->length == src->length);
-	uint32_t n = dst->length;
-	uint32_t n2 = n / 2;
-	for (uint32_t i = 0; i < n2; i++)
-	{
-		auto tmp = src->array[i];
-		dst->array[i] = src->array[n - 1 - i];
-		dst->array[n - 1 - i] = tmp;
-	}
-	if (n & 1) dst->array[n2] = src->array[n2];
-}
-
-int32_t iv_gcd(const ivector* v)
-{
-	int32_t x = 0;
-	for (uint32_t i = 0; i < v->length; i++)
-	{
-		int32_t y = x;
-		x = v->array[i];
-		while (y != 0)
-		{
-			int32_t z = x % y;
-			x = y;
-			y = z;
-		}
-	}
-	return abs(x);
-}
+int32_t iv_sum(const ivector* v) { return std::accumulate(v->array, v->array + v->length, 0); }
 
 void iv_print(const ivector* v)
 {

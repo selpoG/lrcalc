@@ -18,14 +18,10 @@ extern "C"
 
 	int part_entry(const ivector* p, int i);
 
-	void part_chop(ivector* p);
-
 	/* Must have len >= iv_length(p) and p was allocated with enough space. */
 	void part_unchop(ivector* p, int len_);
 
 	int part_leq(const ivector* p1, const ivector* p2);
-
-	ivector* part_conj(const ivector* p);
 
 	void part_print(const ivector* p);
 	void part_printnl(const ivector* p);
@@ -73,14 +69,6 @@ extern "C"
 	void pitr_box_first(part_iter* itr, ivector* p, int rows, int cols);
 
 	void pitr_box_sz_first(part_iter* itr, ivector* p, int rows, int cols, int size);
-
-	void pitr_sub_first(part_iter* itr, ivector* p, const ivector* outer);
-
-	void pitr_sub_sz_first(part_iter* itr, ivector* p, const ivector* outer, int size);
-
-	void pitr_between_first(part_iter* itr, ivector* p, const ivector* outer, const ivector* inner);
-
-	void pitr_between_sz_first(part_iter* itr, ivector* p, const ivector* outer, const ivector* inner, int size);
 
 	void pitr_next(part_iter* itr);
 #ifdef __cplusplus

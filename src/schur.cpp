@@ -48,7 +48,7 @@ ivlincomb* schur_mult(const ivector* sh1, const ivector* sh2, int rows, int cols
 	return lc;
 }
 
-int fusion_reduce(ivector* la, int level, ivector* tmp)
+static int fusion_reduce(ivector* la, int level, ivector* tmp)
 {
 	assert(iv_length(la) == iv_length(tmp));
 	int rows = int(iv_length(la));

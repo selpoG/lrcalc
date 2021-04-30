@@ -286,7 +286,7 @@ void lrit_next(lrtab_iter* lrit)
 	lrit->size = -1;
 }
 
-ivlincomb* lrit_count(lrtab_iter* lrit)
+static ivlincomb* lrit_count(lrtab_iter* lrit)
 {
 	ivector* cont = lrit->cont;
 	ivlincomb* lc = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);

@@ -124,21 +124,6 @@ static int _trans(ivector* w, int vars, ivlincomb* res)
 	return 0;
 }
 
-static int _monk_add(uint32_t i, const ivlincomb* slc, int rank, ivlincomb* res);
-
-ivlincomb* monk(uint32_t i, const ivlincomb* slc, int rank)
-{
-	ivlincomb* res = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
-	if (res == nullptr) return nullptr;
-	if (rank == 0) rank = unsigned(-1) >> 1;
-	if (_monk_add(i, slc, rank, res) != 0)
-	{
-		ivlc_free_all(res);
-		return nullptr;
-	}
-	return res;
-}
-
 static int _monk_add(uint32_t i, const ivlincomb* slc, int rank, ivlincomb* res)
 {
 	ivlc_iter itr;

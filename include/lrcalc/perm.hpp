@@ -16,9 +16,6 @@ extern "C"
 
 	int dimvec_valid(const ivector* dv);
 
-	/* Return 1 if w1 <= w2. */
-	int bruhat_leq(const ivector* w1, const ivector* w2);
-
 	/* Return 1 if S_w1 * S_w2 = 0 in H^*(Fl(rank)). */
 	int bruhat_zero(const ivector* w1, const ivector* w2, int rank);
 

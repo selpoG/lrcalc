@@ -42,21 +42,11 @@ extern "C"
 
 	uint32_t ivlc_card(const ivlincomb* ht);
 
-	/* Initialize hash table structure. */
-	int ivlc_init(ivlincomb* ht, uint32_t tabsz, uint32_t eltsz);
-
 	ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz);
-
-	void ivlc_dealloc(ivlincomb* ht);
 
 	void ivlc_free(ivlincomb* ht);
 
 	void ivlc_reset(ivlincomb* ht);
-
-	int ivlc__grow_table(ivlincomb* ht, uint32_t sz);
-	int ivlc__grow_elts(ivlincomb* ht, uint32_t sz);
-
-	int ivlc_makeroom(ivlincomb* ht, uint32_t sz);
 
 	/* Return pointer to keyval_t, nullptr if key not in table. */
 	ivlc_keyval_t* ivlc_lookup(const ivlincomb* ht, const ivector* key, uint32_t hash);
@@ -65,9 +55,6 @@ extern "C"
 	   a pointer to new value variable, nullptr if memory allocation
 	   error. */
 	ivlc_keyval_t* ivlc_insert(ivlincomb* ht, ivector* key, uint32_t hash, int32_t value);
-
-	/* Remove key from hashtable; return pointer to removed keyval_t, or nullptr. */
-	ivlc_keyval_t* ivlc_remove(ivlincomb* ht, const ivector* key, uint32_t hash);
 
 	/* Return 1 if equal; ignore zero values unless opt_zero != 0. */
 	int ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2, int opt_zero);
@@ -93,17 +80,12 @@ extern "C"
 
 	ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr);
 
-	void ivlc_dealloc_refs(ivlincomb* ht);
-
-	void ivlc_dealloc_all(ivlincomb* ht);
-
 	void ivlc_free_all(ivlincomb* ht);
 
 	constexpr int LC_COPY_KEY = 1;
 	constexpr int LC_FREE_KEY = 0;
 
 	constexpr int LC_FREE_ZERO = 2;
-	constexpr int LC_KEEP_ZERO = 0;
 
 	int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
 
