@@ -7,12 +7,13 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
+
+#include <new>
 
 static int il_init(ilist* lst, size_t sz)
 {
-	lst->array = static_cast<int*>(malloc(sz * sizeof(int)));
+	lst->array = new (std::nothrow) int[sz];
 	if (lst->array == nullptr) return -1;
 	lst->allocated = sz;
 	lst->length = 0;
@@ -21,11 +22,11 @@ static int il_init(ilist* lst, size_t sz)
 
 ilist* il_new(size_t sz)
 {
-	auto lst = static_cast<ilist*>(malloc(sizeof(ilist)));
+	auto lst = new (std::nothrow) ilist;
 	if (lst == nullptr) return nullptr;
 	if (il_init(lst, sz) != 0)
 	{
-		free(lst);
+		delete lst;
 		return nullptr;
 	}
 	return lst;
@@ -33,15 +34,17 @@ ilist* il_new(size_t sz)
 
 void il_free(ilist* v)
 {
-	free(v->array);
-	free(v);
+	delete[] v->array;
+	delete v;
 }
 
 static int il__realloc_array(ilist* lst, size_t sz)
 {
 	sz *= 2;
-	auto array = static_cast<int*>(realloc(lst->array, sz * sizeof(int)));
+	auto array = new (std::nothrow) int[sz];
 	if (array == nullptr) return -1;
+	memcpy(array, lst->array, lst->length * sizeof(int));
+	delete[] lst->array;
 	lst->array = array;
 	lst->allocated = sz;
 	return 0;
@@ -49,10 +52,8 @@ static int il__realloc_array(ilist* lst, size_t sz)
 
 static int il_makeroom(ilist* lst, size_t sz)
 {
-	if (sz <= lst->allocated)
-		return 0;
-	else
-		return il__realloc_array(lst, sz);
+	if (sz <= lst->allocated) return 0;
+	return il__realloc_array(lst, sz);
 }
 
 int il_append(ilist* lst, int x)

@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <new>
+
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
@@ -27,7 +29,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	{
 		ivector* cont = iv_new(1);
 		if (cont == nullptr) return nullptr;
-		auto lrit = static_cast<lrtab_iter*>(malloc(sizeof(lrtab_iter)));
+		auto lrit = new (std::nothrow) lrtab_iter;
 		if (lrit == nullptr)
 		{
 			iv_free(cont);
@@ -73,12 +75,12 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	}
 
 	/* Allocate array. */
-	auto arr = static_cast<lrit_box*>(malloc(uint32_t(array_len) * sizeof(lrit_box)));
+	auto arr = new (std::nothrow) lrit_box[uint32_t(array_len)];
 	if (arr == nullptr) return nullptr;
-	auto lrit = static_cast<lrtab_iter*>(malloc(sizeof(lrtab_iter)));
+	auto lrit = new (std::nothrow) lrtab_iter;
 	if (lrit == nullptr)
 	{
-		free(arr);
+		delete[] arr;
 		return nullptr;
 	}
 	lrit->array_len = array_len;
@@ -90,7 +92,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	ivector* cont = (lrit->cont = iv_new(partsz_u));
 	if (cont == nullptr)
 	{
-		free(lrit);
+		delete lrit;
 		return nullptr;
 	}
 	lrit->size = -1;
@@ -170,8 +172,8 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 void lrit_free(lrtab_iter* lrit)
 {
 	iv_free(lrit->cont);
-	free(lrit->array);
-	free(lrit);
+	delete[] lrit->array;
+	delete lrit;
 }
 
 void lrit_print_skewtab(const lrtab_iter* lrit, const ivector* outer, const ivector* inner)

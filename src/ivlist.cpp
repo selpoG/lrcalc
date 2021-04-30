@@ -10,12 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <new>
+
 #include "lrcalc/ivector.hpp"
 
 /* Initialize list structure. */
 static int ivl_init(ivlist* lst, size_t sz)
 {
-	lst->array = static_cast<ivector**>(malloc(sz * sizeof(ivector*)));
+	lst->array = new (std::nothrow) ivector*[sz];
 	if (lst->array == nullptr) return -1;
 	lst->allocated = sz;
 	lst->length = 0;
@@ -24,11 +26,11 @@ static int ivl_init(ivlist* lst, size_t sz)
 
 ivlist* ivl_new(size_t sz)
 {
-	auto lst = static_cast<ivlist*>(malloc(sizeof(ivlist)));
+	auto lst = new ivlist;
 	if (lst == nullptr) return nullptr;
 	if (ivl_init(lst, sz) != 0)
 	{
-		free(lst);
+		delete lst;
 		return nullptr;
 	}
 	return lst;
@@ -36,15 +38,17 @@ ivlist* ivl_new(size_t sz)
 
 static void ivl_free(ivlist* v)
 {
-	free(v->array);
-	free(v);
+	delete[] v->array;
+	delete v;
 }
 
 static int ivl__realloc_array(ivlist* lst, size_t sz)
 {
 	sz *= 2;
-	auto array = static_cast<ivector**>(realloc(lst->array, sz * sizeof(ivector*)));
+	auto array = new (std::nothrow) ivector*[sz];
 	if (array == nullptr) return -1;
+	memcpy(array, lst->array, lst->length * sizeof(ivector*));
+	delete[] lst->array;
 	lst->array = array;
 	lst->allocated = sz;
 	return 0;
@@ -52,10 +56,8 @@ static int ivl__realloc_array(ivlist* lst, size_t sz)
 
 static int ivl_makeroom(ivlist* lst, size_t sz)
 {
-	if (sz <= lst->allocated)
-		return 0;
-	else
-		return ivl__realloc_array(lst, sz);
+	if (sz <= lst->allocated) return 0;
+	return ivl__realloc_array(lst, sz);
 }
 
 int ivl_append(ivlist* lst, ivector* x)

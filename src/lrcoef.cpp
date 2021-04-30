@@ -2,7 +2,8 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
+
+#include <new>
 
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
@@ -21,8 +22,8 @@ struct lrcoef_box
 
 struct lrcoef_content
 {
-	int cont;   /* number of boxes containing a given integer */
-	int supply; /* total supply of given integer */
+	int cont = 0;   /* number of boxes containing a given integer */
+	int supply = 0; /* total supply of given integer */
 };
 
 static lrcoef_content* lrcoef_new_content(const ivector* mu)
@@ -31,7 +32,7 @@ static lrcoef_content* lrcoef_new_content(const ivector* mu)
 	assert(part_length(mu) > 0);
 
 	uint32_t n = part_length(mu);
-	lrcoef_content* res = static_cast<lrcoef_content*>(calloc(n + 1, sizeof(lrcoef_content)));
+	auto res = new (std::nothrow) lrcoef_content[n + 1]();
 	if (res == nullptr) return nullptr;
 	res[0].cont = iv_elem(mu, 0);
 	res[0].supply = iv_elem(mu, 0);
@@ -47,7 +48,7 @@ static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int 
 	assert(part_entry(nu, 0) > 0);
 
 	auto N = uint32_t(iv_sum(nu) - iv_sum(la));
-	lrcoef_box* array = static_cast<lrcoef_box*>(malloc((N + 2) * sizeof(lrcoef_box)));
+	auto array = new (std::nothrow) lrcoef_box[N + 2];
 	if (array == nullptr) return nullptr;
 
 	auto pos = int(N);
@@ -94,7 +95,7 @@ long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector
 	lrcoef_content* C = lrcoef_new_content(content);
 	if (C == nullptr)
 	{
-		free(T);
+		delete[] T;
 		return -1;
 	}
 
@@ -161,7 +162,7 @@ long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector
 		}
 	}
 
-	free(T);
-	free(C);
+	delete[] T;
+	delete[] C;
 	return coef;
 }

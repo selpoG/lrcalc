@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <memory>
+#include <new>
 #include <utility>
 
 #include "lrcalc/ivector.hpp"
@@ -209,7 +210,7 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 
 	if (rank == 0) rank = unsigned(-1) >> 1;
 
-	auto p = static_cast<void**>(malloc(2 * n * sizeof(void*)));
+	auto p = new (std::nothrow) void*[2 * n];
 	if (p == nullptr)
 	{
 		ivlc_free_all(poly);
@@ -237,7 +238,7 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 	perm->length = svlen;
 
 	for (i = 0; i < n; i++) iv_free(static_cast<ivector*>(p[2 * i]));
-	free(p);
+	delete[] p;
 
 	if (ok != 0)
 	{

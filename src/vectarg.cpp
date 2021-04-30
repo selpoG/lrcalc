@@ -10,6 +10,8 @@
 #include <unistd.h>
 extern int optind;
 
+#include <new>
+
 #include "lrcalc/ivector.hpp"
 
 ivector* get_vect_arg(int ac, const char* const* av)
@@ -25,7 +27,7 @@ ivector* get_vect_arg(int ac, const char* const* av)
 		if ((ch == '-' || ch == '/') && *(av[optind] + 1) == '\0') optind++;
 	}
 
-	auto tmp = static_cast<int*>(malloc(uint32_t(ac - optind) * sizeof(int)));
+	auto tmp = new (std::nothrow) int[uint32_t(ac - optind)];
 	if (tmp == nullptr) return nullptr;
 
 	uint32_t n = 0;
@@ -44,7 +46,7 @@ ivector* get_vect_arg(int ac, const char* const* av)
 	ivector* res = iv_new(n);
 	if (res == nullptr) return nullptr;
 	for (uint32_t i = 0; i < n; i++) iv_elem(res, i) = tmp[i];
-	free(tmp);
+	delete[] tmp;
 
 	return res;
 }
