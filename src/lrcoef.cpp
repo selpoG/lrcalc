@@ -80,28 +80,6 @@ static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int 
 	return array;
 }
 
-#ifdef DEBUG
-void dump_content(const lrcoef_content* C, uint32_t n)
-{
-	printf("cont:");
-	for (uint32_t i = 0; i < n; i++) printf(" %d", C[i].cont);
-	printf("  supply:");
-	for (uint32_t i = 0; i < n; i++) printf(" %d", C[i].supply);
-	putchar('\n');
-}
-
-void dump_skewtab(const lrcoef_box* T, uint32_t n)
-{
-	printf("id: vl mx no es sp ss ws\n");
-	for (uint32_t i = 0; i < n; i++)
-	{
-		lrcoef_box* b = T + i;
-		printf("%2d: %2d %2d %2d %2d %2d %2d %2d\n", i, b->value, b->max, b->north, b->east, b->se_supply, b->se_sz,
-		       b->west_sz);
-	}
-}
-#endif
-
 /* This is a low level function called from schur_lrcoef(). */
 long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector* content)
 {

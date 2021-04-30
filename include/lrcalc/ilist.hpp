@@ -13,11 +13,7 @@ extern "C"
 
 #define il_length(lst) ((lst)->length)
 
-#ifdef DEBUG
-#define il_elem(lst, i) (*il_pelem(lst, i))
-#else
 #define il_elem(lst, i) ((lst)->array[i])
-#endif
 
 #ifndef LRCALC_ILIST_C
 #undef LIST

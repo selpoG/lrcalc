@@ -15,15 +15,6 @@
 #define VA_VALUE_T int
 #define VALUE_FMT "%d"
 
-#ifdef DEBUG
-int32_t* iv_pelem(ivector* v, uint32_t i)
-{
-	assert(i >= 0);
-	assert(i < v->length);
-	return v->array + i;
-}
-#endif
-
 ivector* iv_new(uint32_t length)
 {
 	auto arr = static_cast<int32_t*>(malloc(length * sizeof(int32_t)));

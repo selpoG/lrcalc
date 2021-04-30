@@ -15,10 +15,6 @@ extern "C"
 		int32_t* array;
 	} ivector;
 
-#ifdef DEBUG
-	int32_t* iv_pelem(ivector* v, uint32_t i);
-#endif
-
 	ivector* iv_new(uint32_t length);
 
 	ivector* iv_new_zero(uint32_t length);
@@ -52,11 +48,7 @@ extern "C"
 
 #define iv_length(v) ((v)->length)
 
-#ifdef DEBUG
-#define iv_elem(v, i) (*iv_pelem(v, i))
-#else
 #define iv_elem(v, i) ((v)->array[i])
-#endif
 
 #ifdef __cplusplus
 }

@@ -15,11 +15,7 @@ extern "C"
 
 #define ivl_length(lst) ((lst)->length)
 
-#ifdef DEBUG
-#define ivl_elem(lst, i) (*ivl_pelem(lst, i))
-#else
 #define ivl_elem(lst, i) ((lst)->array[i])
-#endif
 
 	void ivl_free_all(ivlist* lst);
 

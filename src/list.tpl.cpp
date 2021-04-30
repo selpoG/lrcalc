@@ -6,15 +6,6 @@
 #include <assert.h>
 #include <stdarg.h>
 
-#ifdef DEBUG
-VALUE_T* PREFIX(pelem)(LIST* lst, size_t i)
-{
-	assert(i >= 0);
-	assert(i < lst->length);
-	return lst->array + i;
-}
-#endif
-
 int PREFIX(init)(LIST* lst, size_t sz)
 {
 	lst->array = static_cast<VALUE_T*>(malloc(sz * sizeof(VALUE_T)));

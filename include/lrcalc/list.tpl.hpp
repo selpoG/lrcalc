@@ -18,10 +18,6 @@ typedef struct
 	size_t length;
 } LIST;
 
-#ifdef DEBUG
-VALUE_T* PREFIX(pelem)(LIST* lst, size_t i);
-#endif
-
 /* Initialize list structure. */
 int PREFIX(init)(LIST* lst, size_t sz);
 
