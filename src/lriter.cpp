@@ -129,7 +129,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 			}
 		}
 	}
-	assert(maxdepth == clen);
+	assert(maxdepth == int(clen));
 
 	/* Set values of extra boxes. */
 	lrit->array[array_len - 1].value = maxrows - 1;

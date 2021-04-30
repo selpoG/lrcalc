@@ -84,7 +84,7 @@ ivector* ivl_poplast(ivlist* lst)
 
 int ivl_insert(ivlist* lst, size_t i, ivector* x)
 {
-	assert(0 <= i && i <= lst->length);
+	assert(i <= lst->length);
 	if (ivl_makeroom(lst, lst->length + 1) != 0) return -1;
 	size_t n = lst->length - i;
 	lst->length++;
@@ -95,7 +95,7 @@ int ivl_insert(ivlist* lst, size_t i, ivector* x)
 
 ivector* ivl_delete(ivlist* lst, size_t i)
 {
-	assert(0 <= i && i < lst->length);
+	assert(i < lst->length);
 	ivector* x = lst->array[i];
 	lst->length--;
 	size_t n = lst->length - i;
@@ -105,7 +105,7 @@ ivector* ivl_delete(ivlist* lst, size_t i)
 
 ivector* ivl_fastdelete(ivlist* lst, size_t i)
 {
-	assert(0 <= i && i < lst->length);
+	assert(i < lst->length);
 	ivector* x = lst->array[i];
 	lst->array[i] = lst->array[lst->length - 1];
 	(lst->length)--;

@@ -185,7 +185,7 @@ int pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* ou
 	int inner_sz = 0;
 	if (use_inner)
 	{
-		assert(iv_length(inner) >= rows);
+		assert(iv_length(inner) >= uint32_t(rows));
 		if (iv_length(inner) > uint32_t(rows) && iv_elem(inner, rows) != 0) goto empty_result;
 		if (rows > 0 && cols < iv_elem(inner, 0)) goto empty_result;
 	}

@@ -74,7 +74,7 @@ static bool test_schur_lrskew(const ivector* out, const ivector* inn, int rows, 
 	{
 		long long coef = schur_lrcoef(out, inn, sh.get());
 		if (coef < 0) return true;
-		const ivlc_keyval_t* kv = ivlc_lookup(lc.get(), sh.get(), iv_hash(sh.get()));
+		[[maybe_unused]] const ivlc_keyval_t* kv = ivlc_lookup(lc.get(), sh.get(), iv_hash(sh.get()));
 		assert(coef == (kv ? kv->value : 0));
 	}
 

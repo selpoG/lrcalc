@@ -86,7 +86,7 @@ int il_poplast(ilist* lst)
 
 int il_insert(ilist* lst, size_t i, int x)
 {
-	assert(0 <= i && i <= lst->length);
+	assert(i <= lst->length);
 	if (il_makeroom(lst, lst->length + 1) != 0) return -1;
 	size_t n = lst->length - i;
 	lst->length++;
@@ -97,7 +97,7 @@ int il_insert(ilist* lst, size_t i, int x)
 
 int il_delete(ilist* lst, size_t i)
 {
-	assert(0 <= i && i < lst->length);
+	assert(i < lst->length);
 	int x = lst->array[i];
 	lst->length--;
 	size_t n = lst->length - i;
@@ -107,7 +107,7 @@ int il_delete(ilist* lst, size_t i)
 
 int il_fastdelete(ilist* lst, size_t i)
 {
-	assert(0 <= i && i < lst->length);
+	assert(i < lst->length);
 	int x = lst->array[i];
 	lst->array[i] = lst->array[lst->length - 1];
 	(lst->length)--;

@@ -55,7 +55,7 @@ static bool test_schur_lrcoef(const ivector* p1, const ivector* p2, int rows, in
 	{
 		long long coef = schur_lrcoef(outer.get(), p1, p2);
 		if (coef < 0) return true;
-		ivlc_keyval_t* kv = ivlc_lookup(prd.get(), outer.get(), iv_hash(outer.get()));
+		[[maybe_unused]] const ivlc_keyval_t* kv = ivlc_lookup(prd.get(), outer.get(), iv_hash(outer.get()));
 		assert(coef == (kv ? kv->value : 0));
 	}
 
