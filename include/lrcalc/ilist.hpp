@@ -19,8 +19,6 @@ extern "C"
 
 	ilist* il_new(size_t sz);
 
-	ilist* il_new_init(size_t sz, size_t count, ...);
-
 	void il_dealloc(ilist* v);
 
 	void il_free(ilist* v);

@@ -19,8 +19,6 @@ extern "C"
 
 	ivlist* ivl_new(size_t sz);
 
-	ivlist* ivl_new_init(size_t sz, size_t count, ...);
-
 	void ivl_dealloc(ivlist* v);
 
 	void ivl_free(ivlist* v);

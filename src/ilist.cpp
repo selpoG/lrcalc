@@ -6,7 +6,6 @@
 #include "lrcalc/ilist.hpp"
 
 #include <assert.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -28,18 +27,6 @@ ilist* il_new(size_t sz)
 		free(lst);
 		return nullptr;
 	}
-	return lst;
-}
-
-ilist* il_new_init(size_t sz, size_t num, ...)
-{
-	va_list ap;
-
-	ilist* lst = il_new(sz);
-	va_start(ap, num);
-	for (size_t i = 0; i < num; i++) il_append(lst, va_arg(ap, int));
-	va_end(ap);
-
 	return lst;
 }
 

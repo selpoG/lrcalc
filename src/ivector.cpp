@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <limits>
-#include <stdarg.h>
 #include <stdio.h>
 
 #include "lrcalc/ivector.hpp"
@@ -38,18 +37,6 @@ ivector* iv_new_zero(uint32_t length)
 	}
 	v->length = length;
 	v->array = arr;
-	return v;
-}
-
-ivector* iv_new_init(uint32_t length, ...)
-{
-	va_list ap;
-
-	ivector* v = iv_new(length);
-	va_start(ap, length);
-	for (uint32_t i = 0; i < length; i++) v->array[i] = va_arg(ap, int);
-	va_end(ap);
-
 	return v;
 }
 

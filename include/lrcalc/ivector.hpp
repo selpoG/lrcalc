@@ -19,8 +19,6 @@ extern "C"
 
 	ivector* iv_new_zero(uint32_t length);
 
-	ivector* iv_new_init(uint32_t length, ...);
-
 	void iv_free(ivector* v);
 
 	ivector* iv_new_copy(const ivector* v);

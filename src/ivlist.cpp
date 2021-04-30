@@ -6,7 +6,6 @@
 #include "lrcalc/ivlist.hpp"
 
 #include <assert.h>
-#include <stdarg.h>
 
 int ivl_init(ivlist* lst, size_t sz)
 {
@@ -26,18 +25,6 @@ ivlist* ivl_new(size_t sz)
 		free(lst);
 		return nullptr;
 	}
-	return lst;
-}
-
-ivlist* ivl_new_init(size_t sz, size_t num, ...)
-{
-	va_list ap;
-
-	ivlist* lst = ivl_new(sz);
-	va_start(ap, num);
-	for (size_t i = 0; i < num; i++) ivl_append(lst, va_arg(ap, ivector*));
-	va_end(ap);
-
 	return lst;
 }
 
