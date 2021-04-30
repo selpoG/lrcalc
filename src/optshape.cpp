@@ -183,13 +183,6 @@ int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int row
 	for (int i = 0; i < d; i++) iv_elem(nsh2, i) = part_entry(sh2, rows - d + i) + sh1d;
 	for (int i = 0; i < rows - d; i++) iv_elem(nsh2, d + i) = part_entry(sh2, i) + sh1d - level;
 
-#ifdef DEBUG_OPTSHAPE
-	printf("Fusion (d=%d): ", d);
-	iv_print(nsh1);
-	fputs(" * ", stdout);
-	iv_printnl(nsh2);
-#endif
-
 	ss->outer = nsh1.release();
 	ss->cont = nsh2.release();
 	ss->sign = 1;

@@ -1,13 +1,13 @@
 #ifndef LRCALC_PERM_H
 #define LRCALC_PERM_H
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlist.hpp"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 	int perm_valid(ivector* w);
 
 	int perm_length(const ivector* w);
@@ -30,8 +30,8 @@ extern "C"
 	ivector* string2perm(const ivector* str);
 	ivector* str2dimvec(const ivector* str);
 	ivector* perm2string(const ivector* perm, const ivector* dimvec);
-
 #ifdef __cplusplus
 }
 #endif
+
 #endif

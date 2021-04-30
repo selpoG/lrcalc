@@ -1,17 +1,13 @@
 #ifndef LRCALC_OPTSHAPE_H
 #define LRCALC_OPTSHAPE_H
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
-#ifdef UNDEF_DEBUG
-#define DEBUG_OPTSHAPE
+#ifdef __cplusplus
+extern "C"
+{
 #endif
-
 	void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont);
 
 	typedef struct
@@ -31,8 +27,8 @@ extern "C"
 	int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ivector* sh2);
 
 	void sksh_dealloc(skew_shape* ss);
-
 #ifdef __cplusplus
 }
 #endif
+
 #endif

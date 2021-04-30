@@ -1,9 +1,5 @@
 #ifndef LRCALC_ALLOC_H
 #define LRCALC_ALLOC_H
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +23,10 @@ extern "C"
 #define DEBUG_MEMORY
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #ifndef DEBUG_MEMORY
 
 #define ml_malloc malloc
@@ -60,8 +60,8 @@ void alloc_set_trap_number(size_t N);
 void alloc_test_oom(void(f)(void*), void* arg);
 
 #endif /* DEBUG_MEMORY */
-
 #ifdef __cplusplus
 }
 #endif
+
 #endif /* LRCALC_ALLOC_H */

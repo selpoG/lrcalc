@@ -1,15 +1,16 @@
 #ifndef LRCALC_IVECTOR_H
 #define LRCALC_IVECTOR_H
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lrcalc/alloc.hpp"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 	typedef struct
 	{
 		uint32_t length;
@@ -62,4 +63,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
 #endif

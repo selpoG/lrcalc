@@ -1,13 +1,13 @@
 #ifndef LRCALC_LRITER_H
 #define LRCALC_LRITER_H
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 	typedef struct
 	{
 		int value;
@@ -41,8 +41,8 @@ extern "C"
 
 	ivlincomb* lrit_expand(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
 	                       int partsz);
-
 #ifdef __cplusplus
 }
 #endif
+
 #endif

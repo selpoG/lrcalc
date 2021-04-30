@@ -1,9 +1,5 @@
 #ifndef LRCALC_IVLINCOMB_H
 #define LRCALC_IVLINCOMB_H
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +7,10 @@ extern "C"
 #include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 	/* This structure allows fast lookup, insertion, and reset.
 	   Remove is less optimized.  Iterating through the table will be
 	   slow if lots of elements are first inserted and then removed.
@@ -34,18 +34,12 @@ extern "C"
 		uint32_t table_sz;   /* Allocated hash table size. */
 	} ivlincomb;
 
-/* Minimal number of table entries for each element. */
-#ifndef USE_FACTOR
-#define USE_FACTOR 2
-#endif
+	/* Minimal number of table entries for each element. */
+	constexpr uint32_t USE_FACTOR = 2;
 
-#ifndef INIT_TABLE_SIZE
-#define INIT_TABLE_SIZE 2003
-#endif
+	constexpr uint32_t INIT_TABLE_SIZE = 2003;
 
-#ifndef INIT_ELT_SIZE
-#define INIT_ELT_SIZE 100
-#endif
+	constexpr uint32_t INIT_ELT_SIZE = 100;
 
 	uint32_t ivlc_card(const ivlincomb* ht);
 
@@ -106,11 +100,11 @@ extern "C"
 
 	void ivlc_free_all(ivlincomb* ht);
 
-#define LC_COPY_KEY 1
-#define LC_FREE_KEY 0
+	constexpr int LC_COPY_KEY = 1;
+	constexpr int LC_FREE_KEY = 0;
 
-#define LC_FREE_ZERO 2
-#define LC_KEEP_ZERO 0
+	constexpr int LC_FREE_ZERO = 2;
+	constexpr int LC_KEEP_ZERO = 0;
 
 	int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
 
@@ -118,14 +112,10 @@ extern "C"
 
 	void ivlc_print(const ivlincomb* ht, int opt_zero);
 
-#ifndef IVLC_HASHTABLE_SZ
-#define IVLC_HASHTABLE_SZ 2003
-#endif
-#ifndef IVLC_ARRAY_SZ
-#define IVLC_ARRAY_SZ 100
-#endif
-
+	constexpr uint32_t IVLC_HASHTABLE_SZ = 2003;
+	constexpr uint32_t IVLC_ARRAY_SZ = 100;
 #ifdef __cplusplus
 }
 #endif
+
 #endif

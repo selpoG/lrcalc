@@ -1,14 +1,14 @@
 #ifndef LRCALC_PART_H
 #define LRCALC_PART_H
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 	int part_valid(const ivector* p);
 
 	int part_decr(const ivector* p);
@@ -56,9 +56,9 @@ extern "C"
 		int opt;
 	} part_iter;
 
-#define PITR_USE_OUTER 1
-#define PITR_USE_INNER 2
-#define PITR_USE_SIZE 4
+	constexpr int PITR_USE_OUTER = 1;
+	constexpr int PITR_USE_INNER = 2;
+	constexpr int PITR_USE_SIZE = 4;
 
 	int pitr_good(const part_iter* itr);
 
@@ -82,8 +82,8 @@ extern "C"
 	void pitr_between_sz_first(part_iter* itr, ivector* p, const ivector* outer, const ivector* inner, int size);
 
 	void pitr_next(part_iter* itr);
-
 #ifdef __cplusplus
 }
 #endif
+
 #endif
