@@ -5,15 +5,11 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <limits>
 #include <stdarg.h>
 #include <stdio.h>
 
 #include "lrcalc/ivector.hpp"
-
-#define MINVALUE INT_MIN
-#define MAXVALUE INT_MAX
-#define VA_VALUE_T int
-#define VALUE_FMT "%d"
 
 ivector* iv_new(uint32_t length)
 {
@@ -51,7 +47,7 @@ ivector* iv_new_init(uint32_t length, ...)
 
 	ivector* v = iv_new(length);
 	va_start(ap, length);
-	for (uint32_t i = 0; i < length; i++) v->array[i] = va_arg(ap, VA_VALUE_T);
+	for (uint32_t i = 0; i < length; i++) v->array[i] = va_arg(ap, int);
 	va_end(ap);
 
 	return v;
@@ -124,7 +120,7 @@ void iv_div(ivector* dst, const ivector* src, int32_t c)
 int32_t iv_max(const ivector* v)
 {
 	uint32_t n = v->length;
-	if (n == 0) return MINVALUE;
+	if (n == 0) return std::numeric_limits<int32_t>::min();
 	int32_t m = v->array[n - 1];
 	for (auto i = int(n - 2); i >= 0; i--)
 		if (m < v->array[i]) m = v->array[i];
@@ -134,7 +130,7 @@ int32_t iv_max(const ivector* v)
 int32_t iv_min(const ivector* v)
 {
 	uint32_t n = v->length;
-	if (n == 0) return MAXVALUE;
+	if (n == 0) return std::numeric_limits<int32_t>::max();
 	int32_t m = v->array[n - 1];
 	for (auto i = int(n - 2); i >= 0; i--)
 		if (m > v->array[i]) m = v->array[i];
@@ -155,7 +151,6 @@ void iv_reverse(ivector* dst, const ivector* src)
 	if (n & 1) dst->array[n2] = src->array[n2];
 }
 
-#ifdef INTEGER_VALUE
 int32_t iv_gcd(const ivector* v)
 {
 	int32_t x = 0;
@@ -172,7 +167,6 @@ int32_t iv_gcd(const ivector* v)
 	}
 	return abs(x);
 }
-#endif
 
 void iv_print(const ivector* v)
 {
@@ -180,7 +174,7 @@ void iv_print(const ivector* v)
 	for (uint32_t i = 0; i < v->length; i++)
 	{
 		if (i) putchar(',');
-		printf(VALUE_FMT, v->array[i]);
+		printf("%d", v->array[i]);
 	}
 	putchar(')');
 }
