@@ -21,7 +21,7 @@ extern "C"
 		ivector* cont;
 		int size;
 		int array_len;
-		lrit_box array[];
+		lrit_box* array;
 	} lrtab_iter;
 
 	lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,

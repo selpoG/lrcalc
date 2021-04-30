@@ -13,7 +13,7 @@ extern "C"
 	typedef struct
 	{
 		uint32_t length;
-		int32_t array[];
+		int32_t* array;
 	} ivector;
 
 #ifdef DEBUG

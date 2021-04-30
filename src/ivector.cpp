@@ -27,17 +27,31 @@ int32_t* iv_pelem(ivector* v, uint32_t i)
 
 ivector* iv_new(uint32_t length)
 {
-	auto v = static_cast<ivector*>(ml_malloc(sizeof(ivector) + length * sizeof(int32_t)));
-	if (v == nullptr) return nullptr;
+	auto arr = static_cast<int32_t*>(ml_malloc(length * sizeof(int32_t)));
+	if (arr == nullptr) return nullptr;
+	auto v = static_cast<ivector*>(ml_malloc(sizeof(ivector)));
+	if (v == nullptr)
+	{
+		ml_free(arr);
+		return nullptr;
+	}
 	v->length = length;
+	v->array = arr;
 	return v;
 }
 
 ivector* iv_new_zero(uint32_t length)
 {
-	auto v = static_cast<ivector*>(ml_calloc(1, sizeof(ivector) + length * sizeof(int32_t)));
-	if (v == nullptr) return nullptr;
+	auto arr = static_cast<int32_t*>(ml_calloc(length, sizeof(int32_t)));
+	if (arr == nullptr) return nullptr;
+	auto v = static_cast<ivector*>(ml_malloc(sizeof(ivector)));
+	if (v == nullptr)
+	{
+		ml_free(arr);
+		return nullptr;
+	}
 	v->length = length;
+	v->array = arr;
 	return v;
 }
 
@@ -53,7 +67,11 @@ ivector* iv_new_init(uint32_t length, ...)
 	return v;
 }
 
-void iv_free(ivector* v) { ml_free(v); }
+void iv_free(ivector* v)
+{
+	ml_free(v->array);
+	ml_free(v);
+}
 
 ivector* iv_new_copy(const ivector* v)
 {

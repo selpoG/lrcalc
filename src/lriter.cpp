@@ -72,9 +72,16 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	}
 
 	/* Allocate array. */
-	auto lrit = static_cast<lrtab_iter*>(ml_malloc(sizeof(lrtab_iter) + uint32_t(array_len) * sizeof(lrit_box)));
-	if (lrit == nullptr) return nullptr;
+	auto arr = static_cast<lrit_box*>(ml_malloc(uint32_t(array_len) * sizeof(lrit_box)));
+	if (arr == nullptr) return nullptr;
+	auto lrit = static_cast<lrtab_iter*>(ml_malloc(sizeof(lrtab_iter)));
+	if (lrit == nullptr)
+	{
+		ml_free(arr);
+		return nullptr;
+	}
 	lrit->array_len = array_len;
+	lrit->array = arr;
 
 	/* Allocate and copy content. */
 	if (partsz < maxrows) partsz = maxrows;
@@ -162,6 +169,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 void lrit_free(lrtab_iter* lrit)
 {
 	iv_free(lrit->cont);
+	ml_free(lrit->array);
 	ml_free(lrit);
 }
 
