@@ -3,10 +3,11 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
 #include "lrcalc/part.hpp"
+
+#include <assert.h>
 
 int part_valid(const ivector* p)
 {
@@ -42,7 +43,7 @@ void part_chop(ivector* p) { iv_length(p) = part_length(p); }
 void part_unchop(ivector* p, int len_)
 {
 	uint32_t len0 = iv_length(p);
-	claim(int(len0) <= len_);
+	assert(int(len0) <= len_);
 	auto len = uint32_t(len_);
 	iv_length(p) = len;
 	memset(p->array + len0, 0, (len - len0) * sizeof(p->array[0]));
@@ -59,7 +60,7 @@ int part_leq(const ivector* p1, const ivector* p2)
 
 ivector* part_conj(const ivector* p)
 {
-	claim(part_valid(p));
+	assert(part_valid(p));
 	uint32_t np = part_length(p);
 	int nc = (np == 0) ? 0 : iv_elem(p, 0);
 	ivector* conj = iv_new(uint32_t(nc));
@@ -161,9 +162,9 @@ int pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* ou
 	int use_inner = opt & PITR_USE_INNER;
 	int use_size = opt & PITR_USE_SIZE;
 
-	claim((!use_outer) || part_valid(outer));
-	claim((!use_inner) || part_valid(inner));
-	claim((!use_outer) || (!use_inner) || part_leq(inner, outer));
+	assert((!use_outer) || part_valid(outer));
+	assert((!use_inner) || part_valid(inner));
+	assert((!use_outer) || (!use_inner) || part_leq(inner, outer));
 
 	itr->part = p;
 	if (use_outer) itr->outer = outer;
@@ -184,7 +185,7 @@ int pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* ou
 	int inner_sz = 0;
 	if (use_inner)
 	{
-		claim(iv_length(inner) >= rows);
+		assert(iv_length(inner) >= rows);
 		if (iv_length(inner) > uint32_t(rows) && iv_elem(inner, rows) != 0) goto empty_result;
 		if (rows > 0 && cols < iv_elem(inner, 0)) goto empty_result;
 	}

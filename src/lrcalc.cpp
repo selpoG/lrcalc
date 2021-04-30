@@ -41,7 +41,6 @@ struct usage_t
 [[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
-	alloc_report();
 	exit(1);
 }
 
@@ -107,10 +106,6 @@ static void mult_main(int ac, char* const* av)
 		maple_print_lincomb(lc, "s", 1);
 	else
 		part_print_lincomb(lc);
-
-#ifdef DEBUG_MEMORY
-	ivlc_free_all(lc);
-#endif
 }
 
 /***************  SKEW  ***************/
@@ -148,10 +143,6 @@ static void skew_main(int ac, char* const* av)
 		maple_print_lincomb(lc, "s", 1);
 	else
 		part_print_lincomb(lc);
-
-#ifdef DEBUG_MEMORY
-	ivlc_free_all(lc);
-#endif
 }
 
 /***************  COPROD  ***************/
@@ -200,10 +191,6 @@ static void coprod_main(int ac, char* const* av)
 		putchar(')');
 		putchar('\n');
 	}
-
-#ifdef DEBUG_MEMORY
-	ivlc_free_all(lc);
-#endif
 }
 
 /***************  COEF  ***************/
@@ -228,12 +215,6 @@ static void coef_main(int ac, char* const* av)
 	if (sh2 == nullptr || part_valid(sh2) == 0) cmd_error(&coef_usage, "inner2 not a valid partition.");
 
 	long long coef = schur_lrcoef(outer, sh1, sh2);
-
-#ifdef DEBUG_MEMORY
-	iv_free(outer);
-	iv_free(sh1);
-	iv_free(sh2);
-#endif
 
 	if (coef >= 0)
 		printf("%lld\n", coef);
@@ -274,12 +255,6 @@ static void tab_main(int ac, char* const* av)
 		lrit_print_skewtab(lrit, outer, inner);
 		printf("\n");
 	}
-
-#ifdef DEBUG_MEMORY
-	lrit_free(lrit);
-	iv_free(outer);
-	iv_free(inner);
-#endif
 }
 
 /***************  MAIN FUNCTION  ***************/
@@ -296,8 +271,6 @@ static const usage_t* lrcalc_commands[] = {&mult_usage, &skew_usage, &coprod_usa
 
 int main(int ac, char** av)
 {
-	alloc_getenv();
-
 	if (ac < 2) main_usage();
 
 	const char* cmd = av[1];
@@ -316,6 +289,5 @@ int main(int ac, char** av)
 	else
 		main_usage();
 
-	alloc_report();
 	return 0;
 }

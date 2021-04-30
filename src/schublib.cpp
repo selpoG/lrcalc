@@ -9,6 +9,7 @@
 
 #include "lrcalc/schublib.hpp"
 
+#include <assert.h>
 #include <memory>
 #include <utility>
 
@@ -221,7 +222,7 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 
 	if (rank == 0) rank = unsigned(-1) >> 1;
 
-	auto p = static_cast<void**>(ml_malloc(2 * n * sizeof(void*)));
+	auto p = static_cast<void**>(malloc(2 * n * sizeof(void*)));
 	if (p == nullptr)
 	{
 		ivlc_free_all(poly);
@@ -240,7 +241,7 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 		p[i++] = ivlc_key(&itr);
 		p[i++] = reinterpret_cast<void*>(long(ivlc_value(&itr)));
 	}
-	claim(i == 2 * n);
+	assert(i == 2 * n);
 	ivlc_reset(poly);
 
 	uint32_t svlen = iv_length(perm);
@@ -249,7 +250,7 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 	perm->length = svlen;
 
 	for (i = 0; i < n; i++) iv_free(static_cast<ivector*>(p[2 * i]));
-	ml_free(p);
+	free(p);
 
 	if (ok != 0)
 	{
@@ -341,7 +342,7 @@ free_return:
 
 ivlincomb* mult_schubert_str(const ivector* str1, const ivector* str2)
 {
-	claim(str_iscompat(str1, str2));
+	assert(str_iscompat(str1, str2));
 
 	safe_iv_ptr dv{str2dimvec(str1)};
 	if (!dv) return nullptr;

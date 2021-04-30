@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
 #include "lrcalc/perm.hpp"
@@ -39,7 +38,6 @@ using safe_ivlc_ptr = std::unique_ptr<ivlincomb, ivlc_deleter>;
 [[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
-	alloc_report();
 	exit(1);
 }
 
@@ -60,8 +58,6 @@ static bool test_mult_fusion(ivector* sh1, ivector* sh2, int rows, int level)
 
 int main(int ac, char** av)
 {
-	alloc_getenv();
-
 	if (ac != 3) print_usage();
 	int rows = atoi(av[1]);
 	int cols = atoi(av[2]);
@@ -84,6 +80,5 @@ int main(int ac, char** av)
 	}
 
 	puts("success");
-	alloc_report();
 	return 0;
 }

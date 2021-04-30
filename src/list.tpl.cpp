@@ -3,20 +3,21 @@
  *  See the file LICENSE for license information.
  */
 
+#include <assert.h>
 #include <stdarg.h>
 
 #ifdef DEBUG
 VALUE_T* PREFIX(pelem)(LIST* lst, size_t i)
 {
-	claim(i >= 0);
-	claim(i < lst->length);
+	assert(i >= 0);
+	assert(i < lst->length);
 	return lst->array + i;
 }
 #endif
 
 int PREFIX(init)(LIST* lst, size_t sz)
 {
-	lst->array = static_cast<VALUE_T*>(ml_malloc(sz * sizeof(VALUE_T)));
+	lst->array = static_cast<VALUE_T*>(malloc(sz * sizeof(VALUE_T)));
 	if (lst->array == nullptr) return -1;
 	lst->allocated = sz;
 	lst->length = 0;
@@ -25,11 +26,11 @@ int PREFIX(init)(LIST* lst, size_t sz)
 
 LIST* PREFIX(new)(size_t sz)
 {
-	auto lst = static_cast<LIST*>(ml_malloc(sizeof(LIST)));
+	auto lst = static_cast<LIST*>(malloc(sizeof(LIST)));
 	if (lst == nullptr) return nullptr;
 	if (PREFIX(init)(lst, sz) != 0)
 	{
-		ml_free(lst);
+		free(lst);
 		return nullptr;
 	}
 	return lst;
@@ -47,12 +48,12 @@ LIST* PREFIX(new_init)(size_t sz, size_t num, ...)
 	return lst;
 }
 
-void PREFIX(dealloc)(LIST* v) { ml_free(v->array); }
+void PREFIX(dealloc)(LIST* v) { free(v->array); }
 
 void PREFIX(free)(LIST* v)
 {
-	ml_free(v->array);
-	ml_free(v);
+	free(v->array);
+	free(v);
 }
 
 void PREFIX(reset)(LIST* lst) { lst->length = 0; }
@@ -60,7 +61,7 @@ void PREFIX(reset)(LIST* lst) { lst->length = 0; }
 int PREFIX(_realloc_array)(LIST* lst, size_t sz)
 {
 	sz *= 2;
-	auto array = static_cast<VALUE_T*>(ml_realloc(lst->array, sz * sizeof(VALUE_T)));
+	auto array = static_cast<VALUE_T*>(realloc(lst->array, sz * sizeof(VALUE_T)));
 	if (array == nullptr) return -1;
 	lst->array = array;
 	lst->allocated = sz;
@@ -84,13 +85,13 @@ int PREFIX(append)(LIST* lst, VALUE_T x)
 
 VALUE_T PREFIX(poplast)(LIST* lst)
 {
-	claim(lst->length > 0);
+	assert(lst->length > 0);
 	return lst->array[--(lst->length)];
 }
 
 int PREFIX(insert)(LIST* lst, size_t i, VALUE_T x)
 {
-	claim(0 <= i && i <= lst->length);
+	assert(0 <= i && i <= lst->length);
 	if (PREFIX(makeroom)(lst, lst->length + 1) != 0) return -1;
 	size_t n = lst->length - i;
 	lst->length++;
@@ -101,7 +102,7 @@ int PREFIX(insert)(LIST* lst, size_t i, VALUE_T x)
 
 VALUE_T PREFIX(delete)(LIST* lst, size_t i)
 {
-	claim(0 <= i && i < lst->length);
+	assert(0 <= i && i < lst->length);
 	VALUE_T x = lst->array[i];
 	lst->length--;
 	size_t n = lst->length - i;
@@ -111,7 +112,7 @@ VALUE_T PREFIX(delete)(LIST* lst, size_t i)
 
 VALUE_T PREFIX(fastdelete)(LIST* lst, size_t i)
 {
-	claim(0 <= i && i < lst->length);
+	assert(0 <= i && i < lst->length);
 	VALUE_T x = lst->array[i];
 	lst->array[i] = lst->array[lst->length - 1];
 	(lst->length)--;

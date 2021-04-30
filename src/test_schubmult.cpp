@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/ivlist.hpp"
 #include "lrcalc/perm.hpp"
@@ -43,7 +42,6 @@ using safe_ivlc_slice = std::unique_ptr<ivlincomb, ivlc_slice_deleter>;
 [[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
-	alloc_report();
 	exit(1);
 }
 
@@ -107,8 +105,6 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 
 int main(int ac, char** av)
 {
-	alloc_getenv();
-
 	if (ac != 2) print_usage();
 	int n = atoi(av[1]);
 	if (n < 0) print_usage();
@@ -126,6 +122,5 @@ int main(int ac, char** av)
 		}
 
 	puts("success");
-	alloc_report();
 	return 0;
 }

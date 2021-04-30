@@ -1,7 +1,6 @@
 #ifndef LRCALC_PART_H
 #define LRCALC_PART_H
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 

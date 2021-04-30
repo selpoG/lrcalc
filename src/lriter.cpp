@@ -3,6 +3,7 @@
  *  See the file LICENSE for license information.
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,16 +18,16 @@
 lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
                      int partsz)
 {
-	claim(part_valid(outer));
-	claim(inner == nullptr || part_valid(inner));
-	claim(content == nullptr || part_decr(content));
+	assert(part_valid(outer));
+	assert(inner == nullptr || part_valid(inner));
+	assert(content == nullptr || part_decr(content));
 
 	/* Empty result if inner not contained in outer. */
 	if (inner != nullptr && part_leq(inner, outer) == 0)
 	{
 		ivector* cont = iv_new(1);
 		if (cont == nullptr) return nullptr;
-		auto lrit = static_cast<lrtab_iter*>(ml_malloc(sizeof(lrtab_iter)));
+		auto lrit = static_cast<lrtab_iter*>(malloc(sizeof(lrtab_iter)));
 		if (lrit == nullptr)
 		{
 			iv_free(cont);
@@ -42,7 +43,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	if (ilen > len) ilen = len;
 	uint32_t clen = (content == nullptr) ? 0 : part_length(content);
 	int out0 = (len == 0) ? 0 : iv_elem(outer, 0);
-	claim(maxcols < 0 || ilen == 0 || iv_elem(inner, 0) == 0);
+	assert(maxcols < 0 || ilen == 0 || iv_elem(inner, 0) == 0);
 
 	/* Find number of boxes and maximal tableau entry. */
 	int size = 0;
@@ -72,12 +73,12 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	}
 
 	/* Allocate array. */
-	auto arr = static_cast<lrit_box*>(ml_malloc(uint32_t(array_len) * sizeof(lrit_box)));
+	auto arr = static_cast<lrit_box*>(malloc(uint32_t(array_len) * sizeof(lrit_box)));
 	if (arr == nullptr) return nullptr;
-	auto lrit = static_cast<lrtab_iter*>(ml_malloc(sizeof(lrtab_iter)));
+	auto lrit = static_cast<lrtab_iter*>(malloc(sizeof(lrtab_iter)));
 	if (lrit == nullptr)
 	{
-		ml_free(arr);
+		free(arr);
 		return nullptr;
 	}
 	lrit->array_len = array_len;
@@ -89,7 +90,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	ivector* cont = (lrit->cont = iv_new(partsz_u));
 	if (cont == nullptr)
 	{
-		ml_free(lrit);
+		free(lrit);
 		return nullptr;
 	}
 	lrit->size = -1;
@@ -128,7 +129,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 			}
 		}
 	}
-	claim(maxdepth == clen);
+	assert(maxdepth == clen);
 
 	/* Set values of extra boxes. */
 	lrit->array[array_len - 1].value = maxrows - 1;
@@ -169,8 +170,8 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 void lrit_free(lrtab_iter* lrit)
 {
 	iv_free(lrit->cont);
-	ml_free(lrit->array);
-	ml_free(lrit);
+	free(lrit->array);
+	free(lrit);
 }
 
 void lrit_print_skewtab(const lrtab_iter* lrit, const ivector* outer, const ivector* inner)

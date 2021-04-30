@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lrcalc/alloc.hpp"
-
 typedef struct
 {
 	VALUE_T* array;

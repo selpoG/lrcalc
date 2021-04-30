@@ -3,11 +3,10 @@
  *  See the file LICENSE for license information.
  */
 
+#include <assert.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
-
-#include "lrcalc/alloc.hpp"
 
 #include "lrcalc/ivector.hpp"
 
@@ -19,20 +18,20 @@
 #ifdef DEBUG
 int32_t* iv_pelem(ivector* v, uint32_t i)
 {
-	claim(i >= 0);
-	claim(i < v->length);
+	assert(i >= 0);
+	assert(i < v->length);
 	return v->array + i;
 }
 #endif
 
 ivector* iv_new(uint32_t length)
 {
-	auto arr = static_cast<int32_t*>(ml_malloc(length * sizeof(int32_t)));
+	auto arr = static_cast<int32_t*>(malloc(length * sizeof(int32_t)));
 	if (arr == nullptr) return nullptr;
-	auto v = static_cast<ivector*>(ml_malloc(sizeof(ivector)));
+	auto v = static_cast<ivector*>(malloc(sizeof(ivector)));
 	if (v == nullptr)
 	{
-		ml_free(arr);
+		free(arr);
 		return nullptr;
 	}
 	v->length = length;
@@ -42,12 +41,12 @@ ivector* iv_new(uint32_t length)
 
 ivector* iv_new_zero(uint32_t length)
 {
-	auto arr = static_cast<int32_t*>(ml_calloc(length, sizeof(int32_t)));
+	auto arr = static_cast<int32_t*>(calloc(length, sizeof(int32_t)));
 	if (arr == nullptr) return nullptr;
-	auto v = static_cast<ivector*>(ml_malloc(sizeof(ivector)));
+	auto v = static_cast<ivector*>(malloc(sizeof(ivector)));
 	if (v == nullptr)
 	{
-		ml_free(arr);
+		free(arr);
 		return nullptr;
 	}
 	v->length = length;
@@ -69,8 +68,8 @@ ivector* iv_new_init(uint32_t length, ...)
 
 void iv_free(ivector* v)
 {
-	ml_free(v->array);
-	ml_free(v);
+	free(v->array);
+	free(v);
 }
 
 ivector* iv_new_copy(const ivector* v)
@@ -85,7 +84,7 @@ void iv_set_zero(ivector* v) { memset(v->array, 0, v->length * sizeof(int32_t));
 
 void iv_copy(ivector* d, const ivector* s)
 {
-	claim(d->length == s->length);
+	assert(d->length == s->length);
 	memcpy(d->array, s->array, d->length * sizeof(int32_t));
 }
 
@@ -114,20 +113,20 @@ int32_t iv_sum(const ivector* v)
 int iv_lesseq(const ivector* v1, const ivector* v2)
 {
 	uint32_t i = 0;
-	claim(v1->length == v2->length);
+	assert(v1->length == v2->length);
 	while (i < v1->length && v1->array[i] <= v2->array[i]) i++;
 	return (i == v1->length);
 }
 
 void iv_mult(ivector* dst, int32_t c, const ivector* src)
 {
-	claim(dst->length == src->length);
+	assert(dst->length == src->length);
 	for (uint32_t i = 0; i < dst->length; i++) dst->array[i] = c * src->array[i];
 }
 
 void iv_div(ivector* dst, const ivector* src, int32_t c)
 {
-	claim(dst->length == src->length);
+	assert(dst->length == src->length);
 	for (uint32_t i = 0; i < dst->length; i++) dst->array[i] = src->array[i] / c;
 }
 
@@ -153,7 +152,7 @@ int32_t iv_min(const ivector* v)
 
 void iv_reverse(ivector* dst, const ivector* src)
 {
-	claim(dst->length == src->length);
+	assert(dst->length == src->length);
 	uint32_t n = dst->length;
 	uint32_t n2 = n / 2;
 	for (uint32_t i = 0; i < n2; i++)

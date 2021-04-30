@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
 
@@ -23,7 +22,6 @@ using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
 [[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory\n");
-	alloc_report();
 	exit(1);
 }
 
@@ -199,8 +197,6 @@ static bool test_part_iter_between(int rows, int cols, const ivector* outer, con
 
 int main(int ac, char** av)
 {
-	alloc_getenv();
-
 	if (ac != 3)
 	{
 		fprintf(stderr, "usage: " PROGNAME " rows cols\n");
@@ -252,6 +248,5 @@ int main(int ac, char** av)
 	}
 
 	puts("success");
-	alloc_report();
 	return 0;
 }

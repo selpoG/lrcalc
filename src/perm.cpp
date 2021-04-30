@@ -8,6 +8,8 @@
 
 #include "lrcalc/perm.hpp"
 
+#include <assert.h>
+
 int perm_valid(ivector* w)
 {
 	uint32_t n = iv_length(w);
@@ -97,7 +99,7 @@ int bruhat_zero(const ivector* w1, const ivector* w2, int rank)
 
 ivlist* all_strings(const ivector* dimvec)
 {
-	claim(dimvec_valid(dimvec));
+	assert(dimvec_valid(dimvec));
 
 	uint32_t ld = iv_length(dimvec);
 	ivector* cntvec = iv_new_zero(ld);
@@ -183,7 +185,7 @@ out_of_memory:
 
 ivlist* all_perms(int n)
 {
-	claim(n >= 0);
+	assert(n >= 0);
 	ivector* dimvec = iv_new(uint32_t(n + 1));
 	if (dimvec == nullptr) return nullptr;
 	for (uint32_t i = 0; i < iv_length(dimvec); i++) iv_elem(dimvec, i) = int(i);

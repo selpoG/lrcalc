@@ -8,7 +8,6 @@
 #include <unistd.h>
 extern char* optarg;
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/maple.hpp"
 #include "lrcalc/perm.hpp"
@@ -26,14 +25,11 @@ extern char* optarg;
 [[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
-	alloc_report();
 	exit(1);
 }
 
 int main(int ac, char** av)
 {
-	alloc_getenv();
-
 	ivector* dv = get_vect_arg(ac, av);
 	if (dv == nullptr) print_usage();
 	if (dimvec_valid(dv) == 0) print_usage();
@@ -49,5 +45,4 @@ int main(int ac, char** av)
 
 	iv_free(dv);
 	ivl_free_all(lst);
-	alloc_report();
 }

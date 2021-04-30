@@ -1,7 +1,6 @@
 #ifndef LRCALC_OPTSHAPE_H
 #define LRCALC_OPTSHAPE_H
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
 #ifdef __cplusplus

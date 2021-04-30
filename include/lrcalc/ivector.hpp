@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lrcalc/alloc.hpp"
-
 #ifdef __cplusplus
 extern "C"
 {

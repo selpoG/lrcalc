@@ -8,6 +8,7 @@
 
 #include "lrcalc/optshape.hpp"
 
+#include <assert.h>
 #include <memory>
 #include <utility>
 
@@ -68,8 +69,8 @@ void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
 int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols)
 {
 	/* DEBUG: Check valid input. */
-	claim(part_valid(sh1));
-	if (sh2 != nullptr) claim(part_valid(sh2));
+	assert(part_valid(sh1));
+	if (sh2 != nullptr) assert(part_valid(sh2));
 
 	/* Find length and width of shapes. */
 	int len1 = int(part_length(sh1));
@@ -138,10 +139,10 @@ int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxro
 int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int rows, int level)
 {
 	/* DEBUG: Check valid input. */
-	claim(part_valid(sh1));
-	claim(part_valid(sh2));
-	claim(part_entry(sh1, 0) - part_entry(sh1, rows - 1) <= level);
-	claim(part_entry(sh2, 0) - part_entry(sh2, rows - 1) <= level);
+	assert(part_valid(sh1));
+	assert(part_valid(sh2));
+	assert(part_entry(sh1, 0) - part_entry(sh1, rows - 1) <= level);
+	assert(part_entry(sh2, 0) - part_entry(sh2, rows - 1) <= level);
 
 	/* Empty result? */
 	memset(ss, 0, sizeof(skew_shape));
@@ -248,9 +249,9 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 	if (inner == nullptr) return optim_mult(ss, outer, content, maxrows, -1);
 
 	/* DEBUG: Check valid input. */
-	claim(part_valid(outer));
-	claim(part_valid(inner));
-	if (content != nullptr) claim(part_valid(content));
+	assert(part_valid(outer));
+	assert(part_valid(inner));
+	if (content != nullptr) assert(part_valid(content));
 
 	/* Indicate empty result. */
 	memset(ss, 0, sizeof(skew_shape));
@@ -436,9 +437,9 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 	// int N, Nla, Nmu, sum, r, s, N0, nu0, la0, mu0, nur, lar, mur;
 	// int lar1, mur1, nur1, c, ca, Inu, Ila, Imu;
 
-	claim(part_valid(out));
-	claim(part_valid(sh1));
-	claim(part_valid(sh2));
+	assert(part_valid(out));
+	assert(part_valid(sh1));
+	assert(part_valid(sh2));
 
 	memset(ss, 0, sizeof(skew_shape));
 

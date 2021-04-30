@@ -8,7 +8,6 @@
 #include <unistd.h>
 extern char* optarg;
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/part.hpp"
 
 #define PROGNAME "allparts"
@@ -22,14 +21,11 @@ extern char* optarg;
 [[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
-	alloc_report();
 	exit(1);
 }
 
 int main(int ac, char** av)
 {
-	alloc_getenv();
-
 	if (ac != 3) print_usage();
 	int rows = atoi(av[1]);
 	int cols = atoi(av[2]);
@@ -43,5 +39,4 @@ int main(int ac, char** av)
 	for (; pitr_good(&itr); pitr_next(&itr)) iv_printnl(p);
 
 	iv_free(p);
-	alloc_report();
 }

@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
 #ifdef __cplusplus

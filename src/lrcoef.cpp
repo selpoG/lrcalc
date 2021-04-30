@@ -2,6 +2,8 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
 
+#include <assert.h>
+
 typedef struct
 {
 	int value;     /* integer in box of skew tableau */
@@ -22,11 +24,11 @@ typedef struct
 
 static lrcoef_content* lrcoef_new_content(const ivector* mu)
 {
-	claim(part_valid(mu));
-	claim(part_length(mu) > 0);
+	assert(part_valid(mu));
+	assert(part_length(mu) > 0);
 
 	uint32_t n = part_length(mu);
-	lrcoef_content* res = static_cast<lrcoef_content*>(ml_calloc(n + 1, sizeof(lrcoef_content)));
+	lrcoef_content* res = static_cast<lrcoef_content*>(calloc(n + 1, sizeof(lrcoef_content)));
 	if (res == nullptr) return nullptr;
 	res[0].cont = iv_elem(mu, 0);
 	res[0].supply = iv_elem(mu, 0);
@@ -36,13 +38,13 @@ static lrcoef_content* lrcoef_new_content(const ivector* mu)
 
 static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int max_value)
 {
-	claim(part_valid(nu));
-	claim(part_valid(la));
-	claim(part_leq(la, nu));
-	claim(part_entry(nu, 0) > 0);
+	assert(part_valid(nu));
+	assert(part_valid(la));
+	assert(part_leq(la, nu));
+	assert(part_entry(nu, 0) > 0);
 
 	auto N = uint32_t(iv_sum(nu) - iv_sum(la));
-	lrcoef_box* array = static_cast<lrcoef_box*>(ml_malloc((N + 2) * sizeof(lrcoef_box)));
+	lrcoef_box* array = static_cast<lrcoef_box*>(malloc((N + 2) * sizeof(lrcoef_box)));
 	if (array == nullptr) return nullptr;
 
 	auto pos = int(N);
@@ -103,15 +105,15 @@ void dump_skewtab(const lrcoef_box* T, uint32_t n)
 /* This is a low level function called from schur_lrcoef(). */
 long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector* content)
 {
-	claim(iv_sum(outer) == iv_sum(inner) + iv_sum(content));
-	claim(iv_sum(content) > 1);
+	assert(iv_sum(outer) == iv_sum(inner) + iv_sum(content));
+	assert(iv_sum(content) > 1);
 
 	lrcoef_box* T = lrcoef_new_skewtab(outer, inner, int(part_length(content)));
 	if (T == nullptr) return -1;
 	lrcoef_content* C = lrcoef_new_content(content);
 	if (C == nullptr)
 	{
-		ml_free(T);
+		free(T);
 		return -1;
 	}
 
@@ -178,7 +180,7 @@ long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector
 		}
 	}
 
-	ml_free(T);
-	ml_free(C);
+	free(T);
+	free(C);
 	return coef;
 }

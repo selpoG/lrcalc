@@ -3,7 +3,6 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivector.hpp"
 
 #include "lrcalc/ivlincomb.hpp"
@@ -17,13 +16,13 @@ int ivlc_init(ivlincomb* ht, uint32_t tabsz, uint32_t eltsz)
 	ht->free_elts = 0;
 	ht->elts_len = 1;
 	ht->table_sz = tabsz;
-	ht->table = static_cast<uint32_t*>(ml_calloc(tabsz, sizeof(uint32_t)));
+	ht->table = static_cast<uint32_t*>(calloc(tabsz, sizeof(uint32_t)));
 	if (ht->table == nullptr) return -1;
 	ht->elts_sz = eltsz;
-	ht->elts = static_cast<ivlc_keyval_t*>(ml_malloc(eltsz * sizeof(ivlc_keyval_t)));
+	ht->elts = static_cast<ivlc_keyval_t*>(malloc(eltsz * sizeof(ivlc_keyval_t)));
 	if (ht->elts == nullptr)
 	{
-		ml_free(ht->table);
+		free(ht->table);
 		return -1;
 	}
 	return 0;
@@ -31,11 +30,11 @@ int ivlc_init(ivlincomb* ht, uint32_t tabsz, uint32_t eltsz)
 
 ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz)
 {
-	auto ht = static_cast<ivlincomb*>(ml_malloc(sizeof(ivlincomb)));
+	auto ht = static_cast<ivlincomb*>(malloc(sizeof(ivlincomb)));
 	if (ht == nullptr) return nullptr;
 	if (ivlc_init(ht, tabsz, eltsz) != 0)
 	{
-		ml_free(ht);
+		free(ht);
 		return nullptr;
 	}
 	return ht;
@@ -43,15 +42,15 @@ ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz)
 
 void ivlc_dealloc(ivlincomb* ht)
 {
-	ml_free(ht->table);
-	ml_free(ht->elts);
+	free(ht->table);
+	free(ht->elts);
 }
 
 void ivlc_free(ivlincomb* ht)
 {
-	ml_free(ht->table);
-	ml_free(ht->elts);
-	ml_free(ht);
+	free(ht->table);
+	free(ht->elts);
+	free(ht);
 }
 
 void ivlc_reset(ivlincomb* ht)
@@ -68,7 +67,7 @@ int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
 	if (newsz % 3 == 0) newsz += 2;
 	if (newsz % 5 == 0) newsz += 6;
 	if (newsz % 7 == 0) newsz += 30;
-	auto newtab = static_cast<uint32_t*>(ml_calloc(newsz, sizeof(uint32_t)));
+	auto newtab = static_cast<uint32_t*>(calloc(newsz, sizeof(uint32_t)));
 	if (newtab == nullptr) return -1;
 
 	uint32_t* oldtab = ht->table;
@@ -85,14 +84,14 @@ int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
 
 	ht->table_sz = newsz;
 	ht->table = newtab;
-	ml_free(oldtab);
+	free(oldtab);
 	return 0;
 }
 
 int ivlc__grow_elts(ivlincomb* ht, uint32_t sz)
 {
 	uint32_t newsz = 2 * sz;
-	auto elts = static_cast<ivlc_keyval_t*>(ml_realloc(ht->elts, newsz * sizeof(ivlc_keyval_t)));
+	auto elts = static_cast<ivlc_keyval_t*>(realloc(ht->elts, newsz * sizeof(ivlc_keyval_t)));
 	if (elts == nullptr) return -1;
 	ht->elts_sz = newsz;
 	ht->elts = elts;

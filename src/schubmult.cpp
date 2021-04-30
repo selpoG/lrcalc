@@ -8,7 +8,6 @@
 #include <unistd.h>
 extern char* optarg;
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/maple.hpp"
 #include "lrcalc/perm.hpp"
@@ -32,14 +31,11 @@ extern char* optarg;
 [[noreturn]] static void out_of_memory()
 {
 	fprintf(stderr, PROGNAME ": out of memory.\n");
-	alloc_report();
 	exit(1);
 }
 
 int main(int ac, char** av)
 {
-	alloc_getenv();
-
 	if (ac == 1) print_usage();
 
 	int opt_maple = 0;
@@ -90,12 +86,5 @@ int main(int ac, char** av)
 	else
 		ivlc_print(lc, 0);
 
-#ifdef DEBUG_MEMORY
-	iv_free(w1);
-	iv_free(w2);
-	ivlc_free_all(lc);
-#endif
-
-	alloc_report();
 	return 0;
 }

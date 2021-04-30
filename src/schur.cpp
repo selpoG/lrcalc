@@ -3,7 +3,6 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/alloc.hpp"
 #include "lrcalc/ilist.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
@@ -15,6 +14,7 @@
 
 #include "lrcalc/schur.hpp"
 
+#include <assert.h>
 #include <memory>
 
 struct iv_deleter
@@ -48,7 +48,7 @@ ivlincomb* schur_mult(const ivector* sh1, const ivector* sh2, int rows, int cols
 
 int fusion_reduce(ivector* la, int level, ivector* tmp)
 {
-	claim(iv_length(la) == iv_length(tmp));
+	assert(iv_length(la) == iv_length(tmp));
 	int rows = int(iv_length(la));
 	int n = rows + level;
 
@@ -130,7 +130,7 @@ int fusion_reduce_lc(ivlincomb* lc, int level)
 
 ivlincomb* schur_mult_fusion(ivector* sh1, ivector* sh2, int rows, int level)
 {
-	claim(part_valid(sh1) && part_valid(sh2));
+	assert(part_valid(sh1) && part_valid(sh2));
 	if (part_entry(sh1, rows) != 0 || part_entry(sh2, rows) != 0) return ivlc_new(5, 2);
 
 	int sign = 1;

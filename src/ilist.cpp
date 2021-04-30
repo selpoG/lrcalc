@@ -3,8 +3,6 @@
  *  See the file LICENSE for license information.
  */
 
-#include "lrcalc/alloc.hpp"
-
 #define LRCALC_ILIST_C
 #include "lrcalc/ilist.hpp"
 
