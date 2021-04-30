@@ -62,7 +62,7 @@ void ivlc_reset(ivlincomb* ht)
 	ht->elts_len = 1;
 }
 
-static int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
+static int ivlc_grow_table(ivlincomb* ht, uint32_t sz)
 {
 	uint32_t newsz = 2 * USE_FACTOR * sz + 1;
 	if (newsz % 3 == 0) newsz += 2;
@@ -89,7 +89,7 @@ static int ivlc__grow_table(ivlincomb* ht, uint32_t sz)
 	return 0;
 }
 
-static int ivlc__grow_elts(ivlincomb* ht, uint32_t sz)
+static int ivlc_grow_elts(ivlincomb* ht, uint32_t sz)
 {
 	uint32_t newsz = 2 * sz;
 	auto elts = new (std::nothrow) ivlc_keyval_t[newsz];
@@ -105,12 +105,12 @@ static int ivlc_makeroom(ivlincomb* ht, uint32_t sz)
 {
 	if (USE_FACTOR * sz > ht->table_sz)
 	{
-		if (ivlc__grow_table(ht, sz) != 0) return -1;
+		if (ivlc_grow_table(ht, sz) != 0) return -1;
 	}
 	/* First entry of ht->elts not used. */
 	if (sz + 1 > ht->elts_sz)
 	{
-		if (ivlc__grow_elts(ht, sz + 1) != 0) return -1;
+		if (ivlc_grow_elts(ht, sz + 1) != 0) return -1;
 	}
 	return 0;
 }

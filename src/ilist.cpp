@@ -38,7 +38,7 @@ void il_free(ilist* v)
 	delete v;
 }
 
-static int il__realloc_array(ilist* lst, size_t sz)
+static int il_realloc_array(ilist* lst, size_t sz)
 {
 	sz *= 2;
 	auto array = new (std::nothrow) int[sz];
@@ -53,7 +53,7 @@ static int il__realloc_array(ilist* lst, size_t sz)
 static int il_makeroom(ilist* lst, size_t sz)
 {
 	if (sz <= lst->allocated) return 0;
-	return il__realloc_array(lst, sz);
+	return il_realloc_array(lst, sz);
 }
 
 int il_append(ilist* lst, int x)

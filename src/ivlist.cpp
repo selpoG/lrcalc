@@ -42,7 +42,7 @@ static void ivl_free(ivlist* v)
 	delete v;
 }
 
-static int ivl__realloc_array(ivlist* lst, size_t sz)
+static int ivl_realloc_array(ivlist* lst, size_t sz)
 {
 	sz *= 2;
 	auto array = new (std::nothrow) ivector*[sz];
@@ -57,7 +57,7 @@ static int ivl__realloc_array(ivlist* lst, size_t sz)
 static int ivl_makeroom(ivlist* lst, size_t sz)
 {
 	if (sz <= lst->allocated) return 0;
-	return ivl__realloc_array(lst, sz);
+	return ivl_realloc_array(lst, sz);
 }
 
 int ivl_append(ivlist* lst, ivector* x)
