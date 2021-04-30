@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include <memory>
 #include <new>
 
 #include "lrcalc/ivector.hpp"
@@ -22,25 +23,26 @@ struct lrcoef_box
 
 struct lrcoef_content
 {
-	int cont = 0;   /* number of boxes containing a given integer */
-	int supply = 0; /* total supply of given integer */
+	int cont;   /* number of boxes containing a given integer */
+	int supply; /* total supply of given integer */
+	lrcoef_content() : cont(0), supply(0) {}
 };
 
-static lrcoef_content* lrcoef_new_content(const ivector* mu)
+static std::unique_ptr<lrcoef_content[]> lrcoef_new_content(const ivector* mu)
 {
 	assert(part_valid(mu));
 	assert(part_length(mu) > 0);
 
 	uint32_t n = part_length(mu);
-	auto res = new (std::nothrow) lrcoef_content[n + 1]();
-	if (res == nullptr) return nullptr;
+	std::unique_ptr<lrcoef_content[]> res{new (std::nothrow) lrcoef_content[n + 1]()};
+	if (!res) return res;
 	res[0].cont = iv_elem(mu, 0);
 	res[0].supply = iv_elem(mu, 0);
 	for (uint32_t i = 0; i < n; i++) res[i + 1].supply = iv_elem(mu, i);
 	return res;
 }
 
-static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int max_value)
+static std::unique_ptr<lrcoef_box[]> lrcoef_new_skewtab(const ivector* nu, const ivector* la, int max_value)
 {
 	assert(part_valid(nu));
 	assert(part_valid(la));
@@ -48,8 +50,8 @@ static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int 
 	assert(part_entry(nu, 0) > 0);
 
 	auto N = uint32_t(iv_sum(nu) - iv_sum(la));
-	auto array = new (std::nothrow) lrcoef_box[N + 2];
-	if (array == nullptr) return nullptr;
+	std::unique_ptr<lrcoef_box[]> array{new (std::nothrow) lrcoef_box[N + 2]};
+	if (!array) return array;
 
 	auto pos = int(N);
 	for (int r = int(iv_length(nu)) - 1; r >= 0; r--)
@@ -61,7 +63,7 @@ static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int 
 		int nu_1 = part_entry(nu, r + 1);
 		for (int c = la_r; c < nu_r; c++)
 		{
-			lrcoef_box* box = array + --pos;
+			lrcoef_box* box = array.get() + --pos;
 			box->north = (la_0 <= c && c < nu_0) ? pos - nu_r + la_0 : int(N);
 			box->east = (c + 1 < nu_r) ? pos - 1 : int(N + 1);
 			box->west_sz = c - la_r;
@@ -73,8 +75,8 @@ static lrcoef_box* lrcoef_new_skewtab(const ivector* nu, const ivector* la, int 
 			else
 			{
 				int below = pos + nu_1 - la_r;
-				box->max = array[below].max - 1;
-				box->se_sz = array[below].se_sz + nu_1 - c;
+				box->max = array[uint32_t(below)].max - 1;
+				box->se_sz = array[uint32_t(below)].se_sz + nu_1 - c;
 			}
 		}
 	}
@@ -90,28 +92,25 @@ long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector
 	assert(iv_sum(outer) == iv_sum(inner) + iv_sum(content));
 	assert(iv_sum(content) > 1);
 
-	lrcoef_box* T = lrcoef_new_skewtab(outer, inner, int(part_length(content)));
-	if (T == nullptr) return -1;
-	lrcoef_content* C = lrcoef_new_content(content);
-	if (C == nullptr)
-	{
-		delete[] T;
-		return -1;
-	}
+	auto T = lrcoef_new_skewtab(outer, inner, int(part_length(content)));
+	if (!T) return -1;
+	auto C = lrcoef_new_content(content);
+	if (!C) return -1;
 
 	int N = iv_sum(content);
 	int pos = 0;
-	lrcoef_box* box = T;
-	int above = T[box->north].value;
+	lrcoef_box* box = T.get();
+	int above = T[uint32_t(box->north)].value;
 	int x = 1;
 	int se_supply = N - C[1].supply;
 	long long coef = 0;
 
 	while (true)
 	{
-		while (x > above && (C[x].cont == C[x].supply || C[x].cont == C[x - 1].cont))
+		while (x > above &&
+		       (C[uint32_t(x)].cont == C[uint32_t(x)].supply || C[uint32_t(x)].cont == C[uint32_t(x - 1)].cont))
 		{
-			se_supply += (C[x].supply - C[x].cont);
+			se_supply += (C[uint32_t(x)].supply - C[uint32_t(x)].cont);
 			x--;
 		}
 
@@ -121,30 +120,30 @@ long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector
 			if (pos < 0) break;
 			box--;
 			se_supply = box->se_supply;
-			above = T[box->north].value;
+			above = T[uint32_t(box->north)].value;
 			x = box->value;
-			C[x].cont--;
-			se_supply += (C[x].supply - C[x].cont);
+			C[uint32_t(x)].cont--;
+			se_supply += (C[uint32_t(x)].supply - C[uint32_t(x)].cont);
 			x--;
 		}
 		else if (pos + 1 < N)
 		{
 			box->se_supply = se_supply;
 			box->value = x;
-			C[x].cont++;
+			C[uint32_t(x)].cont++;
 			pos++;
 			box++;
-			se_supply = T[box->east].se_supply;
-			x = T[box->east].value;
-			above = T[box->north].value;
+			se_supply = T[uint32_t(box->east)].se_supply;
+			x = T[uint32_t(box->east)].value;
+			above = T[uint32_t(box->north)].value;
 			while (x > box->max)
 			{
-				se_supply += (C[x].supply - C[x].cont);
+				se_supply += (C[uint32_t(x)].supply - C[uint32_t(x)].cont);
 				x--;
 			}
 			while (x > above && se_supply < box->se_sz)
 			{
-				se_supply += (C[x].supply - C[x].cont);
+				se_supply += (C[uint32_t(x)].supply - C[uint32_t(x)].cont);
 				x--;
 			}
 		}
@@ -154,15 +153,13 @@ long long lrcoef_count(const ivector* outer, const ivector* inner, const ivector
 			pos--;
 			box--;
 			se_supply = box->se_supply;
-			above = T[box->north].value;
+			above = T[uint32_t(box->north)].value;
 			x = box->value;
-			C[x].cont--;
-			se_supply += (C[x].supply - C[x].cont);
+			C[uint32_t(x)].cont--;
+			se_supply += (C[uint32_t(x)].supply - C[uint32_t(x)].cont);
 			x--;
 		}
 	}
 
-	delete[] T;
-	delete[] C;
 	return coef;
 }

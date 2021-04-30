@@ -202,38 +202,37 @@ struct partial_shape
 	int top;
 	int bot; /* Left edge of skew shape is (top,col)...(bot-1,col). */
 	int col;
+	partial_shape(ivector* inn, ivector* out, int rows) : inn(inn), out(out), rows(rows), top(0), bot(0), col(0) {}
+	void add_comp(const ivector* out0, const ivector* inn0, int c0, int r0t, int r0b, int c1, int r1t, int r1b)
+	{
+		int x = this->top + this->rows + r1t - r1b;
+		if (x > this->bot) x = this->bot;
+		int y1 = x + r1b - r1t;
+		int z = y1 + r0b - r1b;
+
+		int r;
+		for (r = this->bot; r < y1; r++) iv_elem(this->out, r) = this->col;
+		for (; r < z; r++)
+		{
+			int c = iv_elem(out0, r - x + r1t);
+			iv_elem(this->out, r) = this->col + c - c1;
+		}
+
+		int len0 = (inn0 == nullptr) ? 0 : int(iv_length(inn0));
+		int y0 = x + r0t - r1t;
+		for (r = x; r < y0; r++)
+		{
+			int ra = r - x + r1t;
+			int c = (ra < len0) ? iv_elem(inn0, ra) : 0;
+			iv_elem(this->inn, r) = this->col + c - c1;
+		}
+		for (; r < z; r++) iv_elem(this->inn, r) = this->col - c1 + c0;
+
+		this->col -= (c1 - c0);
+		this->top = y0;
+		this->bot = z;
+	}
 };
-
-static void _add_comp(partial_shape* ps, const ivector* out0, const ivector* inn0, int c0, int r0t, int r0b, int c1,
-                      int r1t, int r1b)
-{
-	int x = ps->top + ps->rows + r1t - r1b;
-	if (x > ps->bot) x = ps->bot;
-	int y1 = x + r1b - r1t;
-	int z = y1 + r0b - r1b;
-
-	int r;
-	for (r = ps->bot; r < y1; r++) iv_elem(ps->out, r) = ps->col;
-	for (; r < z; r++)
-	{
-		int c = iv_elem(out0, r - x + r1t);
-		iv_elem(ps->out, r) = ps->col + c - c1;
-	}
-
-	int len0 = (inn0 == nullptr) ? 0 : int(iv_length(inn0));
-	int y0 = x + r0t - r1t;
-	for (r = x; r < y0; r++)
-	{
-		int ra = r - x + r1t;
-		int c = (ra < len0) ? iv_elem(inn0, ra) : 0;
-		iv_elem(ps->inn, r) = ps->col + c - c1;
-	}
-	for (; r < z; r++) iv_elem(ps->inn, r) = ps->col - c1 + c0;
-
-	ps->col -= (c1 - c0);
-	ps->top = y0;
-	ps->bot = z;
-}
 
 /* Find optimal shape for skew Schur function.
  *
@@ -330,13 +329,7 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 	int r0b = r2b;
 
 	/* Skew shape structure to pass to add_comp. */
-	partial_shape ps;
-	ps.inn = inn.release();
-	ps.out = out.release();
-	ps.rows = maxrows;
-	ps.top = 0;
-	ps.bot = 0;
-	ps.col = 0;
+	partial_shape ps{inn.release(), out.release(), maxrows};
 
 	for (c1--; c1 >= 0; c1--)
 	{
@@ -381,7 +374,7 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 			int r = 1;
 			int c = iv_elem(cont, 0);
 			while (r < clen && iv_elem(cont, r) == c) r++;
-			_add_comp(&ps, cont.get(), nullptr, 0, 0, clen, c, 0, r);
+			ps.add_comp(cont.get(), nullptr, 0, 0, clen, c, 0, r);
 		}
 
 		if (r1t == r2t && comp_size > cont_size)
@@ -403,9 +396,7 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 			cont_size = comp_size;
 		}
 		else if (comp_size > 0)
-		{
-			_add_comp(&ps, outer, inner, c1, r1t, r1b, c2, r2t, r2b);
-		}
+			ps.add_comp(outer, inner, c1, r1t, r1b, c2, r2t, r2b);
 
 		c2 = c1;
 		r2t = r0t;
