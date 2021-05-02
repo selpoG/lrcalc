@@ -8,9 +8,9 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include <memory>
+#include <vector>
 
-#include "lrcalc/ilist.hpp"
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/ivlist.hpp"
@@ -18,22 +18,6 @@
 #include "lrcalc/lriter.hpp"
 #include "lrcalc/optshape.hpp"
 #include "lrcalc/part.hpp"
-
-struct iv_deleter
-{
-	void operator()(ivector* p) const { iv_free(p); }
-};
-struct il_deleter
-{
-	void operator()(ilist* p) const { il_free(p); }
-};
-struct ivl_deleter
-{
-	void operator()(ivlist* p) const { ivl_free_all(p); }
-};
-using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
-using safe_il_ptr = std::unique_ptr<ilist, il_deleter>;
-using safe_ivl_ptr = std::unique_ptr<ivlist, ivl_deleter>;
 
 ivlincomb* schur_mult(const ivector* sh1, const ivector* sh2, int rows, int cols, int partsz)
 {
@@ -48,7 +32,7 @@ ivlincomb* schur_mult(const ivector* sh1, const ivector* sh2, int rows, int cols
 	return lc;
 }
 
-static int fusion_reduce(ivector* la, int level, ivector* tmp)
+static int fusion_reduce(ivector* la, int level, iv_ptr& tmp)
 {
 	assert(iv_length(la) == iv_length(tmp));
 	int rows = int(iv_length(la));
@@ -97,96 +81,92 @@ static int fusion_reduce(ivector* la, int level, ivector* tmp)
 int fusion_reduce_lc(ivlincomb* lc, int level)
 {
 	/* Copy linear combination to lists. */
-	safe_ivl_ptr parts{ivl_new(ivlc_card(lc))};
+	ivl_ptr parts{ivl_new(ivlc_card(lc))};
 	if (!parts) return 1;
-	safe_il_ptr coefs{il_new(ivlc_card(lc))};
-	if (!coefs) return 1;
-
-	ivlc_iter itr;
-	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	try
 	{
-		ivl_append(parts.get(), ivlc_key(&itr));
-		il_append(coefs.get(), ivlc_value(&itr));
+		std::vector<int> coefs;
+		coefs.reserve(ivlc_card(lc));
+
+		for (auto& kv : ivlc_iterator(lc))
+		{
+			ivl_append(parts.get(), kv.key);
+			coefs.push_back(kv.value);
+		}
+		ivlc_reset(lc);
+
+		iv_ptr tmp;
+		if (ivl_length(parts) > 0)
+		{
+			const ivector* sh = ivl_elem(parts, 0);
+			tmp = iv_create(iv_length(sh));
+			if (!tmp) return 1;
+		}
+
+		/* Reduce and reinsert terms. */
+		while (ivl_length(parts) != 0)
+		{
+			ivector* sh = ivl_poplast(parts.get());
+			int c = coefs.back();
+			coefs.pop_back();
+			int sign = fusion_reduce(sh, level, tmp);
+			if (ivlc_add_element(lc, sign * c, sh, iv_hash(sh), LC_FREE_KEY | LC_FREE_ZERO) != 0) return true;
+		}
 	}
-	ivlc_reset(lc);
-
-	safe_iv_ptr tmp;
-	if (ivl_length(parts) > 0)
+	catch (const std::bad_alloc&)
 	{
-		const ivector* sh = ivl_elem(parts, 0);
-		tmp.reset(iv_new(iv_length(sh)));
-		if (!tmp) return 1;
-	}
-
-	/* Reduce and reinsert terms. */
-	while (ivl_length(parts) != 0)
-	{
-		ivector* sh = ivl_poplast(parts.get());
-		int c = il_poplast(coefs.get());
-		int sign = fusion_reduce(sh, level, tmp.get());
-		if (ivlc_add_element(lc, sign * c, sh, iv_hash(sh), LC_FREE_KEY | LC_FREE_ZERO) != 0) return true;
+		return 1;
 	}
 
 	return 0;
 }
 
-ivlincomb* schur_mult_fusion(ivector* sh1, ivector* sh2, int rows, int level)
+ivlincomb* schur_mult_fusion(const ivector* sh1, const ivector* sh2, int rows, int level)
 {
 	assert(part_valid(sh1) && part_valid(sh2));
 	if (part_entry(sh1, rows) != 0 || part_entry(sh2, rows) != 0) return ivlc_new(5, 2);
 
 	int sign = 1;
-	safe_iv_ptr tmp, nsh1, nsh2;
+	iv_ptr tmp, nsh1, nsh2;
 	if (part_entry(sh1, 0) - part_entry(sh1, rows - 1) > level)
 	{
-		tmp.reset(iv_new(uint32_t(rows)));
+		tmp = iv_create(uint32_t(rows));
 		if (!tmp) return nullptr;
-		nsh1.reset(iv_new(uint32_t(rows)));
+		nsh1 = iv_create(uint32_t(rows));
 		if (!nsh1) return nullptr;
 		for (int i = 0; i < rows; i++) iv_elem(nsh1, i) = part_entry(sh1, i);
+		sign = fusion_reduce(nsh1.get(), level, tmp);
 		sh1 = nsh1.get();
-		sign = fusion_reduce(sh1, level, tmp.get());
 	}
 	if (sign == 0) return ivlc_new(5, 2);
 	if (part_entry(sh2, 0) - part_entry(sh2, rows - 1) > level)
 	{
-		if (!tmp) tmp.reset(iv_new(uint32_t(rows)));
+		if (!tmp) tmp = iv_create(uint32_t(rows));
 		if (!tmp) return nullptr;
-		nsh2.reset(iv_new(uint32_t(rows)));
+		nsh2 = iv_create(uint32_t(rows));
 		if (!nsh2) return nullptr;
 		for (int i = 0; i < rows; i++) iv_elem(nsh2, i) = part_entry(sh2, i);
+		sign *= fusion_reduce(nsh2.get(), level, tmp);
 		sh2 = nsh2.get();
-		sign *= fusion_reduce(sh2, level, tmp.get());
 	}
 	if (sign == 0) return ivlc_new(5, 2);
 
 	skew_shape ss;
 	if (optim_fusion(&ss, sh1, sh2, rows, level) != 0) return nullptr;
-	ivlincomb* lc;
+	ivlc_ptr lc;
 	if (ss.sign)
-		lc = lrit_expand(ss.outer, nullptr, ss.cont, rows, -1, rows);
+		lc.reset(lrit_expand(ss.outer, nullptr, ss.cont, rows, -1, rows));
 	else
-		lc = ivlc_new(5, 2);
+		lc.reset(ivlc_new(5, 2));
 	sksh_dealloc(&ss);
-	if (lc == nullptr) return nullptr;
+	if (!lc) return nullptr;
 
-	if (fusion_reduce_lc(lc, level))
-	{
-		ivlc_free_all(lc);
-		return nullptr;
-	}
+	if (fusion_reduce_lc(lc.get(), level)) return nullptr;
 
 	if (sign < 0)
-	{
-		ivlc_iter itr;
-		for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
-		{
-			ivlc_keyval_t* kv = ivlc_keyval(&itr);
-			kv->value = -kv->value;
-		}
-	}
+		for (auto& kv : ivlc_iterator(lc)) kv.value = -kv.value;
 
-	return lc;
+	return lc.release();
 }
 
 ivlincomb* schur_skew(const ivector* outer, const ivector* inner, int rows, int partsz)
@@ -217,35 +197,31 @@ static int _schur_coprod_isredundant(const ivector* cont, int rows, int cols)
 	return 0;
 }
 
-static ivlincomb* _schur_coprod_count(lrtab_iter* lrit, int rows, int cols)
+static ivlc_ptr _schur_coprod_count(lrtab_iter* lrit, int rows, int cols)
 {
 	ivector* cont = lrit->cont;
-	ivlincomb* lc = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
-	if (lc == nullptr) return nullptr;
+	ivlc_ptr lc = ivlc_create();
+	if (!lc) return {};
 	for (; lrit_good(lrit); lrit_next(lrit))
 	{
 		if (_schur_coprod_isredundant(cont, rows, cols)) continue;
-		if (ivlc_add_element(lc, 1, cont, iv_hash(cont), LC_COPY_KEY) != 0)
-		{
-			ivlc_free_all(lc);
-			return nullptr;
-		}
+		if (ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY) != 0) return {};
 	}
 	return lc;
 }
 
-static ivlincomb* _schur_coprod_expand(const ivector* outer, const ivector* content, int rows, int cols, int partsz)
+static ivlc_ptr _schur_coprod_expand(const ivector* outer, const ivector* content, int rows, int cols, int partsz)
 {
 	lrtab_iter* lrit = lrit_new(outer, nullptr, content, -1, -1, partsz);
-	if (lrit == nullptr) return nullptr;
-	ivlincomb* lc = _schur_coprod_count(lrit, rows, cols);
+	if (lrit == nullptr) return {};
+	ivlc_ptr lc = _schur_coprod_count(lrit, rows, cols);
 	lrit_free(lrit);
 	return lc;
 }
 
 ivlincomb* schur_coprod(const ivector* sh, int rows, int cols, int partsz, int all)
 {
-	safe_iv_ptr box{iv_new(uint32_t(rows))};
+	iv_ptr box = iv_create(uint32_t(rows));
 	if (!box) return nullptr;
 	for (int i = 0; i < rows; i++) iv_elem(box, i) = cols;
 
@@ -254,9 +230,9 @@ ivlincomb* schur_coprod(const ivector* sh, int rows, int cols, int partsz, int a
 	skew_shape ss;
 	if (optim_mult(&ss, sh, box.get(), -1, -1) != 0) return nullptr;
 
-	ivlincomb* lc = _schur_coprod_expand(ss.outer, ss.cont, rows, cols, partsz);
+	ivlc_ptr lc = _schur_coprod_expand(ss.outer, ss.cont, rows, cols, partsz);
 	sksh_dealloc(&ss);
-	return lc;
+	return lc.release();
 }
 
 long long schur_lrcoef(const ivector* outer, const ivector* inner1, const ivector* inner2)

@@ -12,6 +12,7 @@
 
 #include <new>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 
 uint32_t ivlc_card(const ivlincomb* ht) { return ht->card; }
@@ -174,21 +175,17 @@ static ivlc_keyval_t* ivlc_remove(ivlincomb* ht, const ivector* key, uint32_t ha
 
 int ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2, int opt_zero)
 {
-	ivlc_iter itr;
-	ivlc_keyval_t *kv1, *kv2;
-	for (ivlc_first(ht1, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	for (const auto& kv1 : ivlc_iterator(ht1))
 	{
-		kv1 = ivlc_keyval(&itr);
-		if (kv1->value == 0 && opt_zero == 0) continue;
-		kv2 = ivlc_lookup(ht2, kv1->key, kv1->hash);
-		if (kv2 == nullptr || kv1->value != kv2->value) return 0;
+		if (kv1.value == 0 && opt_zero == 0) continue;
+		const ivlc_keyval_t* kv2 = ivlc_lookup(ht2, kv1.key, kv1.hash);
+		if (kv2 == nullptr || kv1.value != kv2->value) return 0;
 	}
-	for (ivlc_first(ht2, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	for (const auto& kv2 : ivlc_iterator(ht2))
 	{
-		kv2 = ivlc_keyval(&itr);
-		if (kv2->value == 0 && opt_zero == 0) continue;
-		kv1 = ivlc_lookup(ht1, kv2->key, kv2->hash);
-		if (kv1 == nullptr || kv1->value != kv2->value) return 0;
+		if (kv2.value == 0 && opt_zero == 0) continue;
+		const ivlc_keyval_t* kv1 = ivlc_lookup(ht1, kv2.key, kv2.hash);
+		if (kv1 == nullptr || kv1->value != kv2.value) return 0;
 	}
 	return 1;
 }
@@ -229,20 +226,11 @@ void ivlc_next(ivlc_iter* itr)
 	itr->i = ht->table[index];
 }
 
-ivector* ivlc_key(const ivlc_iter* itr) { return itr->ht->elts[itr->i].key; }
-
-int32_t ivlc_value(const ivlc_iter* itr) { return itr->ht->elts[itr->i].value; }
-
 ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr) { return itr->ht->elts + itr->i; }
 
 static void ivlc_dealloc_refs(ivlincomb* ht)
 {
-	ivlc_iter itr;
-	for (ivlc_first(ht, &itr); ivlc_good(&itr); ivlc_next(&itr))
-	{
-		ivlc_keyval_t* kv = ivlc_keyval(&itr);
-		iv_free(kv->key);
-	}
+	for (auto& kv : ivlc_iterator(ht)) iv_free(kv.key);
 }
 
 void ivlc_free_all(ivlincomb* ht)
@@ -284,25 +272,20 @@ int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int 
 	return 0;
 }
 
-int ivlc_add_multiple(ivlincomb* dst, int32_t c, const ivlincomb* src, int opt)
+int ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt)
 {
-	ivlc_iter itr;
-	for (ivlc_first(src, &itr); ivlc_good(&itr); ivlc_next(&itr))
-	{
-		ivlc_keyval_t* kv = ivlc_keyval(&itr);
-		if (ivlc_add_element(dst, c * kv->value, kv->key, kv->hash, opt) != 0) return -1;
-	}
+	for (auto& kv : ivlc_iterator(src))
+		if (ivlc_add_element(dst, c * kv.value, kv.key, kv.hash, opt) != 0) return -1;
 	return 0;
 }
 
 void ivlc_print(const ivlincomb* ht, int opt_zero)
 {
-	ivlc_iter itr;
-	for (ivlc_first(ht, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	for (const auto& kv : ivlc_iterator(ht))
 	{
-		if (ivlc_value(&itr) == 0 && opt_zero == 0) continue;
-		printf("%d  ", ivlc_value(&itr));
-		iv_print(ivlc_key(&itr));
+		if (kv.value == 0 && opt_zero == 0) continue;
+		printf("%d  ", kv.value);
+		iv_print(kv.key);
 		putchar('\n');
 	}
 }

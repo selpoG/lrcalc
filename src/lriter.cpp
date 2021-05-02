@@ -13,6 +13,7 @@
 
 #include <new>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
@@ -27,15 +28,11 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	/* Empty result if inner not contained in outer. */
 	if (inner != nullptr && part_leq(inner, outer) == 0)
 	{
-		ivector* cont = iv_new(1);
-		if (cont == nullptr) return nullptr;
+		iv_ptr cont = iv_create(1);
+		if (!cont) return nullptr;
 		auto lrit = new (std::nothrow) lrtab_iter;
-		if (lrit == nullptr)
-		{
-			iv_free(cont);
-			return nullptr;
-		}
-		lrit->cont = cont;
+		if (lrit == nullptr) return nullptr;
+		lrit->cont = cont.release();
 		lrit->size = -1;
 		return lrit;
 	}
@@ -291,15 +288,11 @@ void lrit_next(lrtab_iter* lrit)
 static ivlincomb* lrit_count(lrtab_iter* lrit)
 {
 	ivector* cont = lrit->cont;
-	ivlincomb* lc = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
-	if (lc == nullptr) return nullptr;
+	ivlc_ptr lc = ivlc_create();
+	if (!lc) return nullptr;
 	for (; lrit_good(lrit); lrit_next(lrit))
-		if (ivlc_add_element(lc, 1, cont, iv_hash(cont), LC_COPY_KEY) != 0)
-		{
-			ivlc_free_all(lc);
-			return nullptr;
-		}
-	return lc;
+		if (ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY) != 0) return nullptr;
+	return lc.release();
 }
 
 ivlincomb* lrit_expand(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,

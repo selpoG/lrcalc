@@ -33,12 +33,13 @@ impl Iterator for LinearCombination {
             if bindings::ivlc_good(&mut self.it) == 0 {
                 None
             } else {
+                let kv = *bindings::ivlc_keyval(&self.it);
                 Some((
                     IntVector {
-                        data: bindings::ivlc_key(&mut self.it),
+                        data: kv.key,
                         owned: false,
                     },
-                    bindings::ivlc_value(&mut self.it),
+                    kv.value,
                 ))
             }
         }

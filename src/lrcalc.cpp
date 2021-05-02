@@ -10,6 +10,7 @@
 #include <unistd.h>
 extern int optind;
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/lriter.hpp"
@@ -82,30 +83,29 @@ static void mult_main(int ac, char* const* av)
 		default: cmd_usage(mult_usage);
 		}
 
-	ivector* sh1 = get_vect_arg(ac, av);
-	if (sh1 == nullptr || part_valid(sh1) == 0) cmd_error(mult_usage, "part1 not a valid partition.");
-	ivector* sh2 = get_vect_arg(ac, av);
-	if (sh2 == nullptr || part_valid(sh2) == 0) cmd_error(mult_usage, "part2 not a valid partition.");
+	ivlc_ptr lc;
+	{
+		iv_ptr sh1{get_vect_arg(ac, av)};
+		if (!sh1 || part_valid(sh1.get()) == 0) cmd_error(mult_usage, "part1 not a valid partition.");
+		iv_ptr sh2{get_vect_arg(ac, av)};
+		if (!sh2 || part_valid(sh2.get()) == 0) cmd_error(mult_usage, "part2 not a valid partition.");
 
-	ivlincomb* lc;
-	if (opt_fusion || opt_quantum)
-		lc = schur_mult_fusion(sh1, sh2, opt_rows, opt_cols);
-	else
-		lc = schur_mult(sh1, sh2, opt_rows, opt_cols, -1);
-
-	iv_free(sh1);
-	iv_free(sh2);
-	if (lc == nullptr) out_of_memory();
+		if (opt_fusion || opt_quantum)
+			lc.reset(schur_mult_fusion(sh1.get(), sh2.get(), opt_rows, opt_cols));
+		else
+			lc.reset(schur_mult(sh1.get(), sh2.get(), opt_rows, opt_cols, -1));
+	}
+	if (!lc) out_of_memory();
 
 	if (opt_quantum)
 		if (opt_maple)
-			maple_qprint_lincomb(lc, opt_cols, "s");
+			maple_qprint_lincomb(lc.get(), opt_cols, "s");
 		else
-			part_qprint_lincomb(lc, opt_cols);
+			part_qprint_lincomb(lc.get(), opt_cols);
 	else if (opt_maple)
-		maple_print_lincomb(lc, "s", 1);
+		maple_print_lincomb(lc.get(), "s", 1);
 	else
-		part_print_lincomb(lc);
+		part_print_lincomb(lc.get());
 }
 
 /***************  SKEW  ***************/
@@ -129,20 +129,21 @@ static void skew_main(int ac, char* const* av)
 		default: cmd_usage(skew_usage);
 		}
 
-	ivector* outer = get_vect_arg(ac, av);
-	if (outer == nullptr || part_valid(outer) == 0) cmd_error(skew_usage, "outer shape not a valid partition.");
-	ivector* inner = get_vect_arg(ac, av);
-	if (inner == nullptr || part_valid(inner) == 0) cmd_error(skew_usage, "inner shape not a valid partition.");
+	ivlc_ptr lc;
+	{
+		iv_ptr outer{get_vect_arg(ac, av)};
+		if (!outer || part_valid(outer.get()) == 0) cmd_error(skew_usage, "outer shape not a valid partition.");
+		iv_ptr inner{get_vect_arg(ac, av)};
+		if (!inner || part_valid(inner.get()) == 0) cmd_error(skew_usage, "inner shape not a valid partition.");
 
-	ivlincomb* lc = schur_skew(outer, inner, opt_rows, -1);
-	iv_free(inner);
-	iv_free(outer);
-	if (lc == nullptr) out_of_memory();
+		lc.reset(schur_skew(outer.get(), inner.get(), opt_rows, -1));
+	}
+	if (!lc) out_of_memory();
 
 	if (opt_maple)
-		maple_print_lincomb(lc, "s", 1);
+		maple_print_lincomb(lc.get(), "s", 1);
 	else
-		part_print_lincomb(lc);
+		part_print_lincomb(lc.get());
 }
 
 /***************  COPROD  ***************/
@@ -161,22 +162,25 @@ static void coprod_main(int ac, char* const* av)
 		default: cmd_usage(mult_usage);
 		}
 
-	ivector* sh = get_vect_arg(ac, av);
-	if (sh == nullptr || part_valid(sh) == 0) cmd_error(mult_usage, "part not a valid partition.");
-
-	uint32_t rows = part_length(sh);
-	int cols = part_entry(sh, 0);
-
-	ivlincomb* lc = schur_coprod(sh, int(rows), cols, -1, opt_all);
-	iv_free(sh);
-	if (lc == nullptr) out_of_memory();
-
-	ivlc_iter itr;
-	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	ivlc_ptr lc;
+	uint32_t rows;
+	int cols;
 	{
-		if (ivlc_value(&itr) == 0) continue;
-		printf("%d  (", ivlc_value(&itr));
-		ivector* part = ivlc_key(&itr);
+		iv_ptr sh{get_vect_arg(ac, av)};
+		if (!sh || part_valid(sh.get()) == 0) cmd_error(mult_usage, "part not a valid partition.");
+
+		rows = part_length(sh.get());
+		cols = part_entry(sh.get(), 0);
+
+		lc.reset(schur_coprod(sh.get(), int(rows), cols, -1, opt_all));
+	}
+	if (!lc) out_of_memory();
+
+	for (const auto& kv : ivlc_iterator(lc))
+	{
+		if (kv.value == 0) continue;
+		printf("%d  (", kv.value);
+		const ivector* part = kv.key;
 		for (uint32_t i = 0; i < rows && iv_elem(part, i) > cols; i++)
 		{
 			if (i) putchar(',');
@@ -207,14 +211,14 @@ static void coef_main(int ac, char* const* av)
 		default: cmd_usage(coef_usage);
 		}
 
-	ivector* outer = get_vect_arg(ac, av);
-	if (outer == nullptr || part_valid(outer) == 0) cmd_error(coef_usage, "outer not a valid partition.");
-	ivector* sh1 = get_vect_arg(ac, av);
-	if (sh1 == nullptr || part_valid(sh1) == 0) cmd_error(coef_usage, "inner1 not a valid partition.");
-	ivector* sh2 = get_vect_arg(ac, av);
-	if (sh2 == nullptr || part_valid(sh2) == 0) cmd_error(coef_usage, "inner2 not a valid partition.");
+	iv_ptr outer{get_vect_arg(ac, av)};
+	if (!outer || part_valid(outer.get()) == 0) cmd_error(coef_usage, "outer not a valid partition.");
+	iv_ptr sh1{get_vect_arg(ac, av)};
+	if (!sh1 || part_valid(sh1.get()) == 0) cmd_error(coef_usage, "inner1 not a valid partition.");
+	iv_ptr sh2{get_vect_arg(ac, av)};
+	if (!sh2 || part_valid(sh2.get()) == 0) cmd_error(coef_usage, "inner2 not a valid partition.");
 
-	long long coef = schur_lrcoef(outer, sh1, sh2);
+	long long coef = schur_lrcoef(outer.get(), sh1.get(), sh2.get());
 
 	if (coef >= 0)
 		printf("%lld\n", coef);
@@ -238,23 +242,19 @@ static void tab_main(int ac, char* const* av)
 		default: cmd_usage(tab_usage);
 		}
 
-	ivector* outer = get_vect_arg(ac, av);
-	if (outer == nullptr || part_valid(outer) == 0) cmd_error(tab_usage, "outer shape not a valid partition.");
-	ivector* inner = get_vect_arg(ac, av);
-	if (inner == nullptr || part_valid(inner) == 0) cmd_error(tab_usage, "inner shape not a valid partition.");
+	iv_ptr outer{get_vect_arg(ac, av)};
+	if (!outer || part_valid(outer.get()) == 0) cmd_error(tab_usage, "outer shape not a valid partition.");
+	iv_ptr inner{get_vect_arg(ac, av)};
+	if (!inner || part_valid(inner.get()) == 0) cmd_error(tab_usage, "inner shape not a valid partition.");
 
-	lrtab_iter* lrit = lrit_new(outer, inner, nullptr, opt_rows, -1, -1);
-	if (lrit == nullptr)
-	{
-		iv_free(outer);
-		iv_free(inner);
-		out_of_memory();
-	}
+	lrtab_iter* lrit = lrit_new(outer.get(), inner.get(), nullptr, opt_rows, -1, -1);
+	if (lrit == nullptr) out_of_memory();
 	for (; lrit_good(lrit); lrit_next(lrit))
 	{
-		lrit_print_skewtab(lrit, outer, inner);
+		lrit_print_skewtab(lrit, outer.get(), inner.get());
 		printf("\n");
 	}
+	lrit_free(lrit);
 }
 
 /***************  MAIN FUNCTION  ***************/

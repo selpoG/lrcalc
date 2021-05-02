@@ -12,6 +12,7 @@ extern int optind;
 
 #include <new>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 
 ivector* get_vect_arg(int ac, const char* const* av)
@@ -43,10 +44,10 @@ ivector* get_vect_arg(int ac, const char* const* av)
 
 	if (n == 0) return nullptr;
 
-	ivector* res = iv_new(n);
-	if (res == nullptr) return nullptr;
+	iv_ptr res = iv_create(n);
+	if (!res) return nullptr;
 	for (uint32_t i = 0; i < n; i++) iv_elem(res, i) = tmp[i];
 	delete[] tmp;
 
-	return res;
+	return res.release();
 }

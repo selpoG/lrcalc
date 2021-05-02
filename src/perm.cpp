@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlist.hpp"
 
@@ -85,19 +86,15 @@ ivlist* all_strings(const ivector* dimvec)
 	assert(dimvec_valid(dimvec));
 
 	uint32_t ld = iv_length(dimvec);
-	ivector* cntvec = iv_new_zero(ld);
-	if (cntvec == nullptr) return nullptr;
+	iv_ptr cntvec = iv_create_zero(ld);
+	if (!cntvec) return nullptr;
 	int n_ = iv_elem(dimvec, ld - 1);
-	if (n_ < 0)
-	{
-		iv_free(cntvec);
-		return nullptr;
-	}
+	if (n_ < 0) return nullptr;
 	auto n = uint32_t(n_);
 
-	ivlist* res = nullptr;
-	ivector* str = iv_new(n);
-	if (str == nullptr) goto out_of_memory;
+	ivl_ptr res;
+	iv_ptr str = iv_create(n);
+	if (!str) return nullptr;
 	{
 		uint32_t j = 0;
 		for (uint32_t i = 0; i < ld; i++)
@@ -110,23 +107,22 @@ ivlist* all_strings(const ivector* dimvec)
 		}
 	}
 
-	res = ivl_new(200);
-	if (res == nullptr) goto out_of_memory;
+	res.reset(ivl_new(200));
+	if (!res) return nullptr;
 	if (n == 0)
 	{
-		if (ivl_append(res, str) != 0) goto out_of_memory;
-		iv_free(cntvec);
-		return res;
+		if (ivl_append(res.get(), str.release()) != 0) return nullptr;
+		return res.release();
 	}
 
 	while (1)
 	{
-		ivector* nstr = iv_new_copy(str);
-		if (nstr == nullptr) goto out_of_memory;
-		if (ivl_append(res, nstr) != 0)
+		ivector* nstr = iv_new_copy(str.get());
+		if (nstr == nullptr) return nullptr;
+		if (ivl_append(res.get(), nstr) != 0)
 		{
 			iv_free(nstr);
-			goto out_of_memory;
+			return nullptr;
 		}
 		uint32_t j = n - 1;
 		iv_elem(cntvec, iv_elem(str, j))++;
@@ -155,26 +151,16 @@ ivlist* all_strings(const ivector* dimvec)
 		}
 	}
 
-	iv_free(cntvec);
-	iv_free(str);
-	return res;
-
-out_of_memory:
-	if (cntvec) iv_free(cntvec);
-	if (str) iv_free(str);
-	if (res) ivl_free_all(res);
-	return nullptr;
+	return res.release();
 }
 
 ivlist* all_perms(int n)
 {
 	assert(n >= 0);
-	ivector* dimvec = iv_new(uint32_t(n + 1));
-	if (dimvec == nullptr) return nullptr;
+	iv_ptr dimvec = iv_create(uint32_t(n + 1));
+	if (!dimvec) return nullptr;
 	for (uint32_t i = 0; i < iv_length(dimvec); i++) iv_elem(dimvec, i) = int(i);
-	ivlist* res = all_strings(dimvec);
-	iv_free(dimvec);
-	return res;
+	return all_strings(dimvec.get());
 }
 
 ivector* string2perm(const ivector* str)
@@ -186,17 +172,13 @@ ivector* string2perm(const ivector* str)
 		if (int(N) < iv_elem(str, i)) N = uint32_t(iv_elem(str, i));
 	N++;
 
-	ivector* dimvec = iv_new_zero(N);
-	if (dimvec == nullptr) return nullptr;
+	iv_ptr dimvec = iv_create_zero(N);
+	if (!dimvec) return nullptr;
 	for (uint32_t i = 0; i < n; i++) iv_elem(dimvec, iv_elem(str, i))++;
 	for (uint32_t i = 1; i < N; i++) iv_elem(dimvec, i) += iv_elem(dimvec, i - 1);
 
-	ivector* perm = iv_new(n);
-	if (perm == nullptr)
-	{
-		iv_free(dimvec);
-		return nullptr;
-	}
+	iv_ptr perm = iv_create(n);
+	if (!perm) return nullptr;
 
 	for (int i = int(n) - 1; i >= 0; i--)
 	{
@@ -205,8 +187,7 @@ ivector* string2perm(const ivector* str)
 		iv_elem(perm, iv_elem(dimvec, j)) = i + 1;
 	}
 
-	iv_free(dimvec);
-	return perm;
+	return perm.release();
 }
 
 ivector* str2dimvec(const ivector* str)
@@ -217,35 +198,29 @@ ivector* str2dimvec(const ivector* str)
 		if (iv_elem(str, i) < 0) return nullptr;
 		if (int(n) <= iv_elem(str, i)) n = uint32_t(iv_elem(str, i)) + 1;
 	}
-	ivector* res = iv_new_zero(n);
-	if (res == nullptr) return nullptr;
+	iv_ptr res = iv_create_zero(n);
+	if (!res) return nullptr;
 	for (uint32_t i = 0; i < iv_length(str); i++) iv_elem(res, iv_elem(str, i))++;
 	for (uint32_t i = 1; i < n; i++) iv_elem(res, i) += iv_elem(res, i - 1);
-	return res;
+	return res.release();
 }
 
 int str_iscompat(const ivector* str1, const ivector* str2)
 {
 	if (iv_length(str1) != iv_length(str2)) return 0;
-	ivector* dv1 = str2dimvec(str1);
-	if (dv1 == nullptr) return 0;
-	ivector* dv2 = str2dimvec(str2);
-	if (dv2 == nullptr)
-	{
-		iv_free(dv1);
-		return 0;
-	}
-	int cmp = iv_cmp(dv1, dv2);
-	iv_free(dv1);
-	iv_free(dv2);
+	iv_ptr dv1{str2dimvec(str1)};
+	if (!dv1) return 0;
+	iv_ptr dv2{str2dimvec(str2)};
+	if (!dv2) return 0;
+	int cmp = iv_cmp(dv1.get(), dv2.get());
 	return (cmp == 0) ? 1 : 0;
 }
 
 ivector* perm2string(const ivector* perm, const ivector* dimvec)
 {
 	int n = iv_length(dimvec) ? iv_elem(dimvec, iv_length(dimvec) - 1) : 0;
-	ivector* res = iv_new(uint32_t(n));
-	if (res == nullptr) return nullptr;
+	iv_ptr res = iv_create(uint32_t(n));
+	if (!res) return nullptr;
 	uint32_t j = 0;
 	for (uint32_t i = 0; i < iv_length(dimvec); i++)
 		while (int(j) < iv_elem(dimvec, i))
@@ -255,5 +230,5 @@ ivector* perm2string(const ivector* perm, const ivector* dimvec)
 			j++;
 		}
 
-	return res;
+	return res.release();
 }

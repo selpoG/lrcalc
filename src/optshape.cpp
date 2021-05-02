@@ -10,18 +10,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <memory>
 #include <utility>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
-
-struct iv_deleter
-{
-	void operator()(ivector* p) const { iv_free(p); }
-};
-using safe_iv_ptr = std::unique_ptr<ivector, iv_deleter>;
-static safe_iv_ptr iv_create(uint32_t N) { return safe_iv_ptr{iv_new(N)}; }
 
 void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
 {
@@ -120,14 +113,14 @@ int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxro
 	}
 
 	/* Remove full rows and columns from sh1. */
-	safe_iv_ptr out = iv_create(uint32_t(len1 - fr1));
+	iv_ptr out = iv_create(uint32_t(len1 - fr1));
 	if (!out) return -1;
 	for (int r = 0; r < len1 - fr1; r++) iv_elem(out, r) = iv_elem(sh1, fr1 + r) - fc1;
 
 	/* Add full rows and columns to sh2. */
 	int clen = (fc1 + fc2 > 0) ? maxrows : len2 + fr1;
-	safe_iv_ptr cont = iv_create(uint32_t(clen));
-	if (cont == nullptr) return -1;
+	iv_ptr cont = iv_create(uint32_t(clen));
+	if (!cont) return -1;
 	for (int r = 0; r < fr1; r++) iv_elem(cont, r) = maxcols;
 	for (int r = 0; r < len2; r++) iv_elem(cont, fr1 + r) = iv_elem(sh2, r) + fc1;
 	for (int r = len2 + fr1; r < clen; r++) iv_elem(cont, r) = fc1;
@@ -179,11 +172,11 @@ int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int row
 	int sh1d = part_entry(sh1, d - 1);
 
 	/* Create shifted partitions. */
-	safe_iv_ptr nsh1 = iv_create(uint32_t(rows));
+	iv_ptr nsh1 = iv_create(uint32_t(rows));
 	if (!nsh1) return -1;
 	for (int i = 0; i < rows - d; i++) iv_elem(nsh1, i) = part_entry(sh1, d + i) - sh1d + level;
 	for (int i = 0; i < d; i++) iv_elem(nsh1, rows - d + i) = part_entry(sh1, i) - sh1d;
-	safe_iv_ptr nsh2 = iv_create(uint32_t(rows));
+	iv_ptr nsh2 = iv_create(uint32_t(rows));
 	if (!nsh2) return -1;
 	for (int i = 0; i < d; i++) iv_elem(nsh2, i) = part_entry(sh2, rows - d + i) + sh1d;
 	for (int i = 0; i < rows - d; i++) iv_elem(nsh2, d + i) = part_entry(sh2, i) + sh1d - level;
@@ -280,13 +273,13 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 	if (maxrows < 0) maxrows = slen + 1;
 
 	/* Allocate new skew shape. */
-	safe_iv_ptr out = iv_create(uint32_t(slen));
+	iv_ptr out = iv_create(uint32_t(slen));
 	if (!out) return -1;
-	safe_iv_ptr inn = iv_create(uint32_t(slen));
+	iv_ptr inn = iv_create(uint32_t(slen));
 	if (!inn) return -1;
 
 	/* Allocate and copy content. */
-	safe_iv_ptr cont = iv_create(uint32_t((clen > row_span) ? clen : row_span));
+	iv_ptr cont = iv_create(uint32_t((clen > row_span) ? clen : row_span));
 	if (!cont) return -1;
 	int cont_size = 0;
 	for (int r = clen - 1; r >= 0; r--)
@@ -447,11 +440,11 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 		return 0;
 	}
 
-	safe_iv_ptr nu = iv_create(uint32_t(N));
+	iv_ptr nu = iv_create(uint32_t(N));
 	if (!nu) return -1;
-	safe_iv_ptr la = iv_create(uint32_t(N));
+	iv_ptr la = iv_create(uint32_t(N));
 	if (!la) return -1;
-	safe_iv_ptr mu = iv_create(uint32_t(N));
+	iv_ptr mu = iv_create(uint32_t(N));
 	if (!mu) return -1;
 
 	int sum = 0;

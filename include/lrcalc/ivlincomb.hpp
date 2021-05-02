@@ -74,10 +74,6 @@ extern "C"
 
 	void ivlc_next(ivlc_iter* itr);
 
-	ivector* ivlc_key(const ivlc_iter* itr);
-
-	int32_t ivlc_value(const ivlc_iter* itr);
-
 	ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr);
 
 	void ivlc_free_all(ivlincomb* ht);
@@ -89,7 +85,7 @@ extern "C"
 
 	int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
 
-	int ivlc_add_multiple(ivlincomb* dst, int32_t c, const ivlincomb* src, int opt);
+	int ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
 
 	void ivlc_print(const ivlincomb* ht, int opt_zero);
 

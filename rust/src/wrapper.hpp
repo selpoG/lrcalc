@@ -1,6 +1,5 @@
 #include <stdint.h>
 
-#include "lrcalc/ilist.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/ivlist.hpp"

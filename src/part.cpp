@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 
@@ -79,12 +80,11 @@ void part_printnl(const ivector* p)
 
 void part_print_lincomb(const ivlincomb* lc)
 {
-	ivlc_iter itr;
-	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	for (const auto& kv : ivlc_iterator(lc))
 	{
-		if (ivlc_value(&itr) == 0) continue;
-		printf("%d  ", ivlc_value(&itr));
-		part_printnl(ivlc_key(&itr));
+		if (kv.value == 0) continue;
+		printf("%d  ", kv.value);
+		part_printnl(kv.key);
 	}
 }
 
@@ -130,12 +130,11 @@ void part_qprintnl(const ivector* p, int level)
 
 void part_qprint_lincomb(const ivlincomb* lc, int level)
 {
-	ivlc_iter itr;
-	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	for (const auto& kv : ivlc_iterator(lc))
 	{
-		if (ivlc_value(&itr) == 0) continue;
-		printf("%d  ", ivlc_value(&itr));
-		part_qprintnl(ivlc_key(&itr), level);
+		if (kv.value == 0) continue;
+		printf("%d  ", kv.value);
+		part_qprintnl(kv.key, level);
 	}
 }
 

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlist.hpp"
 #include "lrcalc/perm.hpp"
@@ -28,19 +29,12 @@
 
 int main(int ac, char** av)
 {
-	ivector* dv = get_vect_arg(ac, av);
-	if (dv == nullptr) print_usage();
-	if (dimvec_valid(dv) == 0) print_usage();
+	iv_ptr dv{get_vect_arg(ac, av)};
+	if (!dv) print_usage();
+	if (dimvec_valid(dv.get()) == 0) print_usage();
 
-	ivlist* lst = all_strings(dv);
-	if (lst == nullptr)
-	{
-		iv_free(dv);
-		out_of_memory();
-	}
+	ivl_ptr lst{all_strings(dv.get())};
+	if (!lst) out_of_memory();
 
 	for (uint32_t i = 0; i < ivl_length(lst); i++) iv_printnl(ivl_elem(lst, i));
-
-	iv_free(dv);
-	ivl_free_all(lst);
 }

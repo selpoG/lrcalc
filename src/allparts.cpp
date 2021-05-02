@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/part.hpp"
 
 #define PROGNAME "allparts"
@@ -30,12 +31,8 @@ int main(int ac, char** av)
 	int cols = atoi(av[2]);
 	if (rows <= 0 || cols <= 0) print_usage();
 
-	ivector* p = iv_new(uint32_t(rows));
-	if (p == nullptr) out_of_memory();
+	iv_ptr p = iv_create(uint32_t(rows));
+	if (!p) out_of_memory();
 
-	part_iter itr;
-	pitr_first(&itr, p, rows, cols, nullptr, nullptr, 0, 0);
-	for (; pitr_good(&itr); pitr_next(&itr)) iv_printnl(p);
-
-	iv_free(p);
+	for ([[maybe_unused]] auto& itr : pitr(p.get(), rows, cols, nullptr, nullptr, 0, 0)) iv_printnl(p.get());
 }

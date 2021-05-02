@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
@@ -31,11 +32,10 @@ static void _maple_print_term(int c, const ivector* v, const char* letter, int n
 void maple_print_lincomb(const ivlincomb* ht, const char* letter, int nz)
 {
 	putchar('0');
-	ivlc_iter itr;
-	for (ivlc_first(ht, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	for (const auto& kv : ivlc_iterator(ht))
 	{
-		if (ivlc_value(&itr) == 0) continue;
-		_maple_print_term(ivlc_value(&itr), ivlc_key(&itr), letter, nz);
+		if (kv.value == 0) continue;
+		_maple_print_term(kv.value, kv.key, letter, nz);
 	}
 	putchar('\n');
 }
@@ -58,12 +58,11 @@ static void _maple_qprint_term(int c, const ivector* v, int level, const char* l
 
 void maple_qprint_lincomb(const ivlincomb* lc, int level, const char* letter)
 {
-	ivlc_iter itr;
 	putchar('0');
-	for (ivlc_first(lc, &itr); ivlc_good(&itr); ivlc_next(&itr))
+	for (const auto& kv : ivlc_iterator(lc))
 	{
-		if (ivlc_value(&itr) == 0) continue;
-		_maple_qprint_term(ivlc_value(&itr), ivlc_key(&itr), level, letter);
+		if (kv.value == 0) continue;
+		_maple_qprint_term(kv.value, kv.key, level, letter);
 	}
 	putchar('\n');
 }

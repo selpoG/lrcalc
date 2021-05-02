@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlist.hpp"
 #include "lrcalc/perm.hpp"
@@ -31,10 +32,8 @@ int main(int ac, char** av)
 	int n = atoi(av[1]);
 	if (n < 0) print_usage();
 
-	ivlist* lst = all_perms(n);
-	if (lst == nullptr) out_of_memory();
+	ivl_ptr lst{all_perms(n)};
+	if (!lst) out_of_memory();
 
 	for (uint32_t i = 0; i < ivl_length(lst); i++) iv_printnl(ivl_elem(lst, i));
-
-	ivl_free_all(lst);
 }

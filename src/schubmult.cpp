@@ -8,7 +8,7 @@
 #include <unistd.h>
 extern char* optarg;
 
-#include "lrcalc/ivector.hpp"
+#include "lrcalc/cpp_lib.hpp"
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/maple.hpp"
 #include "lrcalc/perm.hpp"
@@ -54,10 +54,10 @@ int main(int ac, char** av)
 		default: print_usage();
 		}
 
-	ivector* w1 = get_vect_arg(ac, av);
-	if (w1 == nullptr) error("perm1 is missing.");
-	ivector* w2 = get_vect_arg(ac, av);
-	if (w2 == nullptr) error("perm2 is missing.");
+	iv_ptr w1{get_vect_arg(ac, av)};
+	if (!w1) error("perm1 is missing.");
+	iv_ptr w2{get_vect_arg(ac, av)};
+	if (!w2) error("perm2 is missing.");
 
 	if (rank > 0 && opt_string) error("-s cannot be used with -r.");
 
@@ -65,22 +65,17 @@ int main(int ac, char** av)
 	if (opt_string)
 	{
 		if (rank > 0) error("options -r and -s cannot be used together.");
-		if (str_iscompat(w1, w2) == 0) error("incompatible strings.");
-		lc = mult_schubert_str(w1, w2);
+		if (str_iscompat(w1.get(), w2.get()) == 0) error("incompatible strings.");
+		lc = mult_schubert_str(w1.get(), w2.get());
 	}
 	else
 	{
-		if (perm_valid(w1) == 0) error("perm1 not a valid permutation.");
-		if (perm_valid(w2) == 0) error("perm2 not a valid permutation.");
-		lc = mult_schubert(w1, w2, rank);
+		if (perm_valid(w1.get()) == 0) error("perm1 not a valid permutation.");
+		if (perm_valid(w2.get()) == 0) error("perm2 not a valid permutation.");
+		lc = mult_schubert(w1.get(), w2.get(), rank);
 	}
 
-	if (lc == nullptr)
-	{
-		iv_free(w1);
-		iv_free(w2);
-		out_of_memory();
-	}
+	if (lc == nullptr) out_of_memory();
 
 	if (opt_maple)
 		maple_print_lincomb(lc, "X", 0);

@@ -30,7 +30,6 @@ set_flags()
 set(MY_TARGET lrcalc)
 
 add_library(${MY_TARGET} STATIC
-	src/ilist.cpp
 	src/ivector.cpp
 	src/ivlincomb.cpp
 	src/ivlist.cpp
@@ -43,7 +42,6 @@ add_library(${MY_TARGET} STATIC
 	src/schublib.cpp
 	src/schur.cpp
 	src/vectarg.cpp
-	include/lrcalc/ilist.hpp
 	include/lrcalc/ivector.hpp
 	include/lrcalc/ivlincomb.hpp
 	include/lrcalc/ivlist.hpp
@@ -53,6 +51,7 @@ add_library(${MY_TARGET} STATIC
 	include/lrcalc/optshape.hpp
 	include/lrcalc/part.hpp
 	include/lrcalc/perm.hpp
+	include/lrcalc/cpp_lib.hpp
 	include/lrcalc/schublib.hpp
 	include/lrcalc/schur.hpp
 	include/lrcalc/vectarg.hpp
