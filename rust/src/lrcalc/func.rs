@@ -54,7 +54,7 @@ fn _schur_skew(
 
 fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
 	unsafe {
-		let ans = bindings::schur_coprod(sh.data, sh.rows() as i32, sh.cols() as i32, -1, all as i32);
+		let ans = bindings::schur_coprod(sh.data, sh.rows() as i32, sh.cols() as i32, -1, all);
 		if ans == std::ptr::null_mut() {
 			panic!("Memory Error")
 		}

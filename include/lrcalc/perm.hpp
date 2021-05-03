@@ -8,18 +8,18 @@
 extern "C"
 {
 #endif
-	int perm_valid(ivector* w);
+	bool perm_valid(ivector* w);
 
 	int perm_length(const ivector* w);
 
 	int perm_group(const ivector* w);
 
-	int dimvec_valid(const ivector* dv);
+	bool dimvec_valid(const ivector* dv);
 
-	/* Return 1 if S_w1 * S_w2 = 0 in H^*(Fl(rank)). */
-	int bruhat_zero(const ivector* w1, const ivector* w2, int rank);
+	/* Return true if S_w1 * S_w2 = 0 in H^*(Fl(rank)). */
+	bool bruhat_zero(const ivector* w1, const ivector* w2, int rank);
 
-	int str_iscompat(const ivector* str1, const ivector* str2);
+	bool str_iscompat(const ivector* str1, const ivector* str2);
 
 	ivlist* all_strings(const ivector* dimvec);
 	ivlist* all_perms(int n);

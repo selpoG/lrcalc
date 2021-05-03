@@ -31,20 +31,20 @@
 static bool test_schur_lrcoef(const iv_ptr& p1, const iv_ptr& p2, int rows, int cols)
 {
 	iv_ptr outer = iv_create(uint32_t(rows));
-	if (!outer) return true;
+	if (!outer) return false;
 
 	ivlc_ptr prd{schur_mult(p1.get(), p2.get(), rows, cols, rows)};
-	if (!prd) return true;
+	if (!prd) return false;
 
 	for ([[maybe_unused]] auto& itr : pitr::box(outer.get(), rows, cols))
 	{
 		long long coef = schur_lrcoef(outer.get(), p1.get(), p2.get());
-		if (coef < 0) return true;
+		if (coef < 0) return false;
 		[[maybe_unused]] const ivlc_keyval_t* kv = ivlc_lookup(prd.get(), outer.get(), iv_hash(outer.get()));
 		assert(coef == (kv ? kv->value : 0));
 	}
 
-	return false;
+	return true;
 }
 
 int main(int ac, char** av)
@@ -61,7 +61,7 @@ int main(int ac, char** av)
 
 	for ([[maybe_unused]] auto& itr1 : pitr::box(p1.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(p2.get(), rows, cols))
-			if (test_schur_lrcoef(p1, p2, rows, cols)) out_of_memory();
+			if (!test_schur_lrcoef(p1, p2, rows, cols)) out_of_memory();
 
 	puts("success");
 	return 0;

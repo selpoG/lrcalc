@@ -91,33 +91,33 @@ static bool test_schur_mult(const iv_ptr& p1, const iv_ptr& p2)
 		ivlc_ptr prd_s;
 		{
 			iv_ptr s1 = part2string(p1, rows, cols);
-			if (!s1) return true;
+			if (!s1) return false;
 			iv_ptr s2 = part2string(p2, rows, cols);
-			if (!s2) return true;
+			if (!s2) return false;
 			prd_s.reset(mult_schubert_str(s1.get(), s2.get()));
-			if (!prd_s) return true;
+			if (!prd_s) return false;
 		}
 		prd = string2part_lc(prd_s, rows);
-		if (!prd) return true;
+		if (!prd) return false;
 	}
 
 	{
 		ivlc_ptr prd_sm{schur_mult(p1.get(), p2.get(), -1, -1, -1)};
-		if (!prd_sm) return true;
-		assert(ivlc_equals(prd_sm.get(), prd.get(), 0));
+		if (!prd_sm) return false;
+		assert(ivlc_equals(prd_sm.get(), prd.get()));
 	}
 
 	for (int r = -1; r <= rows; r++)
 		for (int c = -1; c <= cols; c++)
 		{
 			ivlc_ptr prd_sm{schur_mult(p1.get(), p2.get(), r, c, rows)};
-			if (!prd_sm) return true;
+			if (!prd_sm) return false;
 			ivlc_slice prd_gb = get_box(prd, r, c);
-			if (!prd_gb) return true;
-			assert(ivlc_equals(prd_sm.get(), prd_gb.get(), 0));
+			if (!prd_gb) return false;
+			assert(ivlc_equals(prd_sm.get(), prd_gb.get()));
 		}
 
-	return false;
+	return true;
 }
 
 int main(int ac, char** av)
@@ -134,7 +134,7 @@ int main(int ac, char** av)
 
 	for ([[maybe_unused]] auto& itr1 : pitr::box(p1.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(p2.get(), rows, cols))
-			if (test_schur_mult(p1, p2)) out_of_memory();
+			if (!test_schur_mult(p1, p2)) out_of_memory();
 
 	puts("success");
 	return 0;

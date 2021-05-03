@@ -26,7 +26,7 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	assert(content == nullptr || part_decr(content));
 
 	/* Empty result if inner not contained in outer. */
-	if (inner != nullptr && part_leq(inner, outer) == 0)
+	if (inner != nullptr && !part_leq(inner, outer))
 	{
 		iv_ptr cont = iv_create(1);
 		if (!cont) return nullptr;
@@ -251,7 +251,7 @@ void lrit_dump_skew(const lrtab_iter* lrit, const ivector* outer, const ivector*
 	}
 }
 
-int lrit_good(const lrtab_iter* lrit) { return lrit->size >= 0; }
+bool lrit_good(const lrtab_iter* lrit) { return lrit->size >= 0; }
 
 void lrit_next(lrtab_iter* lrit)
 {
@@ -291,7 +291,7 @@ static ivlincomb* lrit_count(lrtab_iter* lrit)
 	ivlc_ptr lc = ivlc_create();
 	if (!lc) return nullptr;
 	for (; lrit_good(lrit); lrit_next(lrit))
-		if (ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY) != 0) return nullptr;
+		if (!ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY)) return nullptr;
 	return lc.release();
 }
 

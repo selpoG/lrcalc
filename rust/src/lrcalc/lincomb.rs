@@ -30,9 +30,7 @@ impl Iterator for LinearCombination {
             } else {
                 bindings::ivlc_next(&mut self.it)
             }
-            if bindings::ivlc_good(&mut self.it) == 0 {
-                None
-            } else {
+            if bindings::ivlc_good(&mut self.it) {
                 let kv = *bindings::ivlc_keyval(&self.it);
                 Some((
                     IntVector {
@@ -41,6 +39,8 @@ impl Iterator for LinearCombination {
                     },
                     kv.value,
                 ))
+            } else {
+                None
             }
         }
     }

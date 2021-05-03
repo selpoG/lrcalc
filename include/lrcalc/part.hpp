@@ -10,9 +10,9 @@
 extern "C"
 {
 #endif
-	int part_valid(const ivector* p);
+	bool part_valid(const ivector* p);
 
-	int part_decr(const ivector* p);
+	bool part_decr(const ivector* p);
 
 	uint32_t part_length(const ivector* p);
 
@@ -21,7 +21,7 @@ extern "C"
 	/* Must have len >= iv_length(p) and p was allocated with enough space. */
 	void part_unchop(ivector* p, int len_);
 
-	int part_leq(const ivector* p1, const ivector* p2);
+	bool part_leq(const ivector* p1, const ivector* p2);
 
 	void part_print(const ivector* p);
 	void part_printnl(const ivector* p);
@@ -57,13 +57,13 @@ extern "C"
 	constexpr int PITR_USE_INNER = 2;
 	constexpr int PITR_USE_SIZE = 4;
 
-	int pitr_good(const part_iter* itr);
+	bool pitr_good(const part_iter* itr);
 
-	int pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* outer, const ivector* inner, int size,
-	               int opt);
+	void pitr_first(part_iter* itr, ivector* p, int rows, int cols, const ivector* outer, const ivector* inner,
+	                int size, int opt);
 
-	/* int pitr_first(part_iter *itr, ivector *p, int rows, int cols,
-	 *                const ivector *outer, const ivector *inner, int size, int opt)
+	/* void pitr_first(part_iter *itr, ivector *p, int rows, int cols,
+	 *                 const ivector *outer, const ivector *inner, int size, int opt)
 	 */
 
 	void pitr_box_first(part_iter* itr, ivector* p, int rows, int cols);

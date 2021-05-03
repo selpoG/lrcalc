@@ -47,20 +47,20 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 	ivlc_ptr prd12;
 	{
 		ivlc_ptr poly{trans(w1, 0)};
-		if (!poly) return true;
+		if (!poly) return false;
 		prd12.reset(mult_poly_schubert(poly.release(), w2, 0));
-		if (!prd12) return true;
+		if (!prd12) return false;
 	}
 
 	{
 		ivlc_ptr prd21;
 		{
 			ivlc_ptr poly{trans(w2, 0)};
-			if (!poly) return true;
+			if (!poly) return false;
 			prd21.reset(mult_poly_schubert(poly.release(), w1, 0));
-			if (!prd21) return true;
+			if (!prd21) return false;
 		}
-		assert(ivlc_equals(prd12.get(), prd21.get(), 0));
+		assert(ivlc_equals(prd12.get(), prd21.get()));
 		prd21.reset();
 	}
 
@@ -74,14 +74,14 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 	for (int r = 0; r <= maxrank; r++)
 	{
 		ivlc_ptr prd_sm{mult_schubert(w1, w2, r)};
-		if (!prd_sm) return true;
+		if (!prd_sm) return false;
 
 		ivlc_slice prd_gr = get_rank(prd12, r);
-		if (!prd_gr) return true;
-		assert(ivlc_equals(prd_sm.get(), prd_gr.get(), 0));
+		if (!prd_gr) return false;
+		assert(ivlc_equals(prd_sm.get(), prd_gr.get()));
 	}
 
-	return false;
+	return true;
 }
 
 int main(int ac, char** av)
@@ -98,7 +98,7 @@ int main(int ac, char** av)
 		{
 			ivector* w1 = ivl_elem(lst, i);
 			ivector* w2 = ivl_elem(lst, j);
-			if (test_mult_schubert(w1, w2)) out_of_memory();
+			if (!test_mult_schubert(w1, w2)) out_of_memory();
 			assert(int(iv_length(w1)) == n && int(iv_length(w2)) == n);
 		}
 

@@ -63,7 +63,7 @@ void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
  *    columns.
  */
 
-int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols)
+bool optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols)
 {
 	/* DEBUG: Check valid input. */
 	assert(part_valid(sh1));
@@ -79,13 +79,13 @@ int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxro
 	memset(ss, 0, sizeof(skew_shape));
 
 	/* Empty result? */
-	if (maxrows >= 0 && (len1 > maxrows || len2 > maxrows)) return 0;
-	if (maxcols >= 0 && (sh10 > maxcols || sh20 > maxcols)) return 0;
+	if (maxrows >= 0 && (len1 > maxrows || len2 > maxrows)) return true;
+	if (maxcols >= 0 && (sh10 > maxcols || sh20 > maxcols)) return true;
 	if (maxrows >= 0 && maxcols >= 0)
 	{
 		int r = (len1 + len2 < maxrows) ? len2 : maxrows - len1;
 		for (; r < len2; r++)
-			if (iv_elem(sh1, maxrows - r - 1) + iv_elem(sh2, r) > maxcols) return 0;
+			if (iv_elem(sh1, maxrows - r - 1) + iv_elem(sh2, r) > maxcols) return true;
 	}
 
 	/* Number of full rows and columns in shapes. */
@@ -114,13 +114,13 @@ int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxro
 
 	/* Remove full rows and columns from sh1. */
 	iv_ptr out = iv_create(uint32_t(len1 - fr1));
-	if (!out) return -1;
+	if (!out) return false;
 	for (int r = 0; r < len1 - fr1; r++) iv_elem(out, r) = iv_elem(sh1, fr1 + r) - fc1;
 
 	/* Add full rows and columns to sh2. */
 	int clen = (fc1 + fc2 > 0) ? maxrows : len2 + fr1;
 	iv_ptr cont = iv_create(uint32_t(clen));
-	if (!cont) return -1;
+	if (!cont) return false;
 	for (int r = 0; r < fr1; r++) iv_elem(cont, r) = maxcols;
 	for (int r = 0; r < len2; r++) iv_elem(cont, fr1 + r) = iv_elem(sh2, r) + fc1;
 	for (int r = len2 + fr1; r < clen; r++) iv_elem(cont, r) = fc1;
@@ -128,12 +128,12 @@ int optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxro
 	ss->outer = out.release();
 	ss->cont = cont.release();
 	ss->sign = 1;
-	return 0;
+	return true;
 }
 
 /* Find optimal shape for fusion product. */
 
-int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int rows, int level)
+bool optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int rows, int level)
 {
 	/* DEBUG: Check valid input. */
 	assert(part_valid(sh1));
@@ -143,7 +143,7 @@ int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int row
 
 	/* Empty result? */
 	memset(ss, 0, sizeof(skew_shape));
-	if (int(part_length(sh1)) > rows || int(part_length(sh2)) > rows) return 0;
+	if (int(part_length(sh1)) > rows || int(part_length(sh2)) > rows) return true;
 
 	/* Find Seidel shift that results in smallest LHS partition. */
 	int d1 = 0, d2 = 0, s1, s2;
@@ -173,18 +173,18 @@ int optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int row
 
 	/* Create shifted partitions. */
 	iv_ptr nsh1 = iv_create(uint32_t(rows));
-	if (!nsh1) return -1;
+	if (!nsh1) return false;
 	for (int i = 0; i < rows - d; i++) iv_elem(nsh1, i) = part_entry(sh1, d + i) - sh1d + level;
 	for (int i = 0; i < d; i++) iv_elem(nsh1, rows - d + i) = part_entry(sh1, i) - sh1d;
 	iv_ptr nsh2 = iv_create(uint32_t(rows));
-	if (!nsh2) return -1;
+	if (!nsh2) return false;
 	for (int i = 0; i < d; i++) iv_elem(nsh2, i) = part_entry(sh2, rows - d + i) + sh1d;
 	for (int i = 0; i < rows - d; i++) iv_elem(nsh2, d + i) = part_entry(sh2, i) + sh1d - level;
 
 	ss->outer = nsh1.release();
 	ss->cont = nsh2.release();
 	ss->sign = 1;
-	return 0;
+	return true;
 }
 
 struct partial_shape
@@ -239,7 +239,7 @@ struct partial_shape
  *    plus all columns of height maxrows.
  */
 
-int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const ivector* content, int maxrows)
+bool optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const ivector* content, int maxrows)
 {
 	/* Handle case in other function. */
 	if (inner == nullptr) return optim_mult(ss, outer, content, maxrows, -1);
@@ -251,7 +251,7 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 
 	/* Indicate empty result. */
 	memset(ss, 0, sizeof(skew_shape));
-	if (part_leq(inner, outer) == 0) return 0;
+	if (!part_leq(inner, outer)) return true;
 
 	/* Find range of non-empty rows in outer/inner. */
 	auto row_bound = int(part_length(outer));
@@ -267,20 +267,20 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 
 	/* Bound number of rows in content of LR tableaux. */
 	int clen = (content == nullptr) ? 0 : int(part_length(content));
-	if (maxrows >= 0 && clen > maxrows) return 0;
+	if (maxrows >= 0 && clen > maxrows) return true;
 	/* FIXME: Prove slen is large enough!!! */
 	int slen = 2 * row_span + clen;
 	if (maxrows < 0) maxrows = slen + 1;
 
 	/* Allocate new skew shape. */
 	iv_ptr out = iv_create(uint32_t(slen));
-	if (!out) return -1;
+	if (!out) return false;
 	iv_ptr inn = iv_create(uint32_t(slen));
-	if (!inn) return -1;
+	if (!inn) return false;
 
 	/* Allocate and copy content. */
 	iv_ptr cont = iv_create(uint32_t((clen > row_span) ? clen : row_span));
-	if (!cont) return -1;
+	if (!cont) return false;
 	int cont_size = 0;
 	for (int r = clen - 1; r >= 0; r--)
 	{
@@ -298,7 +298,7 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 		ss->inner = inn.release();
 		ss->cont = cont.release();
 		ss->sign = 1;
-		return 0;
+		return true;
 	}
 
 	/* Number of columns of size maxrows. */
@@ -337,7 +337,7 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 		if (r0t < r1b && r0b - r1t < maxrows) continue;
 
 		/* Single column too high? */
-		if (c1 == c2 - 1 && r1b - r1t > maxrows) return 0;
+		if (c1 == c2 - 1 && r1b - r1t > maxrows) return true;
 
 		/* Single column of full height? */
 		if (c1 == c2 - 1 && r1b - r1t == maxrows)
@@ -417,10 +417,10 @@ int optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const
 	ss->inner = ps.inn;
 	ss->cont = cont.release();
 	ss->sign = 1;
-	return 0;
+	return true;
 }
 
-int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ivector* sh2)
+bool optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ivector* sh2)
 {
 	// int N, Nla, Nmu, sum, r, s, N0, nu0, la0, mu0, nur, lar, mur;
 	// int lar1, mur1, nur1, c, ca, Inu, Ila, Imu;
@@ -432,20 +432,20 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 	memset(ss, 0, sizeof(skew_shape));
 
 	int N = int(part_length(out));
-	if (N < int(iv_length(sh1)) && iv_elem(sh1, N) > 0) return 0;
-	if (N < int(iv_length(sh2)) && iv_elem(sh2, N) > 0) return 0;
+	if (N < int(iv_length(sh1)) && iv_elem(sh1, N) > 0) return true;
+	if (N < int(iv_length(sh2)) && iv_elem(sh2, N) > 0) return true;
 	if (N == 0)
 	{
 		ss->sign = 1;
-		return 0;
+		return true;
 	}
 
 	iv_ptr nu = iv_create(uint32_t(N));
-	if (!nu) return -1;
+	if (!nu) return false;
 	iv_ptr la = iv_create(uint32_t(N));
-	if (!la) return -1;
+	if (!la) return false;
 	iv_ptr mu = iv_create(uint32_t(N));
-	if (!mu) return -1;
+	if (!mu) return false;
 
 	int sum = 0;
 	for (int r = N - 1; r >= 0; r--)
@@ -461,7 +461,7 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 	{
 		int x = iv_elem(sh1, r);
 		iv_elem(la, r) = x;
-		if (iv_elem(nu, r) < x) return 0;
+		if (iv_elem(nu, r) < x) return true;
 		sum -= iv_elem(la, r);
 	}
 
@@ -472,11 +472,11 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 	{
 		int x = iv_elem(sh2, r);
 		iv_elem(mu, r) = x;
-		if (iv_elem(nu, r) < x) return 0;
+		if (iv_elem(nu, r) < x) return true;
 		sum -= iv_elem(mu, r);
 	}
 
-	if (sum != 0) return 0;
+	if (sum != 0) return true;
 
 	int N0 = N + 1;
 	int nu0 = 0;
@@ -503,11 +503,11 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 		{
 			int lar = iv_elem(la, r);
 			int nur = iv_elem(nu, r);
-			if (nur - lar > mu0) return 0;
+			if (nur - lar > mu0) return true;
 			int ca = nur - lar1 - mu0;
 			if (ca < lar - nur1) ca = lar - nur1;
 			if (ca > 0) c += ca;
-			if (nur - c < iv_elem(mu, r)) return 0;
+			if (nur - c < iv_elem(mu, r)) return true;
 			if (nur == c)
 			{
 				N = r;
@@ -524,7 +524,7 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 		while (r < N && iv_elem(nu, r) - iv_elem(la, r) < mu0) r++;
 		if (r < N)
 		{
-			if (iv_elem(nu, r) - iv_elem(la, r) > mu0) return 0;
+			if (iv_elem(nu, r) - iv_elem(la, r) > mu0) return true;
 			for (; r < N - 1; r++)
 			{
 				iv_elem(la, r) = iv_elem(la, r + 1);
@@ -551,11 +551,11 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 		{
 			int mur = iv_elem(mu, r);
 			int nur = iv_elem(nu, r);
-			if (nur - mur > la0) return 0;
+			if (nur - mur > la0) return true;
 			int ca = nur - mur1 - la0;
 			if (ca < mur - nur1) ca = mur - nur1;
 			if (ca > 0) c += ca;
-			if (nur - c < iv_elem(la, r)) return 0;
+			if (nur - c < iv_elem(la, r)) return true;
 			if (nur == c)
 			{
 				N = r;
@@ -572,7 +572,7 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 		while (r < N && iv_elem(nu, r) - iv_elem(mu, r) < la0) r++;
 		if (r < N)
 		{
-			if (iv_elem(nu, r) - iv_elem(mu, r) > la0) return 0;
+			if (iv_elem(nu, r) - iv_elem(mu, r) > la0) return true;
 			for (; r < N - 1; r++)
 			{
 				iv_elem(mu, r) = iv_elem(mu, r + 1);
@@ -601,7 +601,7 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 				else
 				{
 					iv_elem(nu, Inu) = iv_elem(nu, r);
-					if (iv_elem(nu, Inu) < iv_elem(mu, Inu)) return 0;
+					if (iv_elem(nu, Inu) < iv_elem(mu, Inu)) return true;
 					Inu++;
 				}
 			}
@@ -614,13 +614,13 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 					continue;
 				}
 				while (iv_elem(la, s) == -1) s++;
-				if (iv_elem(la, s) < iv_elem(nu, r)) return 0;
+				if (iv_elem(la, s) < iv_elem(nu, r)) return true;
 				if (iv_elem(la, s) > iv_elem(nu, r))
 				{
 					iv_elem(la, Ila) = iv_elem(la, s);
 					Ila++;
 					iv_elem(nu, Inu) = iv_elem(nu, r);
-					if (iv_elem(nu, Inu) < iv_elem(mu, Inu)) return 0;
+					if (iv_elem(nu, Inu) < iv_elem(mu, Inu)) return true;
 					Inu++;
 				}
 				r++;
@@ -635,7 +635,7 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 				}
 				s += 1;
 			}
-			if (Inu < N && iv_elem(mu, Inu) > 0) return 0;
+			if (Inu < N && iv_elem(mu, Inu) > 0) return true;
 			N = Inu;
 		}
 
@@ -644,8 +644,8 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 		while (r <= N && iv_elem(nu, r - 1) <= iv_elem(la, r - Nmu)) r++;
 		if (r <= N)
 		{
-			if (r > Nmu && iv_elem(nu, r - 1) > iv_elem(la, r - Nmu - 1)) return 0;
-			if (r < N && iv_elem(nu, r) > iv_elem(la, r - Nmu)) return 0;
+			if (r > Nmu && iv_elem(nu, r - 1) > iv_elem(la, r - Nmu - 1)) return true;
+			if (r < N && iv_elem(nu, r) > iv_elem(la, r - Nmu)) return true;
 			int s;
 			for (s = r - Nmu - 1; s >= 0; s--) iv_elem(la, s)--;
 			for (s = Nmu - 1; s >= 0; s--) iv_elem(mu, s)--;
@@ -679,7 +679,7 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 				else
 				{
 					iv_elem(nu, Inu) = iv_elem(nu, r);
-					if (iv_elem(nu, Inu) < iv_elem(la, Inu)) return 0;
+					if (iv_elem(nu, Inu) < iv_elem(la, Inu)) return true;
 					Inu++;
 				}
 			}
@@ -692,13 +692,13 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 					continue;
 				}
 				while (iv_elem(mu, s) == -1) s++;
-				if (iv_elem(mu, s) < iv_elem(nu, r)) return 0;
+				if (iv_elem(mu, s) < iv_elem(nu, r)) return true;
 				if (iv_elem(mu, s) > iv_elem(nu, r))
 				{
 					iv_elem(mu, Imu) = iv_elem(mu, s);
 					Imu++;
 					iv_elem(nu, Inu) = iv_elem(nu, r);
-					if (iv_elem(nu, Inu) < iv_elem(la, Inu)) return 0;
+					if (iv_elem(nu, Inu) < iv_elem(la, Inu)) return true;
 					Inu++;
 				}
 				r++;
@@ -713,7 +713,7 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 				}
 				s += 1;
 			}
-			if (Inu < N && iv_elem(la, Inu) > 0) return 0;
+			if (Inu < N && iv_elem(la, Inu) > 0) return true;
 			N = Inu;
 		}
 
@@ -722,8 +722,8 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 		while (r <= N && iv_elem(nu, r - 1) <= iv_elem(mu, r - Nla)) r++;
 		if (r <= N)
 		{
-			if (r > Nla && iv_elem(nu, r - 1) > iv_elem(mu, r - Nla - 1)) return 0;
-			if (r < N && iv_elem(nu, r) > iv_elem(mu, r - Nla)) return 0;
+			if (r > Nla && iv_elem(nu, r - 1) > iv_elem(mu, r - Nla - 1)) return true;
+			if (r < N && iv_elem(nu, r) > iv_elem(mu, r - Nla)) return true;
 			int s;
 			for (s = r - Nla - 1; s >= 0; s--) iv_elem(mu, s)--;
 			for (s = Nla - 1; s >= 0; s--) iv_elem(la, s)--;
@@ -753,11 +753,11 @@ int optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ive
 	ss->inner = la.release();
 	ss->cont = mu.release();
 	ss->sign = 2;
-	return 0;
+	return true;
 
 coef_one:
 	ss->sign = 1;
-	return 0;
+	return true;
 }
 
 void sksh_dealloc(skew_shape* ss)

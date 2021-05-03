@@ -39,14 +39,14 @@ int main(int ac, char** av)
 {
 	if (ac == 1) print_usage();
 
-	int opt_maple = 0;
-	int opt_string = 0;
+	bool opt_maple = false;
+	bool opt_string = false;
 	int rank = 0;
 	int c;
 	while ((c = getopt(ac, av, "msr:")) != EOF) switch (c)
 		{
-		case 'm': opt_maple = 1; break;
-		case 's': opt_string = 1; break;
+		case 'm': opt_maple = true; break;
+		case 's': opt_string = true; break;
 		case 'r':
 			rank = atoi(optarg);
 			if (rank < 0) print_usage();
@@ -65,7 +65,7 @@ int main(int ac, char** av)
 	if (opt_string)
 	{
 		if (rank > 0) error("options -r and -s cannot be used together.");
-		if (str_iscompat(w1.get(), w2.get()) == 0) error("incompatible strings.");
+		if (!str_iscompat(w1.get(), w2.get())) error("incompatible strings.");
 		lc = mult_schubert_str(w1.get(), w2.get());
 	}
 	else

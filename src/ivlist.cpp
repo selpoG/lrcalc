@@ -60,11 +60,11 @@ static int ivl_makeroom(ivlist* lst, size_t sz)
 	return ivl_realloc_array(lst, sz);
 }
 
-int ivl_append(ivlist* lst, ivector* x)
+bool ivl_append(ivlist* lst, ivector* x)
 {
-	if (ivl_makeroom(lst, lst->length + 1) != 0) return -1;
+	if (ivl_makeroom(lst, lst->length + 1) != 0) return false;
 	lst->array[(lst->length)++] = x;
-	return 0;
+	return true;
 }
 
 ivector* ivl_poplast(ivlist* lst)

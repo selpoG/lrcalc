@@ -56,23 +56,23 @@ static void mult_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(mult_usage);
 
-	int opt_maple = 0;
+	bool opt_maple = false;
 	int opt_rows = -1;
 	int opt_cols = -1;
-	int opt_fusion = 0;
-	int opt_quantum = 0;
+	bool opt_fusion = false;
+	bool opt_quantum = false;
 	int c;
 	while ((c = getopt(ac, av, "mr:c:q:f:")) != EOF) switch (c)
 		{
-		case 'm': opt_maple = 1; break;
+		case 'm': opt_maple = true; break;
 		case 'r': opt_rows = atoi(optarg); break;
 		case 'c': opt_cols = atoi(optarg); break;
 		case 'q':
 		case 'f':
 			if (c == 'q')
-				opt_quantum = 1;
+				opt_quantum = true;
 			else
-				opt_fusion = 1;
+				opt_fusion = true;
 			char* p;
 			opt_rows = int(strtol(optarg, &p, 10));
 			if (p == nullptr || *p != ',') cmd_usage(mult_usage);
@@ -86,9 +86,9 @@ static void mult_main(int ac, char* const* av)
 	ivlc_ptr lc;
 	{
 		iv_ptr sh1{get_vect_arg(ac, av)};
-		if (!sh1 || part_valid(sh1.get()) == 0) cmd_error(mult_usage, "part1 not a valid partition.");
+		if (!sh1 || !part_valid(sh1.get())) cmd_error(mult_usage, "part1 not a valid partition.");
 		iv_ptr sh2{get_vect_arg(ac, av)};
-		if (!sh2 || part_valid(sh2.get()) == 0) cmd_error(mult_usage, "part2 not a valid partition.");
+		if (!sh2 || !part_valid(sh2.get())) cmd_error(mult_usage, "part2 not a valid partition.");
 
 		if (opt_fusion || opt_quantum)
 			lc.reset(schur_mult_fusion(sh1.get(), sh2.get(), opt_rows, opt_cols));
@@ -119,12 +119,12 @@ static void skew_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(skew_usage);
 
-	int opt_maple = 0;
+	bool opt_maple = false;
 	int opt_rows = -1;
 	int c;
 	while ((c = getopt(ac, av, "mr:")) != EOF) switch (c)
 		{
-		case 'm': opt_maple = 1; break;
+		case 'm': opt_maple = true; break;
 		case 'r': opt_rows = atoi(optarg); break;
 		default: cmd_usage(skew_usage);
 		}
@@ -132,9 +132,9 @@ static void skew_main(int ac, char* const* av)
 	ivlc_ptr lc;
 	{
 		iv_ptr outer{get_vect_arg(ac, av)};
-		if (!outer || part_valid(outer.get()) == 0) cmd_error(skew_usage, "outer shape not a valid partition.");
+		if (!outer || !part_valid(outer.get())) cmd_error(skew_usage, "outer shape not a valid partition.");
 		iv_ptr inner{get_vect_arg(ac, av)};
-		if (!inner || part_valid(inner.get()) == 0) cmd_error(skew_usage, "inner shape not a valid partition.");
+		if (!inner || !part_valid(inner.get())) cmd_error(skew_usage, "inner shape not a valid partition.");
 
 		lc.reset(schur_skew(outer.get(), inner.get(), opt_rows, -1));
 	}
@@ -154,11 +154,11 @@ static void coprod_main(int ac, char* const* av)
 {
 	if (ac == 1) cmd_usage(mult_usage);
 
-	int opt_all = 0;
+	bool opt_all = false;
 	int c;
 	while ((c = getopt(ac, av, "a")) != EOF) switch (c)
 		{
-		case 'a': opt_all = 1; break;
+		case 'a': opt_all = true; break;
 		default: cmd_usage(mult_usage);
 		}
 
@@ -167,7 +167,7 @@ static void coprod_main(int ac, char* const* av)
 	int cols;
 	{
 		iv_ptr sh{get_vect_arg(ac, av)};
-		if (!sh || part_valid(sh.get()) == 0) cmd_error(mult_usage, "part not a valid partition.");
+		if (!sh || !part_valid(sh.get())) cmd_error(mult_usage, "part not a valid partition.");
 
 		rows = part_length(sh.get());
 		cols = part_entry(sh.get(), 0);
@@ -212,11 +212,11 @@ static void coef_main(int ac, char* const* av)
 		}
 
 	iv_ptr outer{get_vect_arg(ac, av)};
-	if (!outer || part_valid(outer.get()) == 0) cmd_error(coef_usage, "outer not a valid partition.");
+	if (!outer || !part_valid(outer.get())) cmd_error(coef_usage, "outer not a valid partition.");
 	iv_ptr sh1{get_vect_arg(ac, av)};
-	if (!sh1 || part_valid(sh1.get()) == 0) cmd_error(coef_usage, "inner1 not a valid partition.");
+	if (!sh1 || !part_valid(sh1.get())) cmd_error(coef_usage, "inner1 not a valid partition.");
 	iv_ptr sh2{get_vect_arg(ac, av)};
-	if (!sh2 || part_valid(sh2.get()) == 0) cmd_error(coef_usage, "inner2 not a valid partition.");
+	if (!sh2 || !part_valid(sh2.get())) cmd_error(coef_usage, "inner2 not a valid partition.");
 
 	long long coef = schur_lrcoef(outer.get(), sh1.get(), sh2.get());
 
@@ -243,9 +243,9 @@ static void tab_main(int ac, char* const* av)
 		}
 
 	iv_ptr outer{get_vect_arg(ac, av)};
-	if (!outer || part_valid(outer.get()) == 0) cmd_error(tab_usage, "outer shape not a valid partition.");
+	if (!outer || !part_valid(outer.get())) cmd_error(tab_usage, "outer shape not a valid partition.");
 	iv_ptr inner{get_vect_arg(ac, av)};
-	if (!inner || part_valid(inner.get()) == 0) cmd_error(tab_usage, "inner shape not a valid partition.");
+	if (!inner || !part_valid(inner.get())) cmd_error(tab_usage, "inner shape not a valid partition.");
 
 	lrtab_iter* lrit = lrit_new(outer.get(), inner.get(), nullptr, opt_rows, -1, -1);
 	if (lrit == nullptr) out_of_memory();

@@ -41,15 +41,15 @@ static ivlc_slice get_strip(const ivlc_ptr& lc, int rows)
 static bool test_schur_lrskew(const iv_ptr& out, const iv_ptr& inn, int rows, int cols)
 {
 	iv_ptr sh = iv_create(uint32_t(rows));
-	if (!sh) return true;
+	if (!sh) return false;
 	ivlc_ptr lc{schur_skew(out.get(), inn.get(), -1, rows)};
-	if (!lc) return true;
+	if (!lc) return false;
 
 	/* Check that schur_skew() agrees with schur_lrcoef(). */
 	for ([[maybe_unused]] auto& itr : pitr::box(sh.get(), rows, cols))
 	{
 		long long coef = schur_lrcoef(out.get(), inn.get(), sh.get());
-		if (coef < 0) return true;
+		if (coef < 0) return false;
 		[[maybe_unused]] const ivlc_keyval_t* kv = ivlc_lookup(lc.get(), sh.get(), iv_hash(sh.get()));
 		assert(coef == (kv ? kv->value : 0));
 	}
@@ -58,13 +58,13 @@ static bool test_schur_lrskew(const iv_ptr& out, const iv_ptr& inn, int rows, in
 	for (int r = 0; r <= rows; r++)
 	{
 		ivlc_ptr lc_sk{schur_skew(out.get(), inn.get(), r, rows)};
-		if (!lc_sk) return true;
+		if (!lc_sk) return false;
 		ivlc_slice lc_gs = get_strip(lc, r);
-		if (!lc_gs) return true;
-		assert(ivlc_equals(lc_sk.get(), lc_gs.get(), 0));
+		if (!lc_gs) return false;
+		assert(ivlc_equals(lc_sk.get(), lc_gs.get()));
 	}
 
-	return false;
+	return true;
 }
 
 int main(int ac, char** av)
@@ -81,7 +81,7 @@ int main(int ac, char** av)
 
 	for ([[maybe_unused]] auto& itr1 : pitr::box(out.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(inn.get(), rows, cols))
-			if (test_schur_lrskew(out, inn, rows, cols)) out_of_memory();
+			if (!test_schur_lrskew(out, inn, rows, cols)) out_of_memory();
 
 	puts("success");
 	return 0;

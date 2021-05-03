@@ -13,17 +13,17 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlist.hpp"
 
-int perm_valid(ivector* w)
+bool perm_valid(ivector* w)
 {
 	uint32_t n = iv_length(w);
 	for (uint32_t i = 0; i < n; i++)
 	{
 		int a = abs(iv_elem(w, i)) - 1;
-		if (a < 0 || a >= int(n) || iv_elem(w, a) < 0) return 0;
+		if (a < 0 || a >= int(n) || iv_elem(w, a) < 0) return false;
 		iv_elem(w, a) = -iv_elem(w, a);
 	}
 	for (uint32_t i = 0; i < n; i++) iv_elem(w, i) = -iv_elem(w, i);
-	return 1;
+	return true;
 }
 
 int perm_length(const ivector* w)
@@ -43,28 +43,26 @@ int perm_group(const ivector* w)
 	return i;
 }
 
-int dimvec_valid(const ivector* dv)
+bool dimvec_valid(const ivector* dv)
 {
 	uint32_t ld = iv_length(dv);
-	if (ld == 0) return 0;
+	if (ld == 0) return false;
 	if (iv_elem(dv, 0) < 0) return 0;
 	for (uint32_t i = 1; i < ld; i++)
-		if (iv_elem(dv, i - 1) > iv_elem(dv, i)) return 0;
-	return 1;
+		if (iv_elem(dv, i - 1) > iv_elem(dv, i)) return false;
+	return true;
 }
 
-/* Return 1 if S_w1 * S_w2 = 0 in H^*(Fl(rank)). */
-int bruhat_zero(const ivector* w1, const ivector* w2, int rank)
+/* Return true if S_w1 * S_w2 = 0 in H^*(Fl(rank)). */
+bool bruhat_zero(const ivector* w1, const ivector* w2, int rank)
 {
 	int n1 = perm_group(w1);
 	int n2 = perm_group(w2);
-	if (n1 > rank || n2 > rank) return 1;
+	if (n1 > rank || n2 > rank) return true;
 	if (n1 > n2)
 	{
-		const ivector* tmp = w1;
-		w1 = w2;
-		w2 = tmp;
-		n1 = n2;
+		std::swap(w1, w2);
+		std::swap(n1, n2);
 	}
 	for (int q = 1; q < n1; q++)
 	{
@@ -75,10 +73,10 @@ int bruhat_zero(const ivector* w1, const ivector* w2, int rank)
 		{
 			if (iv_elem(w1, p) <= q) r1++;
 			if (iv_elem(w2, p) > q2) r2++;
-			if (r1 < r2) return 1;
+			if (r1 < r2) return true;
 		}
 	}
-	return 0;
+	return false;
 }
 
 ivlist* all_strings(const ivector* dimvec)
@@ -111,7 +109,7 @@ ivlist* all_strings(const ivector* dimvec)
 	if (!res) return nullptr;
 	if (n == 0)
 	{
-		if (ivl_append(res.get(), str.release()) != 0) return nullptr;
+		if (!ivl_append(res.get(), str.release())) return nullptr;
 		return res.release();
 	}
 
@@ -119,7 +117,7 @@ ivlist* all_strings(const ivector* dimvec)
 	{
 		ivector* nstr = iv_new_copy(str.get());
 		if (nstr == nullptr) return nullptr;
-		if (ivl_append(res.get(), nstr) != 0)
+		if (!ivl_append(res.get(), nstr))
 		{
 			iv_free(nstr);
 			return nullptr;
@@ -205,15 +203,14 @@ ivector* str2dimvec(const ivector* str)
 	return res.release();
 }
 
-int str_iscompat(const ivector* str1, const ivector* str2)
+bool str_iscompat(const ivector* str1, const ivector* str2)
 {
-	if (iv_length(str1) != iv_length(str2)) return 0;
+	if (iv_length(str1) != iv_length(str2)) return false;
 	iv_ptr dv1{str2dimvec(str1)};
-	if (!dv1) return 0;
+	if (!dv1) return false;
 	iv_ptr dv2{str2dimvec(str2)};
-	if (!dv2) return 0;
-	int cmp = iv_cmp(dv1.get(), dv2.get());
-	return (cmp == 0) ? 1 : 0;
+	if (!dv2) return false;
+	return iv_cmp(dv1.get(), dv2.get()) == 0;
 }
 
 ivector* perm2string(const ivector* perm, const ivector* dimvec)

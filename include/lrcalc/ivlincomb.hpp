@@ -56,8 +56,8 @@ extern "C"
 	   error. */
 	ivlc_keyval_t* ivlc_insert(ivlincomb* ht, ivector* key, uint32_t hash, int32_t value);
 
-	/* Return 1 if equal; ignore zero values unless opt_zero != 0. */
-	int ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2, int opt_zero);
+	/* Return true if equal; ignore zero values. */
+	bool ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2);
 
 	void ivlc_print_stat(const ivlincomb* ht);
 
@@ -68,7 +68,7 @@ extern "C"
 		size_t i;
 	};
 
-	int ivlc_good(const ivlc_iter* itr);
+	bool ivlc_good(const ivlc_iter* itr);
 
 	void ivlc_first(const ivlincomb* ht, ivlc_iter* itr);
 
@@ -83,9 +83,11 @@ extern "C"
 
 	constexpr int LC_FREE_ZERO = 2;
 
-	int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
+	// return true if secceeded
+	bool ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
 
-	int ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
+	// return true if secceeded
+	bool ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
 
 	void ivlc_print(const ivlincomb* ht, int opt_zero);
 

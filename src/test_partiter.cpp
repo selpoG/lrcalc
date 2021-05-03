@@ -22,7 +22,7 @@
 static bool test_part_iter_box(int rows, int cols)
 {
 	iv_ptr p = iv_create(uint32_t(rows));
-	if (!p) return true;
+	if (!p) return false;
 
 	int np = 1;
 	for (int i = 1; i <= rows; i++) np = np * (cols + i) / i;
@@ -44,17 +44,17 @@ static bool test_part_iter_box(int rows, int cols)
 			np1++;
 		}
 	assert(np1 == np);
-	return false;
+	return true;
 }
 
 static bool test_part_iter_sub(int rows, int cols, const iv_ptr& outer)
 {
 	int size_bound = iv_sum(outer.get()) + 2;
 	iv_ptr count = iv_create_zero(uint32_t(size_bound));
-	if (!count) return true;
+	if (!count) return false;
 
 	iv_ptr p = iv_create(uint32_t(rows));
-	if (!p) return true;
+	if (!p) return false;
 
 	for ([[maybe_unused]] auto& itr : pitr::box(p.get(), rows, cols))
 		if (part_leq(p.get(), outer.get()))
@@ -86,17 +86,17 @@ static bool test_part_iter_sub(int rows, int cols, const iv_ptr& outer)
 		assert(np == iv_elem(count, size));
 	}
 
-	return false;
+	return true;
 }
 
 static bool test_part_iter_super(int rows, int cols, const iv_ptr& inner)
 {
 	int size_bound = rows * cols + 2;
 	iv_ptr count = iv_create_zero(uint32_t(size_bound));
-	if (!count) return true;
+	if (!count) return false;
 
 	iv_ptr p = iv_create(uint32_t(rows));
-	if (!p) return true;
+	if (!p) return false;
 
 	for ([[maybe_unused]] auto& itr : pitr::box(p.get(), rows, cols))
 		if (part_leq(inner.get(), p.get()))
@@ -128,17 +128,17 @@ static bool test_part_iter_super(int rows, int cols, const iv_ptr& inner)
 		assert(np == iv_elem(count, size));
 	}
 
-	return false;
+	return true;
 }
 
 static bool test_part_iter_between(int rows, int cols, const iv_ptr& outer, const iv_ptr& inner)
 {
 	int size_bound = iv_sum(outer.get()) + 2;
 	iv_ptr count = iv_create_zero(uint32_t(size_bound));
-	if (!count) return true;
+	if (!count) return false;
 
 	iv_ptr p = iv_create(uint32_t(rows));
-	if (!p) return true;
+	if (!p) return false;
 
 	for ([[maybe_unused]] auto& itr : pitr::box(p.get(), rows, cols))
 		if (part_leq(inner.get(), p.get()) && part_leq(p.get(), outer.get()))
@@ -173,7 +173,7 @@ static bool test_part_iter_between(int rows, int cols, const iv_ptr& outer, cons
 		assert(np == iv_elem(count, size));
 	}
 
-	return false;
+	return true;
 }
 
 int main(int ac, char** av)
@@ -193,31 +193,31 @@ int main(int ac, char** av)
 	iv_ptr p2 = iv_create(uint32_t(rows));
 	if (!p2) out_of_memory();
 
-	if (test_part_iter_box(rows, cols)) out_of_memory();
+	if (!test_part_iter_box(rows, cols)) out_of_memory();
 
 	for ([[maybe_unused]] auto& itr_p2 : pitr(p2.get(), rows, cols, nullptr, nullptr, 0, 0))
 	{
 		uint32_t p2_len = iv_length(p2);
 		part_unchop(p2.get(), rows);
 
-		if (test_part_iter_sub(rows, cols, p2)) out_of_memory();
-		if (test_part_iter_sub(rows0, cols, p2)) out_of_memory();
-		if (test_part_iter_sub(rows, cols0, p2)) out_of_memory();
-		if (test_part_iter_sub(rows, cols + 1, p2)) out_of_memory();
-		if (test_part_iter_super(rows, cols, p2)) out_of_memory();
-		if (test_part_iter_super(rows0, cols, p2)) out_of_memory();
-		if (test_part_iter_super(rows, cols0, p2)) out_of_memory();
-		if (test_part_iter_super(rows, cols + 2, p2)) out_of_memory();
+		if (!test_part_iter_sub(rows, cols, p2)) out_of_memory();
+		if (!test_part_iter_sub(rows0, cols, p2)) out_of_memory();
+		if (!test_part_iter_sub(rows, cols0, p2)) out_of_memory();
+		if (!test_part_iter_sub(rows, cols + 1, p2)) out_of_memory();
+		if (!test_part_iter_super(rows, cols, p2)) out_of_memory();
+		if (!test_part_iter_super(rows0, cols, p2)) out_of_memory();
+		if (!test_part_iter_super(rows, cols0, p2)) out_of_memory();
+		if (!test_part_iter_super(rows, cols + 2, p2)) out_of_memory();
 
 		for ([[maybe_unused]] auto& itr_p1 : pitr(p1.get(), rows, cols, p2.get(), nullptr, 0, PITR_USE_OUTER))
 		{
 			uint32_t p1_len = iv_length(p1);
 			part_unchop(p1.get(), rows);
 
-			if (test_part_iter_between(rows, cols, p2, p1)) out_of_memory();
-			if (test_part_iter_between(rows0, cols, p2, p1)) out_of_memory();
-			if (test_part_iter_between(rows, cols0, p2, p1)) out_of_memory();
-			if (test_part_iter_between(rows, cols + 2, p2, p1)) out_of_memory();
+			if (!test_part_iter_between(rows, cols, p2, p1)) out_of_memory();
+			if (!test_part_iter_between(rows0, cols, p2, p1)) out_of_memory();
+			if (!test_part_iter_between(rows, cols0, p2, p1)) out_of_memory();
+			if (!test_part_iter_between(rows, cols + 2, p2, p1)) out_of_memory();
 
 			iv_length(p1) = p1_len;
 		}

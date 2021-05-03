@@ -30,16 +30,16 @@
 static bool test_mult_fusion(const iv_ptr& sh1, const iv_ptr& sh2, int rows, int level)
 {
 	ivlc_ptr prd_f{schur_mult_fusion(sh1.get(), sh2.get(), rows, level)};
-	if (!prd_f) return true;
+	if (!prd_f) return false;
 
 	ivlc_ptr prd_s{schur_mult(sh1.get(), sh2.get(), rows, -1, rows)};
-	if (!prd_s) return true;
+	if (!prd_s) return false;
 
-	if (fusion_reduce_lc(prd_s.get(), level)) return true;
+	if (!fusion_reduce_lc(prd_s.get(), level)) return false;
 
-	assert(ivlc_equals(prd_f.get(), prd_s.get(), 0));
+	assert(ivlc_equals(prd_f.get(), prd_s.get()));
 
-	return false;
+	return true;
 }
 
 int main(int ac, char** av)
@@ -57,7 +57,7 @@ int main(int ac, char** av)
 	for ([[maybe_unused]] auto& itr1 : pitr::box(sh1.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(sh2.get(), rows, cols))
 			for (int level = 0; level <= cols; level++)
-				if (test_mult_fusion(sh1, sh2, rows, level)) out_of_memory();
+				if (!test_mult_fusion(sh1, sh2, rows, level)) out_of_memory();
 
 	puts("success");
 	return 0;

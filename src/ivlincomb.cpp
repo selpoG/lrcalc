@@ -173,24 +173,24 @@ static ivlc_keyval_t* ivlc_remove(ivlincomb* ht, const ivector* key, uint32_t ha
 	return elts + i;
 }
 
-int ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2, int opt_zero)
+bool ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2)
 {
 	for (const auto& kv1 : ivlc_iterator(ht1))
 	{
-		if (kv1.value == 0 && opt_zero == 0) continue;
+		if (kv1.value == 0) continue;
 		const ivlc_keyval_t* kv2 = ivlc_lookup(ht2, kv1.key, kv1.hash);
-		if (kv2 == nullptr || kv1.value != kv2->value) return 0;
+		if (kv2 == nullptr || kv1.value != kv2->value) return false;
 	}
 	for (const auto& kv2 : ivlc_iterator(ht2))
 	{
-		if (kv2.value == 0 && opt_zero == 0) continue;
+		if (kv2.value == 0) continue;
 		const ivlc_keyval_t* kv1 = ivlc_lookup(ht1, kv2.key, kv2.hash);
-		if (kv1 == nullptr || kv1->value != kv2.value) return 0;
+		if (kv1 == nullptr || kv1->value != kv2.value) return false;
 	}
-	return 1;
+	return true;
 }
 
-int ivlc_good(const ivlc_iter* itr) { return (itr->i != 0); }
+bool ivlc_good(const ivlc_iter* itr) { return itr->i != 0; }
 
 void ivlc_first(const ivlincomb* ht, ivlc_iter* itr)
 {
@@ -239,12 +239,13 @@ void ivlc_free_all(ivlincomb* ht)
 	ivlc_free(ht);
 }
 
-int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt)
+// return true if secceeded
+bool ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt)
 {
 	if (c == 0)
 	{
 		if (!(opt & LC_COPY_KEY)) iv_free(key);
-		return 0;
+		return true;
 	}
 	ivlc_keyval_t* kv = ivlc_lookup(ht, key, hash);
 	if (kv != nullptr)
@@ -256,27 +257,28 @@ int ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int 
 			ivlc_remove(ht, kv->key, hash);
 			iv_free(kv->key);
 		}
-		return 0;
+		return true;
 	}
 	if (ivlc_makeroom(ht, ht->card + 1) != 0)
 	{
 		if (!(opt & LC_COPY_KEY)) iv_free(key);
-		return -1;
+		return false;
 	}
 	if (opt & LC_COPY_KEY)
 	{
 		key = iv_new_copy(key);
-		if (key == nullptr) return -1;
+		if (key == nullptr) return false;
 	}
 	kv = ivlc_insert(ht, key, hash, c);
-	return 0;
+	return true;
 }
 
-int ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt)
+// return true if secceeded
+bool ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt)
 {
 	for (auto& kv : ivlc_iterator(src))
-		if (ivlc_add_element(dst, c * kv.value, kv.key, kv.hash, opt) != 0) return -1;
-	return 0;
+		if (!ivlc_add_element(dst, c * kv.value, kv.key, kv.hash, opt)) return false;
+	return true;
 }
 
 void ivlc_print(const ivlincomb* ht, int opt_zero)
