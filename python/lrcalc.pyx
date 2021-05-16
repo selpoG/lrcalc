@@ -3,6 +3,7 @@
 
 from liblrcalc cimport *
 
+
 cdef ivector *iv_newpy(pv):
     cdef ivector *v
     cdef int i
@@ -20,10 +21,12 @@ cdef tuple iv_tuple(ivector *v):
 
 cdef dict ivlc_dict_tuple(ivlincomb *lc):
     cdef ivlc_iter itr
+    cdef ivlc_keyval_t *kv
     res = dict()
     ivlc_first(lc, &itr)
     while ivlc_good(&itr):
-        res[iv_tuple(ivlc_key(&itr))] = ivlc_value(&itr)
+        kv = ivlc_keyval(&itr)
+        res[iv_tuple(kv.key)] = kv.value
         ivlc_next(&itr)
     return res
 
@@ -37,10 +40,12 @@ cdef tuple iv_part(ivector *v):
 
 cdef dict ivlc_dict_part(ivlincomb *lc):
     cdef ivlc_iter itr
+    cdef ivlc_keyval_t *kv
     res = dict()
     ivlc_first(lc, &itr)
     while ivlc_good(&itr):
-        res[iv_part(ivlc_key(&itr))] = ivlc_value(&itr)
+        kv = ivlc_keyval(&itr)
+        res[iv_part(kv.key)] = kv.value
         ivlc_next(&itr)
     return res
 
@@ -57,10 +62,12 @@ cdef tuple iv_quantum(ivector *v, int level, bint degrees):
 
 cdef dict ivlc_dict_quantum(ivlincomb *lc, int level, bint degrees):
     cdef ivlc_iter itr
+    cdef ivlc_keyval_t *kv
     res = dict()
     ivlc_first(lc, &itr)
     while ivlc_good(&itr):
-        res[iv_quantum(ivlc_key(&itr), level, degrees)] = ivlc_value(&itr)
+        kv = ivlc_keyval(&itr)
+        res[iv_quantum(kv.key, level, degrees)] = kv.value
         ivlc_next(&itr)
     return res
 
@@ -73,10 +80,12 @@ cdef tuple iv_pair(ivector *v, int rows, int cols):
 
 cdef dict ivlc_dict_pair(ivlincomb *lc, int rows, int cols):
     cdef ivlc_iter itr
+    cdef ivlc_keyval_t *kv
     res = dict()
     ivlc_first(lc, &itr)
     while ivlc_good(&itr):
-        res[iv_pair(ivlc_key(&itr), rows, cols)] = ivlc_value(&itr)
+        kv = ivlc_keyval(&itr)
+        res[iv_pair(kv.key, rows, cols)] = kv.value
         ivlc_next(&itr)
     return res
 
