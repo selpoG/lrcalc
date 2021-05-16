@@ -103,7 +103,7 @@ static void mult_main(int ac, char* const* av)
 		else
 			part_qprint_lincomb(lc.get(), opt_cols);
 	else if (opt_maple)
-		maple_print_lincomb(lc.get(), "s", 1);
+		maple_print_lincomb(lc.get(), "s", true);
 	else
 		part_print_lincomb(lc.get());
 }
@@ -141,7 +141,7 @@ static void skew_main(int ac, char* const* av)
 	if (!lc) out_of_memory();
 
 	if (opt_maple)
-		maple_print_lincomb(lc.get(), "s", 1);
+		maple_print_lincomb(lc.get(), "s", true);
 	else
 		part_print_lincomb(lc.get());
 }

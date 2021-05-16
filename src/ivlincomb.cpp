@@ -281,11 +281,11 @@ bool ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt)
 	return true;
 }
 
-void ivlc_print(const ivlincomb* ht, int opt_zero)
+void ivlc_print(const ivlincomb* ht)
 {
 	for (const auto& kv : ivlc_iterator(ht))
 	{
-		if (kv.value == 0 && opt_zero == 0) continue;
+		if (kv.value == 0) continue;
 		printf("%d  ", kv.value);
 		iv_print(kv.key);
 		putchar('\n');

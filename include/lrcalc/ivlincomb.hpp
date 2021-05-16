@@ -89,7 +89,7 @@ extern "C"
 	// return true if secceeded
 	bool ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
 
-	void ivlc_print(const ivlincomb* ht, int opt_zero);
+	void ivlc_print(const ivlincomb* ht);
 
 	constexpr uint32_t IVLC_HASHTABLE_SZ = 2003;
 	constexpr uint32_t IVLC_ARRAY_SZ = 100;

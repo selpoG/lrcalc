@@ -192,10 +192,9 @@ void lrit_print_skewtab(const lrtab_iter* lrit, const ivector* outer, const ivec
 		int inn_r = (r >= ilen) ? 0 : iv_elem(inner, r);
 		int out_r = iv_elem(outer, r);
 		int row_sz = out_r - inn_r;
-		int c;
 		size -= row_sz;
-		for (c = col_first; c < inn_r; c++) fputs("  ", stdout);
-		for (c = 0; c < row_sz; c++) printf("%2d", array[size + c].value);
+		for (int c = col_first; c < inn_r; c++) fputs("  ", stdout);
+		for (int c = 0; c < row_sz; c++) printf("%2d", array[size + c].value);
 		putchar('\n');
 	}
 }

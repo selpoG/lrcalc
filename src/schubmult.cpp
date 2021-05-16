@@ -70,17 +70,17 @@ int main(int ac, char** av)
 	}
 	else
 	{
-		if (perm_valid(w1.get()) == 0) error("perm1 not a valid permutation.");
-		if (perm_valid(w2.get()) == 0) error("perm2 not a valid permutation.");
+		if (!perm_valid(w1.get())) error("perm1 not a valid permutation.");
+		if (!perm_valid(w2.get())) error("perm2 not a valid permutation.");
 		lc = mult_schubert(w1.get(), w2.get(), rank);
 	}
 
 	if (lc == nullptr) out_of_memory();
 
 	if (opt_maple)
-		maple_print_lincomb(lc, "X", 0);
+		maple_print_lincomb(lc, "X", false);
 	else
-		ivlc_print(lc, 0);
+		ivlc_print(lc);
 
 	return 0;
 }

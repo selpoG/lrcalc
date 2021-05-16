@@ -14,7 +14,7 @@
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/part.hpp"
 
-static void _maple_print_term(int c, const ivector* v, const char* letter, int nz)
+static void _maple_print_term(int c, const ivector* v, const char* letter, bool nz)
 {
 	putchar((c < 0) ? '-' : '+');
 	c = abs(c);
@@ -29,7 +29,7 @@ static void _maple_print_term(int c, const ivector* v, const char* letter, int n
 	putchar(']');
 }
 
-void maple_print_lincomb(const ivlincomb* ht, const char* letter, int nz)
+void maple_print_lincomb(const ivlincomb* ht, const char* letter, bool nz)
 {
 	putchar('0');
 	for (const auto& kv : ivlc_iterator(ht))

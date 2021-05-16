@@ -13,15 +13,20 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlist.hpp"
 
+// check w is a permutation of {1, 2, ..., n}
 bool perm_valid(ivector* w)
 {
 	uint32_t n = iv_length(w);
+	// change signs of elements of w temporarily,
+	// to check each of 1, ..., n appears only once
 	for (uint32_t i = 0; i < n; i++)
 	{
 		int a = abs(iv_elem(w, i)) - 1;
+		// w[a] < 0 means a has appeared before
 		if (a < 0 || a >= int(n) || iv_elem(w, a) < 0) return false;
 		iv_elem(w, a) = -iv_elem(w, a);
 	}
+	// revert
 	for (uint32_t i = 0; i < n; i++) iv_elem(w, i) = -iv_elem(w, i);
 	return true;
 }

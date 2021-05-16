@@ -195,7 +195,7 @@ int main(int ac, char** av)
 
 	if (!test_part_iter_box(rows, cols)) out_of_memory();
 
-	for ([[maybe_unused]] auto& itr_p2 : pitr(p2.get(), rows, cols, nullptr, nullptr, 0, 0))
+	for ([[maybe_unused]] auto& itr_p2 : pitr::box(p2.get(), rows, cols))
 	{
 		uint32_t p2_len = iv_length(p2);
 		part_unchop(p2.get(), rows);
