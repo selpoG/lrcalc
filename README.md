@@ -7,7 +7,9 @@
 ## Build
 
 ```sh
-./configure
+mkdir build
+cd build
+cmake ..
 make
 ```
 
