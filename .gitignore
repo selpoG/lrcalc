@@ -18,3 +18,4 @@ test-suite.log
 /build*/
 .envrc
 /.vscode/
+/*.a

@@ -1,0 +1,13 @@
+[package]
+name = "lrcalc_helper"
+version = "0.1.0"
+authors = ["selpo <planet_selpo@yahoo.co.jp>"]
+edition = "2018"
+
+[lib]
+name = "lrcalc_helper"
+path = "src/lib.rs"
+crate-type = ["rlib", "staticlib"]
+
+[dependencies]
+lrcalc_system = { path="../lrcalc_system" }

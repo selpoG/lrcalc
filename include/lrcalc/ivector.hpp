@@ -32,6 +32,9 @@ extern "C"
 	void iv_print(const ivector* v);
 	void iv_printnl(const ivector* v);
 
+	void puts_r(const char* s);
+	void putchar_r(int ch);
+
 #define iv_length(v) ((v)->length)
 
 #define iv_elem(v, i) ((v)->array[i])

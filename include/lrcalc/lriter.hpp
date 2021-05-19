@@ -30,8 +30,6 @@ extern "C"
 	void lrit_free(lrtab_iter* lrit);
 
 	void lrit_print_skewtab(const lrtab_iter* lrit, const ivector* outer, const ivector* inner);
-	void lrit_dump(const lrtab_iter* lrit);
-	void lrit_dump_skew(const lrtab_iter* lrit, const ivector* outer, const ivector* inner);
 
 	bool lrit_good(const lrtab_iter* lrit);
 

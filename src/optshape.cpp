@@ -16,6 +16,27 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/part.hpp"
 
+skew_shape optim_fusion(const ivector* sh1, const ivector* sh2, int maxrows, int maxcols)
+{
+	skew_shape ss;
+	_optim_fusion(&ss, sh1, sh2, maxrows, maxcols);
+	return ss;
+}
+
+skew_shape optim_skew(const ivector* outer, const ivector* inner, const ivector* content, int maxrows)
+{
+	skew_shape ss;
+	_optim_skew(&ss, outer, inner, content, maxrows);
+	return ss;
+}
+
+skew_shape optim_coef(const ivector* out, const ivector* sh1, const ivector* sh2)
+{
+	skew_shape ss;
+	_optim_coef(&ss, out, sh1, sh2);
+	return ss;
+}
+
 void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
 {
 	uint32_t len = part_length(outer);
@@ -33,9 +54,9 @@ void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
 
 	for (uint32_t r = 0; r < clen; r++)
 	{
-		for (int c = ss_left; c < ss_right; c++) putchar(' ');
-		for (int c = 0; c < iv_elem(cont, r); c++) putchar('c');
-		putchar('\n');
+		for (int c = ss_left; c < ss_right; c++) putchar_r(' ');
+		for (int c = 0; c < iv_elem(cont, r); c++) putchar_r('c');
+		putchar_r('\n');
 	}
 
 	for (uint32_t r = r0; r < len; r++)
@@ -43,97 +64,16 @@ void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
 		int innr = (r < ilen) ? iv_elem(inner, r) : 0;
 		int outr = iv_elem(outer, r);
 		int c = 0;
-		for (c = 0; c < innr; c++) putchar(' ');
-		for (; c < outr; c++) putchar('s');
-		putchar('\n');
+		for (c = 0; c < innr; c++) putchar_r(' ');
+		for (; c < outr; c++) putchar_r('s');
+		putchar_r('\n');
 	}
 }
 
-/* Find optimal shape for product of Schur functions.
- *
- * 1) Let outer0 be outer minus all rows of size maxcols and all
- *    columns of size maxrows.
- *
- * 2) Let content0 be content minus all rows of size maxcols and
- *    all columns of size maxrows.
- *
- * 3) New outer should be smaller of outer0, content0.
- *
- * 4) New content should be larger shape, plus removed rows and
- *    columns.
- */
-
-bool optim_mult(skew_shape* ss, const ivector* sh1, const ivector* sh2, int maxrows, int maxcols)
-{
-	/* DEBUG: Check valid input. */
-	assert(part_valid(sh1));
-	if (sh2 != nullptr) assert(part_valid(sh2));
-
-	/* Find length and width of shapes. */
-	int len1 = int(part_length(sh1));
-	int sh10 = len1 ? iv_elem(sh1, 0) : 0;
-	int len2 = sh2 ? int(part_length(sh2)) : 0;
-	int sh20 = len2 ? iv_elem(sh2, 0) : 0;
-
-	/* Indicate empty result. */
-	memset(ss, 0, sizeof(skew_shape));
-
-	/* Empty result? */
-	if (maxrows >= 0 && (len1 > maxrows || len2 > maxrows)) return true;
-	if (maxcols >= 0 && (sh10 > maxcols || sh20 > maxcols)) return true;
-	if (maxrows >= 0 && maxcols >= 0)
-	{
-		int r = (len1 + len2 < maxrows) ? len2 : maxrows - len1;
-		for (; r < len2; r++)
-			if (iv_elem(sh1, maxrows - r - 1) + iv_elem(sh2, r) > maxcols) return true;
-	}
-
-	/* Number of full rows and columns in shapes. */
-	int fc1 = (len1 == maxrows && len1 > 0) ? iv_elem(sh1, len1 - 1) : 0;
-	int fr1 = 0;
-	while (fr1 < len1 && iv_elem(sh1, fr1) == maxcols) fr1++;
-	int fc2 = (len2 == maxrows && len2 > 0) ? iv_elem(sh2, len2 - 1) : 0;
-	int fr2 = 0;
-	while (fr2 < len2 && iv_elem(sh2, fr2) == maxcols) fr2++;
-
-	/* Find # boxes after removing full rows and columns. */
-	int sz1 = (fr1 - len1) * fc1;
-	for (int r = len1 - 1; r >= fr1; r--) sz1 += iv_elem(sh1, r);
-	int sz2 = (fr2 - len2) * fc2;
-	for (int r = len2 - 1; r >= fr2; r--) sz2 += iv_elem(sh2, r);
-
-	/* sh2 should be largest partition. */
-	if (sz1 > sz2)
-	{
-		std::swap(sh1, sh2);
-		std::swap(len1, len2);
-		std::swap(sh10, sh20);
-		std::swap(fc1, fc2);
-		std::swap(fr1, fr2);
-	}
-
-	/* Remove full rows and columns from sh1. */
-	iv_ptr out = iv_create(uint32_t(len1 - fr1));
-	if (!out) return false;
-	for (int r = 0; r < len1 - fr1; r++) iv_elem(out, r) = iv_elem(sh1, fr1 + r) - fc1;
-
-	/* Add full rows and columns to sh2. */
-	int clen = (fc1 + fc2 > 0) ? maxrows : len2 + fr1;
-	iv_ptr cont = iv_create(uint32_t(clen));
-	if (!cont) return false;
-	for (int r = 0; r < fr1; r++) iv_elem(cont, r) = maxcols;
-	for (int r = 0; r < len2; r++) iv_elem(cont, fr1 + r) = iv_elem(sh2, r) + fc1;
-	for (int r = len2 + fr1; r < clen; r++) iv_elem(cont, r) = fc1;
-
-	ss->outer = out.release();
-	ss->cont = cont.release();
-	ss->sign = 1;
-	return true;
-}
 
 /* Find optimal shape for fusion product. */
 
-bool optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int rows, int level)
+bool _optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int rows, int level)
 {
 	/* DEBUG: Check valid input. */
 	assert(part_valid(sh1));
@@ -239,10 +179,14 @@ struct partial_shape
  *    plus all columns of height maxrows.
  */
 
-bool optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const ivector* content, int maxrows)
+bool _optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, const ivector* content, int maxrows)
 {
 	/* Handle case in other function. */
-	if (inner == nullptr) return optim_mult(ss, outer, content, maxrows, -1);
+	if (inner == nullptr)
+	{
+		*ss = optim_mult(outer, content, maxrows, -1);
+		return true;
+	}
 
 	/* DEBUG: Check valid input. */
 	assert(part_valid(outer));
@@ -420,7 +364,7 @@ bool optim_skew(skew_shape* ss, const ivector* outer, const ivector* inner, cons
 	return true;
 }
 
-bool optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ivector* sh2)
+bool _optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const ivector* sh2)
 {
 	// int N, Nla, Nmu, sum, r, s, N0, nu0, la0, mu0, nur, lar, mur;
 	// int lar1, mur1, nur1, c, ca, Inu, Ila, Imu;
@@ -758,11 +702,4 @@ bool optim_coef(skew_shape* ss, const ivector* out, const ivector* sh1, const iv
 coef_one:
 	ss->sign = 1;
 	return true;
-}
-
-void sksh_dealloc(skew_shape* ss)
-{
-	if (ss->outer != nullptr) iv_free(ss->outer);
-	if (ss->inner != nullptr) iv_free(ss->inner);
-	if (ss->cont != nullptr) iv_free(ss->cont);
 }

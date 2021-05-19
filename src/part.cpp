@@ -14,30 +14,11 @@
 #include "lrcalc/ivector.hpp"
 #include "lrcalc/ivlincomb.hpp"
 
-bool part_valid(const ivector* p)
-{
-	int x = 0;
-	for (auto i = int(iv_length(p) - 1); i >= 0; i--)
-	{
-		int y = iv_elem(p, i);
-		if (y < x) return false;
-		x = iv_elem(p, i);
-	}
-	return true;
-}
-
 bool part_decr(const ivector* p)
 {
 	for (uint32_t i = 1; i < iv_length(p); i++)
 		if (iv_elem(p, i - 1) < iv_elem(p, i)) return false;
 	return true;
-}
-
-uint32_t part_length(const ivector* p)
-{
-	uint32_t len = iv_length(p);
-	while (len > 0 && iv_elem(p, len - 1) == 0) len--;
-	return len;
 }
 
 int part_entry(const ivector* p, int i) { return (uint32_t(i) < iv_length(p)) ? iv_elem(p, i) : 0; }
@@ -59,83 +40,6 @@ bool part_leq(const ivector* p1, const ivector* p2)
 	for (auto i = int(len - 1); i >= 0; i--)
 		if (iv_elem(p1, i) > iv_elem(p2, i)) return false;
 	return true;
-}
-
-void part_print(const ivector* p)
-{
-	putchar('(');
-	for (uint32_t i = 0; i < iv_length(p) && iv_elem(p, i) != 0; i++)
-	{
-		if (i) putchar(',');
-		printf("%d", iv_elem(p, i));
-	}
-	putchar(')');
-}
-
-void part_printnl(const ivector* p)
-{
-	part_print(p);
-	putchar('\n');
-}
-
-void part_print_lincomb(const ivlincomb* lc)
-{
-	for (const auto& kv : ivlc_iterator(lc))
-	{
-		if (kv.value == 0) continue;
-		printf("%d  ", kv.value);
-		part_printnl(kv.key);
-	}
-}
-
-int part_qdegree(const ivector* p, int level)
-{
-	int n = int(iv_length(p)) + level;
-	int d = 0;
-	for (uint32_t i = 0; i < iv_length(p); i++)
-	{
-		int a = iv_elem(p, i) + int(iv_length(p)) - int(i) - 1;
-		int b = (a >= 0) ? (a / n) : -((n - 1 - a) / n);
-		d += b;
-	}
-	return d;
-}
-
-int part_qentry(const ivector* p, int i, int d, int level)
-{
-	int rows = int(iv_length(p));
-	int k = (i + d) % rows;
-	return iv_elem(p, k) - ((i + d) / rows) * level - d;
-}
-
-void part_qprint(const ivector* p, int level)
-{
-	int d = part_qdegree(p, level);
-	putchar('(');
-	for (uint32_t i = 0; i < iv_length(p); i++)
-	{
-		int x = part_qentry(p, int(i), d, level);
-		if (x == 0) break;
-		if (i) putchar(',');
-		printf("%d", x);
-	}
-	putchar(')');
-}
-
-void part_qprintnl(const ivector* p, int level)
-{
-	part_qprint(p, level);
-	putchar('\n');
-}
-
-void part_qprint_lincomb(const ivlincomb* lc, int level)
-{
-	for (const auto& kv : ivlc_iterator(lc))
-	{
-		if (kv.value == 0) continue;
-		printf("%d  ", kv.value);
-		part_qprintnl(kv.key, level);
-	}
 }
 
 bool pitr_good(const part_iter* itr) { return itr->rows >= 0; }

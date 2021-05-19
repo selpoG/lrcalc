@@ -30,7 +30,6 @@ set_flags()
 set(MY_TARGET lrcalc)
 
 add_library(${MY_TARGET} STATIC
-	src/ivector.cpp
 	src/ivlincomb.cpp
 	src/ivlist.cpp
 	src/lrcoef.cpp
@@ -57,6 +56,9 @@ add_library(${MY_TARGET} STATIC
 	include/lrcalc/vectarg.hpp
 )
 
+find_package(Threads REQUIRED)
+link_directories(${CMAKE_SOURCE_DIR})
+target_link_libraries(${MY_TARGET} INTERFACE lrcalc_helper "-pthread" dl)
 if(NOT MSVC)
 	target_link_libraries(${MY_TARGET} INTERFACE stdc++fs)
 	if(NOT CMAKE_COMPILER_IS_GNUCXX)

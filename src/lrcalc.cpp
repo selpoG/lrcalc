@@ -176,25 +176,7 @@ static void coprod_main(int ac, char* const* av)
 	}
 	if (!lc) out_of_memory();
 
-	for (const auto& kv : ivlc_iterator(lc))
-	{
-		if (kv.value == 0) continue;
-		printf("%d  (", kv.value);
-		const ivector* part = kv.key;
-		for (uint32_t i = 0; i < rows && iv_elem(part, i) > cols; i++)
-		{
-			if (i) putchar(',');
-			printf("%d", iv_elem(part, i) - cols);
-		}
-		printf(")  (");
-		for (uint32_t i = rows; i < iv_length(part) && iv_elem(part, i) != 0; i++)
-		{
-			if (i > rows) putchar(',');
-			printf("%d", iv_elem(part, i));
-		}
-		putchar(')');
-		putchar('\n');
-	}
+	ivlc_print_coprod(lc.get(), rows, cols);
 }
 
 /***************  COEF  ***************/
@@ -252,7 +234,7 @@ static void tab_main(int ac, char* const* av)
 	for (; lrit_good(lrit); lrit_next(lrit))
 	{
 		lrit_print_skewtab(lrit, outer.get(), inner.get());
-		printf("\n");
+		puts_r("");
 	}
 	lrit_free(lrit);
 }

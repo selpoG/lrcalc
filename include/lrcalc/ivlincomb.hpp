@@ -59,8 +59,6 @@ extern "C"
 	/* Return true if equal; ignore zero values. */
 	bool ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2);
 
-	void ivlc_print_stat(const ivlincomb* ht);
-
 	struct ivlc_iter
 	{
 		const ivlincomb* ht;
@@ -90,6 +88,8 @@ extern "C"
 	bool ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
 
 	void ivlc_print(const ivlincomb* ht);
+
+	void ivlc_print_coprod(const ivlincomb* ht, uint32_t rows, int cols);
 
 	constexpr uint32_t IVLC_HASHTABLE_SZ = 2003;
 	constexpr uint32_t IVLC_ARRAY_SZ = 100;

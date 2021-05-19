@@ -21,8 +21,7 @@
 
 ivlincomb* schur_mult(const ivector* sh1, const ivector* sh2, int rows, int cols, int partsz)
 {
-	skew_shape ss;
-	if (!optim_mult(&ss, sh1, sh2, rows, cols)) return nullptr;
+	skew_shape ss = optim_mult(sh1, sh2, rows, cols);
 	ivlincomb* lc;
 	if (ss.sign)
 		lc = lrit_expand(ss.outer, nullptr, ss.cont, rows, cols, partsz);
@@ -151,8 +150,7 @@ ivlincomb* schur_mult_fusion(const ivector* sh1, const ivector* sh2, int rows, i
 	}
 	if (sign == 0) return ivlc_new(5, 2);
 
-	skew_shape ss;
-	if (!optim_fusion(&ss, sh1, sh2, rows, level)) return nullptr;
+	skew_shape ss = optim_fusion(sh1, sh2, rows, level);
 	ivlc_ptr lc;
 	if (ss.sign)
 		lc.reset(lrit_expand(ss.outer, nullptr, ss.cont, rows, -1, rows));
@@ -171,8 +169,7 @@ ivlincomb* schur_mult_fusion(const ivector* sh1, const ivector* sh2, int rows, i
 
 ivlincomb* schur_skew(const ivector* outer, const ivector* inner, int rows, int partsz)
 {
-	skew_shape ss;
-	if (!optim_skew(&ss, outer, inner, nullptr, rows)) return nullptr;
+	skew_shape ss = optim_skew(outer, inner, nullptr, rows);
 	ivlincomb* lc;
 	if (ss.sign)
 		lc = lrit_expand(ss.outer, ss.inner, ss.cont, rows, -1, partsz);
@@ -227,8 +224,7 @@ ivlincomb* schur_coprod(const ivector* sh, int rows, int cols, int partsz, bool 
 
 	if (all) return schur_mult(sh, box.get(), -1, -1, partsz);
 
-	skew_shape ss;
-	if (!optim_mult(&ss, sh, box.get(), -1, -1)) return nullptr;
+	skew_shape ss = optim_mult(sh, box.get(), -1, -1);
 
 	ivlc_ptr lc = _schur_coprod_expand(ss.outer, ss.cont, rows, cols, partsz);
 	sksh_dealloc(&ss);
@@ -237,8 +233,7 @@ ivlincomb* schur_coprod(const ivector* sh, int rows, int cols, int partsz, bool 
 
 long long schur_lrcoef(const ivector* outer, const ivector* inner1, const ivector* inner2)
 {
-	skew_shape ss;
-	if (!optim_coef(&ss, outer, inner1, inner2)) return -1;
+	skew_shape ss = optim_coef(outer, inner1, inner2);
 	long long coef;
 	if (ss.sign <= 1)
 		coef = ss.sign;

@@ -224,6 +224,6 @@ int main(int ac, char** av)
 		iv_length(p2) = p2_len;
 	}
 
-	puts("success");
+	puts_r("success");
 	return 0;
 }

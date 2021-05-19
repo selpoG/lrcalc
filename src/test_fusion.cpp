@@ -59,6 +59,6 @@ int main(int ac, char** av)
 			for (int level = 0; level <= cols; level++)
 				if (!test_mult_fusion(sh1, sh2, rows, level)) out_of_memory();
 
-	puts("success");
+	puts_r("success");
 	return 0;
 }

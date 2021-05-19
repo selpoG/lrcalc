@@ -83,6 +83,6 @@ int main(int ac, char** av)
 		for ([[maybe_unused]] auto& itr2 : pitr::box(inn.get(), rows, cols))
 			if (!test_schur_lrskew(out, inn, rows, cols)) out_of_memory();
 
-	puts("success");
+	puts_r("success");
 	return 0;
 }

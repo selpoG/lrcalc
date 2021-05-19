@@ -190,44 +190,6 @@ bool ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2)
 	return true;
 }
 
-bool ivlc_good(const ivlc_iter* itr) { return itr->i != 0; }
-
-void ivlc_first(const ivlincomb* ht, ivlc_iter* itr)
-{
-	itr->ht = ht;
-	uint32_t index = 0;
-	while (index < ht->table_sz && ht->table[index] == 0) index++;
-	if (index == ht->table_sz)
-	{
-		itr->i = 0;
-		return;
-	}
-	itr->index = index;
-	itr->i = ht->table[index];
-}
-
-void ivlc_next(ivlc_iter* itr)
-{
-	const ivlincomb* ht = itr->ht;
-	const ivlc_keyval_t* elts = ht->elts;
-	if (elts[itr->i].next != 0)
-	{
-		itr->i = elts[itr->i].next;
-		return;
-	}
-	uint32_t index = uint32_t(itr->index + 1);
-	while (index < ht->table_sz && ht->table[index] == 0) index++;
-	if (index == ht->table_sz)
-	{
-		itr->i = 0;
-		return;
-	}
-	itr->index = index;
-	itr->i = ht->table[index];
-}
-
-ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr) { return itr->ht->elts + itr->i; }
-
 static void ivlc_dealloc_refs(ivlincomb* ht)
 {
 	for (auto& kv : ivlc_iterator(ht)) iv_free(kv.key);
@@ -279,49 +241,4 @@ bool ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt)
 	for (auto& kv : ivlc_iterator(src))
 		if (!ivlc_add_element(dst, c * kv.value, kv.key, kv.hash, opt)) return false;
 	return true;
-}
-
-void ivlc_print(const ivlincomb* ht)
-{
-	for (const auto& kv : ivlc_iterator(ht))
-	{
-		if (kv.value == 0) continue;
-		printf("%d  ", kv.value);
-		iv_print(kv.key);
-		putchar('\n');
-	}
-}
-
-void ivlc_print_stat(const ivlincomb* ht)
-{
-	constexpr uint32_t range = 20;
-	uint32_t stat[range];
-
-	memset(stat, 0, range * sizeof(uint32_t));
-
-	uint32_t cmp = 0;
-	uint32_t used = 0;
-	for (uint32_t index = 0; index < ht->table_sz; index++)
-	{
-		uint32_t i = ht->table[index];
-		if (i == 0) continue;
-		used++;
-		uint32_t count = 0;
-		while (i != 0)
-		{
-			count++;
-			i = ht->elts[i].next;
-		}
-		cmp += (count + 1) * count / 2;
-		uint32_t c = (count > range) ? range : count;
-		stat[c - 1] += count;
-	}
-
-	printf("Hash table size: %lu\n", static_cast<unsigned long>(ht->table_sz));
-	printf("Hash table used: %lu\n", static_cast<unsigned long>(used));
-	printf("Total elements: %lu\n", static_cast<unsigned long>(ht->card));
-	if (ht->card != 0) printf("Average compares: %f\n", double(cmp) / ht->card);
-	printf("Table distribution:");
-	for (uint32_t i = 0; i < range; i++) printf(" %d", stat[i]);
-	putchar('\n');
 }

@@ -102,6 +102,6 @@ int main(int ac, char** av)
 			assert(int(iv_length(w1)) == n && int(iv_length(w2)) == n);
 		}
 
-	puts("success");
+	puts_r("success");
 	return 0;
 }
