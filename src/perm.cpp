@@ -121,7 +121,6 @@ ivlist* all_strings(const ivector* dimvec)
 	while (1)
 	{
 		ivector* nstr = iv_new_copy(str.get());
-		if (nstr == nullptr) return nullptr;
 		if (!ivl_append(res.get(), nstr))
 		{
 			iv_free(nstr);

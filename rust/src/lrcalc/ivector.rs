@@ -9,9 +9,6 @@ impl IntVector {
     pub fn default(len: u32) -> IntVector {
         unsafe {
             let x = bindings::iv_new(len);
-            if x == std::ptr::null_mut() {
-                panic!("Memory Error")
-            }
             IntVector {
                 data: x,
                 owned: true,

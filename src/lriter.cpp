@@ -87,11 +87,6 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	if (partsz < maxrows) partsz = maxrows;
 	auto partsz_u = uint32_t(partsz);
 	ivector* cont = (lrit->cont = iv_new(partsz_u));
-	if (cont == nullptr)
-	{
-		delete lrit;
-		return nullptr;
-	}
 	lrit->size = -1;
 	if (maxrows < int(clen)) return lrit; /* empty result. */
 	{

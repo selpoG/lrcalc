@@ -103,16 +103,19 @@ impl Iterator for LinearCombinationIter {
 	}
 }
 
+/// never returns null
 #[no_mangle]
 pub extern "C" fn iv_new(length: u32) -> *mut IntVector {
 	IntVector::from_vec(vec![0; length as usize])
 }
 
+/// never returns null
 #[no_mangle]
 pub extern "C" fn iv_new_zero(length: u32) -> *mut IntVector {
 	iv_new(length)
 }
 
+/// never returns null
 #[no_mangle]
 pub extern "C" fn iv_new_copy(v: *const IntVector) -> *mut IntVector {
 	let v = unsafe { &(*v)[..] };

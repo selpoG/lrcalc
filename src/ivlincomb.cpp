@@ -226,11 +226,7 @@ bool ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int
 		if (!(opt & LC_COPY_KEY)) iv_free(key);
 		return false;
 	}
-	if (opt & LC_COPY_KEY)
-	{
-		key = iv_new_copy(key);
-		if (key == nullptr) return false;
-	}
+	if (opt & LC_COPY_KEY) key = iv_new_copy(key);
 	kv = ivlc_insert(ht, key, hash, c);
 	return true;
 }

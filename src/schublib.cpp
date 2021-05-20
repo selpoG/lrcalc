@@ -41,7 +41,6 @@ static bool _trans(ivector* w, int vars, ivlincomb* res)
 	{
 		ivector* xx = iv_new_zero(vars ? uint32_t(vars) : 1);
 		w->length = nw;
-		if (xx == nullptr) return false;
 		if (ivlc_insert(res, xx, iv_hash(xx), 1) == nullptr)
 		{
 			iv_free(xx);
@@ -128,7 +127,6 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 				{
 					last = iv_elem(w, j - 1);
 					ivector* u = iv_new(ulen);
-					if (u == nullptr) return false;
 					for (uint32_t t = 0; t < n; t++) iv_elem(u, t) = iv_elem(w, t);
 					for (uint32_t t = n; t < ulen; t++) iv_elem(u, t) = int(t + 1);
 					iv_elem(u, j - 1) = wi;
@@ -139,7 +137,6 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 		else
 		{
 			ivector* u = iv_new(i);
-			if (u == nullptr) return false;
 			for (uint32_t t = 0; t < n; t++) iv_elem(u, t) = iv_elem(w, t);
 			for (uint32_t t = n; t < i - 2; t++) iv_elem(u, t) = int(t + 1);
 			iv_elem(u, i - 2) = int(i);
@@ -150,7 +147,6 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 		if (i >= n + 1)
 		{
 			ivector* u = iv_new(i + 1);
-			if (u == nullptr) return false;
 			for (uint32_t t = 0; t < n; t++) iv_elem(u, t) = iv_elem(w, t);
 			for (uint32_t t = n; t < i; t++) iv_elem(u, t) = int(t + 1);
 			iv_elem(u, i - 1) = int(i) + 1;
@@ -165,7 +161,6 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 				{
 					last = iv_elem(w, j - 1);
 					ivector* u = iv_new(n);
-					if (u == nullptr) return false;
 					for (uint32_t t = 0; t < n; t++) iv_elem(u, t) = iv_elem(w, t);
 					iv_elem(u, i - 1) = last;
 					iv_elem(u, j - 1) = wi;
@@ -174,7 +169,6 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 			if (last > int(n) && int(n) < rank)
 			{
 				ivector* u = iv_new(n + 1);
-				if (u == nullptr) return false;
 				for (uint32_t t = 0; t < n; t++) iv_elem(u, t) = iv_elem(w, t);
 				iv_elem(u, i - 1) = int(n) + 1;
 				iv_elem(u, n) = wi;
@@ -230,7 +224,6 @@ static bool _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* pe
 	if (maxvar == 0)
 	{
 		ivector* w = iv_new_copy(perm); /* FIXME: OPTIMIZE! */
-		if (w == nullptr) return false;
 		int c = int(reinterpret_cast<long>(poly[1]));
 		return ivlc_add_element(res.get(), c, w, iv_hash(w), LC_FREE_ZERO);
 	}
