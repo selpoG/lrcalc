@@ -31,7 +31,6 @@ set(MY_TARGET lrcalc)
 
 add_library(${MY_TARGET} STATIC
 	src/ivlincomb.cpp
-	src/ivlist.cpp
 	src/lrcoef.cpp
 	src/lriter.cpp
 	src/maple.cpp
