@@ -304,9 +304,7 @@ ivlincomb* mult_schubert_str(const ivector* str1, const ivector* str2)
 	iv_ptr dv{str2dimvec(str1)};
 	if (!dv) return nullptr;
 	iv_ptr w1{string2perm(str1)};
-	if (!w1) return nullptr;
 	iv_ptr w2{string2perm(str2)};
-	if (!w2) return nullptr;
 
 	ivlc_ptr lc{mult_schubert(w1.get(), w2.get(), int(iv_length(w1)))};
 	if (!lc) return nullptr;
@@ -319,7 +317,6 @@ ivlincomb* mult_schubert_str(const ivector* str1, const ivector* str2)
 	for (const auto& kv : ivlc_iterator(lc))
 	{
 		iv_ptr str{perm2string(kv.key, dv.get())};
-		if (!str) return nullptr;
 		if (ivlc_insert(res.get(), str.get(), iv_hash(str.get()), kv.value) == nullptr)
 			// ivlc_insert failed and str must be released
 			return nullptr;
