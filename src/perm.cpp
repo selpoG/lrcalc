@@ -111,21 +111,15 @@ ivlist* all_strings(const ivector* dimvec)
 	}
 
 	res.reset(ivl_new(200));
-	if (!res) return nullptr;
 	if (n == 0)
 	{
-		if (!ivl_append(res.get(), str.release())) return nullptr;
+		ivl_append(res.get(), str.release());
 		return res.release();
 	}
 
 	while (1)
 	{
-		ivector* nstr = iv_new_copy(str.get());
-		if (!ivl_append(res.get(), nstr))
-		{
-			iv_free(nstr);
-			return nullptr;
-		}
+		ivl_append(res.get(), iv_new_copy(str.get()));
 		uint32_t j = n - 1;
 		iv_elem(cntvec, iv_elem(str, j))++;
 		while (j > 0 && iv_elem(str, j - 1) >= iv_elem(str, j))

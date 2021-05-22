@@ -63,13 +63,12 @@ fn _ivl_require(lst: &mut IntVectorList, size: usize) {
 }
 
 #[no_mangle]
-pub extern "C" fn ivl_append(lst: *mut IntVectorList, x: *mut IntVector) -> bool {
+pub extern "C" fn ivl_append(lst: *mut IntVectorList, x: *mut IntVector) {
 	let lst = unsafe { &mut *lst };
 	_ivl_require(lst, (lst.length + 1) as usize);
 	let room = unsafe { &mut *lst.array.offset(lst.length as isize) };
 	*room = x;
 	lst.length += 1;
-	true
 }
 
 #[no_mangle]

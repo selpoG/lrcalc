@@ -18,7 +18,7 @@ extern "C"
 
 	ivlist* ivl_new(size_t sz);
 
-	bool ivl_append(ivlist* lst, ivector* x);
+	void ivl_append(ivlist* lst, ivector* x);
 
 	ivector* ivl_poplast(ivlist* lst);
 

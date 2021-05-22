@@ -81,7 +81,6 @@ bool fusion_reduce_lc(ivlincomb* lc, int level)
 {
 	/* Copy linear combination to lists. */
 	ivl_ptr parts{ivl_new(ivlc_card(lc))};
-	if (!parts) return false;
 	try
 	{
 		std::vector<int> coefs;
