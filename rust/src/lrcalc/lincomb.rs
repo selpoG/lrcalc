@@ -7,7 +7,6 @@ use super::ivector::IntVector;
 pub struct LinearCombination {
     pub data: *mut bindings::ivlincomb,
     pub it: bindings::ivlc_iter,
-    initialized: bool,
     pub(crate) owned: bool,
 }
 
@@ -75,13 +74,15 @@ impl std::fmt::Display for DiffResult {
 
 impl From<*mut bindings::ivlincomb> for LinearCombination {
     fn from(from: *mut bindings::ivlincomb) -> LinearCombination {
-        unsafe {
-            LinearCombination {
-                data: from,
-                it: std::mem::MaybeUninit::uninit().assume_init(),
+        LinearCombination {
+            data: from,
+            it: bindings::ivlc_iter {
+                ht: std::ptr::null(),
+                index: 0,
+                i: 0,
                 initialized: false,
-                owned: true,
-            }
+            },
+            owned: true,
         }
     }
 }
@@ -109,13 +110,15 @@ impl LinearCombination {
     }
     #[allow(dead_code)]
     pub fn iter(&self) -> LinearCombination {
-        unsafe {
-            LinearCombination {
-                data: self.data,
-                it: std::mem::MaybeUninit::uninit().assume_init(),
+        LinearCombination {
+            data: self.data,
+            it: bindings::ivlc_iter {
+                ht: std::ptr::null(),
+                index: 0,
+                i: 0,
                 initialized: false,
-                owned: false,
-            }
+            },
+            owned: false,
         }
     }
     #[allow(dead_code)]
@@ -165,9 +168,9 @@ impl Iterator for LinearCombination {
     type Item = (IntVector, i32);
     fn next(&mut self) -> Option<Self::Item> {
         unsafe {
-            if !self.initialized {
+            if !self.it.initialized {
                 bindings::ivlc_first(self.data, &mut self.it);
-                self.initialized = true
+                self.it.initialized = true
             } else {
                 bindings::ivlc_next(&mut self.it)
             }

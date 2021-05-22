@@ -64,6 +64,7 @@ extern "C"
 		const ivlincomb* ht;
 		size_t index;
 		size_t i;
+		bool initialized;
 	};
 
 	bool ivlc_good(const ivlc_iter* itr);
