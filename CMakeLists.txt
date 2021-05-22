@@ -33,7 +33,6 @@ add_library(${MY_TARGET} STATIC
 	src/ivlincomb.cpp
 	src/lrcoef.cpp
 	src/lriter.cpp
-	src/maple.cpp
 	src/optshape.cpp
 	src/part.cpp
 	src/perm.cpp

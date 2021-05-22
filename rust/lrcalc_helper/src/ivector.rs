@@ -399,20 +399,10 @@ pub extern "C" fn part_qentry(p: *const IntVector, i: i32, d: i32, level: i32) -
 	p[k as usize] - ((i + d) / rows) * level - d
 }
 
-#[no_mangle]
-pub extern "C" fn _maple_print_term(
-	c: i32,
-	v: *const IntVector,
-	letter: *const std::os::raw::c_char,
-	nz: bool,
-) {
-	print!("{}", if c < 0 { "-" } else { "+" });
-	let c = c.abs();
-	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
-	print!("{}*{}[", c, slice.to_str().unwrap());
+fn _maple_print_term(c: i32, v: &IntVector, letter: &str, nz: bool) {
+	print!("{:+}*{}[", c, letter);
 
-	let v = unsafe { &(*v)[..] };
-	for i in 0..v.len() {
+	for i in 0..v.length as usize {
 		if nz && v[i] == 0 {
 			break;
 		}
@@ -425,19 +415,28 @@ pub extern "C" fn _maple_print_term(
 }
 
 #[no_mangle]
-pub extern "C" fn _maple_qprint_term(
-	c: i32,
-	v: *const IntVector,
-	level: i32,
+pub extern "C" fn maple_print_lincomb(
+	ht: *const bindings::ivlincomb,
 	letter: *const std::os::raw::c_char,
+	nz: bool,
 ) {
-	print!("{}", if c < 0 { "-" } else { "+" });
-	let c = c.abs();
-	let d = part_qdegree(v, level);
 	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
-	print!("{}*q^{}*{}[", c, d, slice.to_str().unwrap());
+	let letter = slice.to_str().unwrap();
+	print!("0");
+	for (k, v) in LinearCombinationIter::from(ht) {
+		if v == 0 {
+			continue;
+		}
+		_maple_print_term(v, &k, letter, nz);
+	}
+	println!();
+}
 
-	for i in 0..unsafe { (*v).length } {
+fn _maple_qprint_term(c: i32, v: &IntVector, level: i32, letter: &str) {
+	let d = part_qdegree(v, level);
+	print!("{:+}*q^{}*{}[", c, d, letter);
+
+	for i in 0..(*v).length {
 		let x = part_qentry(v, i as i32, d, level);
 		if x == 0 {
 			break;
@@ -448,6 +447,24 @@ pub extern "C" fn _maple_qprint_term(
 		print!("{}", x);
 	}
 	print!("]")
+}
+
+#[no_mangle]
+pub extern "C" fn maple_qprint_lincomb(
+	ht: *const bindings::ivlincomb,
+	level: i32,
+	letter: *const std::os::raw::c_char,
+) {
+	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
+	let letter = slice.to_str().unwrap();
+	print!("0");
+	for (k, v) in LinearCombinationIter::from(ht) {
+		if v == 0 {
+			continue;
+		}
+		_maple_qprint_term(v, &k, level, letter);
+	}
+	println!();
 }
 
 #[no_mangle]
