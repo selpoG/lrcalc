@@ -79,10 +79,10 @@ extern "C"
 	constexpr int LC_FREE_ZERO = 2;
 
 	// return true if secceeded
-	bool ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
+	void ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
 
 	// return true if secceeded
-	bool ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
+	void ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
 
 	void ivlc_print(const ivlincomb* ht);
 

@@ -31,10 +31,8 @@
 static ivlc_slice get_strip(const ivlc_ptr& lc, int rows)
 {
 	ivlc_slice res = ivlc_create_slice();
-	if (!res) return res;
 	for (auto& kv : ivlc_iterator(lc))
-		if (part_entry(kv.key, rows) == 0)
-			if (ivlc_insert(res.get(), kv.key, kv.hash, kv.value) == nullptr) return nullptr;
+		if (part_entry(kv.key, rows) == 0) ivlc_insert(res.get(), kv.key, kv.hash, kv.value);
 	return res;
 }
 
@@ -59,7 +57,6 @@ static bool test_schur_lrskew(const iv_ptr& out, const iv_ptr& inn, int rows, in
 		ivlc_ptr lc_sk{schur_skew(out.get(), inn.get(), r, rows)};
 		if (!lc_sk) return false;
 		ivlc_slice lc_gs = get_strip(lc, r);
-		if (!lc_gs) return false;
 		assert(ivlc_equals(lc_sk.get(), lc_gs.get()));
 	}
 

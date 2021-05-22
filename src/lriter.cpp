@@ -205,9 +205,7 @@ static ivlincomb* lrit_count(lrtab_iter* lrit)
 {
 	ivector* cont = lrit->cont;
 	ivlc_ptr lc = ivlc_create();
-	if (!lc) return nullptr;
-	for (; lrit_good(lrit); lrit_next(lrit))
-		if (!ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY)) return nullptr;
+	for (; lrit_good(lrit); lrit_next(lrit)) ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY);
 	return lc.release();
 }
 

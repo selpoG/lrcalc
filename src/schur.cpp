@@ -107,7 +107,7 @@ bool fusion_reduce_lc(ivlincomb* lc, int level)
 			int c = coefs.back();
 			coefs.pop_back();
 			int sign = fusion_reduce(sh, level, tmp);
-			if (!ivlc_add_element(lc, sign * c, sh, iv_hash(sh), LC_FREE_KEY | LC_FREE_ZERO)) return false;
+			ivlc_add_element(lc, sign * c, sh, iv_hash(sh), LC_FREE_KEY | LC_FREE_ZERO);
 		}
 	}
 	catch (const std::bad_alloc&)
@@ -192,11 +192,10 @@ static ivlc_ptr _schur_coprod_count(lrtab_iter* lrit, int rows, int cols)
 {
 	ivector* cont = lrit->cont;
 	ivlc_ptr lc = ivlc_create();
-	if (!lc) return {};
 	for (; lrit_good(lrit); lrit_next(lrit))
 	{
 		if (_schur_coprod_isredundant(cont, rows, cols)) continue;
-		if (!ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY)) return {};
+		ivlc_add_element(lc.get(), 1, cont, iv_hash(cont), LC_COPY_KEY);
 	}
 	return lc;
 }

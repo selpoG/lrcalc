@@ -34,11 +34,9 @@
 static ivlc_slice get_rank(const ivlc_ptr& lc, int rank)
 {
 	ivlc_slice res = ivlc_create_slice();
-	if (!res) return res;
 
 	for (auto& kv : ivlc_iterator(lc))
-		if (rank == 0 || perm_group(kv.key) <= rank)
-			if (ivlc_insert(res.get(), kv.key, kv.hash, kv.value) == nullptr) return nullptr;
+		if (rank == 0 || perm_group(kv.key) <= rank) ivlc_insert(res.get(), kv.key, kv.hash, kv.value);
 	return res;
 }
 
@@ -47,7 +45,6 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 	ivlc_ptr prd12;
 	{
 		ivlc_ptr poly{trans(w1, 0)};
-		if (!poly) return false;
 		prd12.reset(mult_poly_schubert(poly.release(), w2, 0));
 		if (!prd12) return false;
 	}
@@ -56,7 +53,6 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 		ivlc_ptr prd21;
 		{
 			ivlc_ptr poly{trans(w2, 0)};
-			if (!poly) return false;
 			prd21.reset(mult_poly_schubert(poly.release(), w1, 0));
 			if (!prd21) return false;
 		}
@@ -77,7 +73,6 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 		if (!prd_sm) return false;
 
 		ivlc_slice prd_gr = get_rank(prd12, r);
-		if (!prd_gr) return false;
 		assert(ivlc_equals(prd_sm.get(), prd_gr.get()));
 	}
 

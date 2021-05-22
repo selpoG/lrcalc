@@ -17,17 +17,16 @@
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/perm.hpp"
 
-static bool _trans(ivector* w, int vars, ivlincomb* res);
+static void _trans(ivector* w, int vars, ivlincomb* res);
 
 ivlincomb* trans(ivector* w, int vars)
 {
 	ivlc_ptr res = ivlc_create();
-	if (!res) return nullptr;
-	if (!_trans(w, vars, res.get())) return nullptr;
+	_trans(w, vars, res.get());
 	return res.release();
 }
 
-static bool _trans(ivector* w, int vars, ivlincomb* res)
+static void _trans(ivector* w, int vars, ivlincomb* res)
 {
 	ivlc_reset(res);
 
@@ -41,12 +40,8 @@ static bool _trans(ivector* w, int vars, ivlincomb* res)
 	{
 		ivector* xx = iv_new_zero(vars ? uint32_t(vars) : 1);
 		w->length = nw;
-		if (ivlc_insert(res, xx, iv_hash(xx), 1) == nullptr)
-		{
-			iv_free(xx);
-			return false;
-		}
-		return true;
+		ivlc_insert(res, xx, iv_hash(xx), 1);
+		return;
 	}
 	if (vars < r) vars = r;
 
@@ -61,22 +56,12 @@ static bool _trans(ivector* w, int vars, ivlincomb* res)
 	iv_elem(v, r - 1) = ws;
 
 	ivlincomb* tmp = trans(v, vars);
-	if (tmp == nullptr)
-	{
-		w->length = nw;
-		return false;
-	}
 	for (auto& kv : ivlc_iterator(tmp))
 	{
 		ivector* xx = kv.key;
 		iv_elem(xx, r - 1)++;
 		uint32_t hash = iv_hash(xx);
-		if (ivlc_insert(res, xx, hash, kv.value) == nullptr)
-		{
-			ivlc_free_all(tmp);
-			w->length = nw;
-			return false;
-		}
+		ivlc_insert(res, xx, hash, kv.value);
 	}
 
 	int last = 0;
@@ -89,14 +74,8 @@ static bool _trans(ivector* w, int vars, ivlincomb* res)
 			last = vi;
 			iv_elem(v, i - 1) = vr;
 			iv_elem(v, r - 1) = vi;
-			bool ok = _trans(v, vars, tmp);
-			if (ok) ok = ivlc_add_multiple(res, 1, tmp, LC_FREE_ZERO);
-			if (!ok)
-			{
-				ivlc_free_all(tmp);
-				w->length = nw;
-				return false;
-			}
+			_trans(v, vars, tmp);
+			ivlc_add_multiple(res, 1, tmp, LC_FREE_ZERO);
 			iv_elem(v, i - 1) = vi;
 		}
 	}
@@ -105,11 +84,9 @@ static bool _trans(ivector* w, int vars, ivlincomb* res)
 	iv_elem(w, s - 1) = ws;
 	iv_elem(w, r - 1) = wr;
 	ivlc_free(tmp);
-
-	return true;
 }
 
-static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
+static void _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 {
 	for (const auto& kv : ivlc_iterator(slc))
 	{
@@ -131,7 +108,7 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 					for (uint32_t t = n; t < ulen; t++) iv_elem(u, t) = int(t + 1);
 					iv_elem(u, j - 1) = wi;
 					iv_elem(u, i - 1) = last;
-					if (!ivlc_add_element(res.get(), -c, u, iv_hash(u), LC_FREE_ZERO)) return false;
+					ivlc_add_element(res.get(), -c, u, iv_hash(u), LC_FREE_ZERO);
 				}
 		}
 		else
@@ -141,7 +118,7 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 			for (uint32_t t = n; t < i - 2; t++) iv_elem(u, t) = int(t + 1);
 			iv_elem(u, i - 2) = int(i);
 			iv_elem(u, i - 1) = int(i) - 1;
-			if (!ivlc_add_element(res.get(), -c, u, iv_hash(u), LC_FREE_ZERO)) return false;
+			ivlc_add_element(res.get(), -c, u, iv_hash(u), LC_FREE_ZERO);
 		}
 
 		if (i >= n + 1)
@@ -151,7 +128,7 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 			for (uint32_t t = n; t < i; t++) iv_elem(u, t) = int(t + 1);
 			iv_elem(u, i - 1) = int(i) + 1;
 			iv_elem(u, i) = int(i);
-			if (!ivlc_add_element(res.get(), c, u, iv_hash(u), LC_FREE_ZERO)) return false;
+			ivlc_add_element(res.get(), c, u, iv_hash(u), LC_FREE_ZERO);
 		}
 		else
 		{
@@ -164,7 +141,7 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 					for (uint32_t t = 0; t < n; t++) iv_elem(u, t) = iv_elem(w, t);
 					iv_elem(u, i - 1) = last;
 					iv_elem(u, j - 1) = wi;
-					if (!ivlc_add_element(res.get(), c, u, iv_hash(u), LC_FREE_ZERO)) return false;
+					ivlc_add_element(res.get(), c, u, iv_hash(u), LC_FREE_ZERO);
 				}
 			if (last > int(n) && int(n) < rank)
 			{
@@ -172,14 +149,13 @@ static bool _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 				for (uint32_t t = 0; t < n; t++) iv_elem(u, t) = iv_elem(w, t);
 				iv_elem(u, i - 1) = int(n) + 1;
 				iv_elem(u, n) = wi;
-				if (!ivlc_add_element(res.get(), c, u, iv_hash(u), LC_FREE_ZERO)) return false;
+				ivlc_add_element(res.get(), c, u, iv_hash(u), LC_FREE_ZERO);
 			}
 		}
 	}
-	return true;
 }
 
-static bool _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res);
+static void _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res);
 
 ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 {
@@ -208,24 +184,23 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 
 	uint32_t svlen = iv_length(perm);
 	perm->length = uint32_t(perm_group(perm));
-	bool ok = _mult_ps(p, n, maxvar, perm, rank, poly_ptr);
+	_mult_ps(p, n, maxvar, perm, rank, poly_ptr);
 	perm->length = svlen;
 
 	for (i = 0; i < n; i++) iv_free(static_cast<ivector*>(p[2 * i]));
 	delete[] p;
 
-	if (!ok) return nullptr;
-
 	return poly_ptr.release();
 }
 
-static bool _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res)
+static void _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res)
 {
 	if (maxvar == 0)
 	{
 		ivector* w = iv_new_copy(perm); /* FIXME: OPTIMIZE! */
 		int c = int(reinterpret_cast<long>(poly[1]));
-		return ivlc_add_element(res.get(), c, w, iv_hash(w), LC_FREE_ZERO);
+		ivlc_add_element(res.get(), c, w, iv_hash(w), LC_FREE_ZERO);
+		return;
 	}
 
 	uint32_t mv0 = 0;
@@ -253,12 +228,10 @@ static bool _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* pe
 	}
 
 	ivlc_ptr res1 = ivlc_create();
-	if (!res1) return false;
-	bool ok = _mult_ps(poly, j, mv1, perm, rank, res1);
-	if (ok) ok = _monk_add(maxvar, res1, rank, res);
+	_mult_ps(poly, j, mv1, perm, rank, res1);
+	_monk_add(maxvar, res1, rank, res);
 
-	if (ok && j < n) ok = _mult_ps(poly + 2 * j, n - j, mv0, perm, rank, res);
-	return ok;
+	if (j < n) _mult_ps(poly + 2 * j, n - j, mv0, perm, rank, res);
 }
 
 ivlincomb* mult_schubert(ivector* w1, ivector* w2, int rank)
@@ -287,7 +260,6 @@ ivlincomb* mult_schubert(ivector* w1, ivector* w2, int rank)
 
 	{
 		ivlincomb* poly = trans(w1, 0);
-		if (poly == nullptr) goto free_return;
 		lc = mult_poly_schubert(poly, w2, rank);
 	}
 
@@ -313,16 +285,10 @@ ivlincomb* mult_schubert_str(const ivector* str1, const ivector* str2)
 	w2.reset();
 
 	ivlc_ptr res = ivlc_create();
-	if (!res) return nullptr;
 	for (const auto& kv : ivlc_iterator(lc))
 	{
-		iv_ptr str{perm2string(kv.key, dv.get())};
-		if (ivlc_insert(res.get(), str.get(), iv_hash(str.get()), kv.value) == nullptr)
-			// ivlc_insert failed and str must be released
-			return nullptr;
-		else
-			// str was inserted by ivlc_insert successfully and str must not be released
-			str.release();
+		auto str = perm2string(kv.key, dv.get());
+		ivlc_insert(res.get(), str, iv_hash(str), kv.value);
 	}
 
 	return res.release();

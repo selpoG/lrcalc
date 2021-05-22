@@ -340,13 +340,13 @@ pub extern "C" fn ivlc_add_element(
 	mut key: *mut IntVector,
 	hash: u32,
 	opt: i32,
-) -> bool {
+) {
 	let ht = unsafe { &mut *ht };
 	if c == 0 {
 		if (opt & LC_COPY_KEY) == 0 {
 			iv_free(key);
 		}
-		return true;
+		return;
 	}
 	let kv = ivlc_lookup(ht, key, hash);
 	if kv != std::ptr::null_mut() {
@@ -359,14 +359,13 @@ pub extern "C" fn ivlc_add_element(
 			_ivlc_remove(ht, kv.key, hash);
 			iv_free(kv.key);
 		}
-		return true;
+		return;
 	}
 	_ivlc_require(ht, (ht.card + 1) as usize);
 	if (opt & LC_COPY_KEY) != 0 {
 		key = iv_new_copy(key);
 	}
 	ivlc_insert(ht, key, hash, c);
-	true
 }
 
 #[no_mangle]
@@ -375,11 +374,10 @@ pub extern "C" fn ivlc_add_multiple(
 	c: i32,
 	src: *mut LinearCombination,
 	opt: i32,
-) -> bool {
+) {
 	for kv in LinearCombinationIter::from(src as *const _) {
 		ivlc_add_element(dst, c * kv.value, kv.key, kv.hash, opt);
 	}
-	true
 }
 
 #[no_mangle]

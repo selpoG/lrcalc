@@ -56,12 +56,10 @@ static iv_ptr string2part(const ivector* s, int rows)
 static ivlc_ptr string2part_lc(const ivlc_ptr& lc, int rows)
 {
 	ivlc_ptr res = ivlc_create();
-	if (!res) return res;
 	for (const auto& kv : ivlc_iterator(lc))
 	{
 		iv_ptr p = string2part(kv.key, rows);
-		if (!p) return nullptr;
-		if (ivlc_insert(res.get(), p.get(), iv_hash(p.get()), kv.value) == nullptr) return nullptr;
+		ivlc_insert(res.get(), p.get(), iv_hash(p.get()), kv.value);
 		p.release();
 	}
 	return res;
@@ -70,12 +68,11 @@ static ivlc_ptr string2part_lc(const ivlc_ptr& lc, int rows)
 static ivlc_slice get_box(const ivlc_ptr& lc, int rows, int cols)
 {
 	ivlc_slice res = ivlc_create_slice();
-	if (!res) return res;
 	if (rows == -1) rows = std::numeric_limits<int>::max();
 	if (cols == -1) cols = std::numeric_limits<int>::max();
 	for (auto& kv : ivlc_iterator(lc))
 		if (part_entry(kv.key, rows) == 0 && part_entry(kv.key, 0) <= cols)
-			if (ivlc_insert(res.get(), kv.key, kv.hash, kv.value) == nullptr) return nullptr;
+			ivlc_insert(res.get(), kv.key, kv.hash, kv.value);
 	return res;
 }
 
@@ -89,14 +86,11 @@ static bool test_schur_mult(const iv_ptr& p1, const iv_ptr& p2)
 		ivlc_ptr prd_s;
 		{
 			iv_ptr s1 = part2string(p1, rows, cols);
-			if (!s1) return false;
 			iv_ptr s2 = part2string(p2, rows, cols);
-			if (!s2) return false;
 			prd_s.reset(mult_schubert_str(s1.get(), s2.get()));
 			if (!prd_s) return false;
 		}
 		prd = string2part_lc(prd_s, rows);
-		if (!prd) return false;
 	}
 
 	{
@@ -111,7 +105,6 @@ static bool test_schur_mult(const iv_ptr& p1, const iv_ptr& p2)
 			ivlc_ptr prd_sm{schur_mult(p1.get(), p2.get(), r, c, rows)};
 			if (!prd_sm) return false;
 			ivlc_slice prd_gb = get_box(prd, r, c);
-			if (!prd_gb) return false;
 			assert(ivlc_equals(prd_sm.get(), prd_gb.get()));
 		}
 
