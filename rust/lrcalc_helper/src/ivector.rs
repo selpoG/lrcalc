@@ -135,16 +135,20 @@ pub extern "C" fn part_length(v: *const IntVector) -> u32 {
 	n as u32
 }
 
+pub fn iv_free_rs(v: &mut IntVector) {
+	if v.array == std::ptr::null_mut() {
+		return;
+	}
+	let s = unsafe { std::slice::from_raw_parts_mut((*v).array, (*v).length as usize) };
+	unsafe { drop(Box::from_raw(s)) }
+}
+
 #[no_mangle]
 pub extern "C" fn iv_free(v: *mut IntVector) {
 	if v == std::ptr::null_mut() {
 		return;
 	}
-	if unsafe { (*v).array } != std::ptr::null_mut() {
-		let s = unsafe { std::slice::from_raw_parts_mut((*v).array, (*v).length as usize) };
-		let s = s.as_mut_ptr();
-		unsafe { drop(Box::from_raw(s)) }
-	}
+	iv_free_rs(unsafe { &mut *v });
 	unsafe { drop(Box::from_raw(v)) }
 }
 
@@ -197,12 +201,12 @@ pub extern "C" fn part_printnl(p: *const IntVector) {
 
 #[no_mangle]
 pub extern "C" fn part_print_lincomb(lc: *const LinearCombination) {
-	for (k, v) in LinearCombinationIter::from(lc) {
-		if v == 0 {
+	for kv in LinearCombinationIter::from(lc) {
+		if kv.value == 0 {
 			continue;
 		}
-		print!("{}  ", v);
-		part_printnl(&k);
+		print!("{}  ", kv.value);
+		part_printnl(kv.key);
 	}
 }
 
@@ -232,12 +236,12 @@ pub extern "C" fn part_qprintnl(p: *const IntVector, level: i32) {
 
 #[no_mangle]
 pub extern "C" fn part_qprint_lincomb(lc: *const LinearCombination, level: i32) {
-	for (k, v) in LinearCombinationIter::from(lc) {
-		if v == 0 {
+	for kv in LinearCombinationIter::from(lc) {
+		if kv.value == 0 {
 			continue;
 		}
-		print!("{}  ", v);
-		part_qprintnl(&k, level);
+		print!("{}  ", kv.value);
+		part_qprintnl(kv.key, level);
 	}
 }
 
@@ -286,11 +290,11 @@ pub extern "C" fn maple_print_lincomb(
 	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
 	let letter = slice.to_str().unwrap();
 	print!("0");
-	for (k, v) in LinearCombinationIter::from(ht) {
-		if v == 0 {
+	for kv in LinearCombinationIter::from(ht) {
+		if kv.value == 0 {
 			continue;
 		}
-		_maple_print_term(v, &k, letter, nz);
+		_maple_print_term(kv.value, unsafe { &*kv.key }, letter, nz);
 	}
 	println!();
 }
@@ -321,11 +325,11 @@ pub extern "C" fn maple_qprint_lincomb(
 	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
 	let letter = slice.to_str().unwrap();
 	print!("0");
-	for (k, v) in LinearCombinationIter::from(ht) {
-		if v == 0 {
+	for kv in LinearCombinationIter::from(ht) {
+		if kv.value == 0 {
 			continue;
 		}
-		_maple_qprint_term(v, &k, level, letter);
+		_maple_qprint_term(kv.value, unsafe { &*kv.key }, level, letter);
 	}
 	println!();
 }

@@ -30,7 +30,6 @@ set_flags()
 set(MY_TARGET lrcalc)
 
 add_library(${MY_TARGET} STATIC
-	src/ivlincomb.cpp
 	src/lrcoef.cpp
 	src/lriter.cpp
 	src/optshape.cpp

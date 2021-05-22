@@ -36,10 +36,6 @@ extern "C"
 	/* Minimal number of table entries for each element. */
 	constexpr uint32_t USE_FACTOR = 2;
 
-	constexpr uint32_t INIT_TABLE_SIZE = 2003;
-
-	constexpr uint32_t INIT_ELT_SIZE = 100;
-
 	uint32_t ivlc_card(const ivlincomb* ht);
 
 	ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz);
