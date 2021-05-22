@@ -31,7 +31,6 @@
 static bool test_schur_lrcoef(const iv_ptr& p1, const iv_ptr& p2, int rows, int cols)
 {
 	iv_ptr outer = iv_create(uint32_t(rows));
-	if (!outer) return false;
 
 	ivlc_ptr prd{schur_mult(p1.get(), p2.get(), rows, cols, rows)};
 	if (!prd) return false;
@@ -55,9 +54,7 @@ int main(int ac, char** av)
 	if (rows < 0 || cols < 0) print_usage();
 
 	iv_ptr p1 = iv_create(uint32_t(rows));
-	if (!p1) out_of_memory();
 	iv_ptr p2 = iv_create(uint32_t(rows));
-	if (!p2) out_of_memory();
 
 	for ([[maybe_unused]] auto& itr1 : pitr::box(p1.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(p2.get(), rows, cols))

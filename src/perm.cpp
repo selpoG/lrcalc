@@ -90,14 +90,12 @@ ivlist* all_strings(const ivector* dimvec)
 
 	uint32_t ld = iv_length(dimvec);
 	iv_ptr cntvec = iv_create_zero(ld);
-	if (!cntvec) return nullptr;
 	int n_ = iv_elem(dimvec, ld - 1);
 	if (n_ < 0) return nullptr;
 	auto n = uint32_t(n_);
 
 	ivl_ptr res;
 	iv_ptr str = iv_create(n);
-	if (!str) return nullptr;
 	{
 		uint32_t j = 0;
 		for (uint32_t i = 0; i < ld; i++)
@@ -154,7 +152,6 @@ ivlist* all_perms(int n)
 {
 	assert(n >= 0);
 	iv_ptr dimvec = iv_create(uint32_t(n + 1));
-	if (!dimvec) return nullptr;
 	for (uint32_t i = 0; i < iv_length(dimvec); i++) iv_elem(dimvec, i) = int(i);
 	return all_strings(dimvec.get());
 }
@@ -169,12 +166,10 @@ ivector* string2perm(const ivector* str)
 	N++;
 
 	iv_ptr dimvec = iv_create_zero(N);
-	if (!dimvec) return nullptr;
 	for (uint32_t i = 0; i < n; i++) iv_elem(dimvec, iv_elem(str, i))++;
 	for (uint32_t i = 1; i < N; i++) iv_elem(dimvec, i) += iv_elem(dimvec, i - 1);
 
 	iv_ptr perm = iv_create(n);
-	if (!perm) return nullptr;
 
 	for (int i = int(n) - 1; i >= 0; i--)
 	{
@@ -195,7 +190,6 @@ ivector* str2dimvec(const ivector* str)
 		if (int(n) <= iv_elem(str, i)) n = uint32_t(iv_elem(str, i)) + 1;
 	}
 	iv_ptr res = iv_create_zero(n);
-	if (!res) return nullptr;
 	for (uint32_t i = 0; i < iv_length(str); i++) iv_elem(res, iv_elem(str, i))++;
 	for (uint32_t i = 1; i < n; i++) iv_elem(res, i) += iv_elem(res, i - 1);
 	return res.release();
@@ -215,7 +209,6 @@ ivector* perm2string(const ivector* perm, const ivector* dimvec)
 {
 	int n = iv_length(dimvec) ? iv_elem(dimvec, iv_length(dimvec) - 1) : 0;
 	iv_ptr res = iv_create(uint32_t(n));
-	if (!res) return nullptr;
 	uint32_t j = 0;
 	for (uint32_t i = 0; i < iv_length(dimvec); i++)
 		while (int(j) < iv_elem(dimvec, i))

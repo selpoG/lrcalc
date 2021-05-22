@@ -98,7 +98,6 @@ bool fusion_reduce_lc(ivlincomb* lc, int level)
 		{
 			const ivector* sh = ivl_elem(parts, 0);
 			tmp = iv_create(iv_length(sh));
-			if (!tmp) return false;
 		}
 
 		/* Reduce and reinsert terms. */
@@ -129,9 +128,7 @@ ivlincomb* schur_mult_fusion(const ivector* sh1, const ivector* sh2, int rows, i
 	if (part_entry(sh1, 0) - part_entry(sh1, rows - 1) > level)
 	{
 		tmp = iv_create(uint32_t(rows));
-		if (!tmp) return nullptr;
 		nsh1 = iv_create(uint32_t(rows));
-		if (!nsh1) return nullptr;
 		for (int i = 0; i < rows; i++) iv_elem(nsh1, i) = part_entry(sh1, i);
 		sign = fusion_reduce(nsh1.get(), level, tmp);
 		sh1 = nsh1.get();
@@ -140,9 +137,7 @@ ivlincomb* schur_mult_fusion(const ivector* sh1, const ivector* sh2, int rows, i
 	if (part_entry(sh2, 0) - part_entry(sh2, rows - 1) > level)
 	{
 		if (!tmp) tmp = iv_create(uint32_t(rows));
-		if (!tmp) return nullptr;
 		nsh2 = iv_create(uint32_t(rows));
-		if (!nsh2) return nullptr;
 		for (int i = 0; i < rows; i++) iv_elem(nsh2, i) = part_entry(sh2, i);
 		sign *= fusion_reduce(nsh2.get(), level, tmp);
 		sh2 = nsh2.get();
@@ -218,7 +213,6 @@ static ivlc_ptr _schur_coprod_expand(const ivector* outer, const ivector* conten
 ivlincomb* schur_coprod(const ivector* sh, int rows, int cols, int partsz, bool all)
 {
 	iv_ptr box = iv_create(uint32_t(rows));
-	if (!box) return nullptr;
 	for (int i = 0; i < rows; i++) iv_elem(box, i) = cols;
 
 	if (all) return schur_mult(sh, box.get(), -1, -1, partsz);

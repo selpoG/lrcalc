@@ -35,7 +35,6 @@
 static iv_ptr part2string(const iv_ptr& p, int rows, int cols)
 {
 	iv_ptr s = iv_create(uint32_t(rows + cols));
-	if (!s) return s;
 	for (int i = 0; uint32_t(i) < iv_length(s); i++) iv_elem(s, i) = 1;
 	for (int i = 0; i < rows; i++) iv_elem(s, i + part_entry(p.get(), rows - 1 - i)) = 0;
 	return s;
@@ -44,7 +43,6 @@ static iv_ptr part2string(const iv_ptr& p, int rows, int cols)
 static iv_ptr string2part(const ivector* s, int rows)
 {
 	iv_ptr p = iv_create(uint32_t(rows));
-	if (!p) return p;
 	int i = 0;
 	for (int j = 0; uint32_t(j) < iv_length(s); j++)
 		if (iv_elem(s, j) == 0)
@@ -128,9 +126,7 @@ int main(int ac, char** av)
 	if (rows < 0 || cols < 0) print_usage();
 
 	iv_ptr p1 = iv_create(uint32_t(rows));
-	if (!p1) out_of_memory();
 	iv_ptr p2 = iv_create(uint32_t(rows));
-	if (!p2) out_of_memory();
 
 	for ([[maybe_unused]] auto& itr1 : pitr::box(p1.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(p2.get(), rows, cols))

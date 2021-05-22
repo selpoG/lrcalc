@@ -50,9 +50,7 @@ int main(int ac, char** av)
 	if (rows < 0 || cols < 0) print_usage();
 
 	iv_ptr sh1 = iv_create(uint32_t(rows));
-	if (!sh1) out_of_memory();
 	iv_ptr sh2 = iv_create(uint32_t(rows));
-	if (!sh2) out_of_memory();
 
 	for ([[maybe_unused]] auto& itr1 : pitr::box(sh1.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(sh2.get(), rows, cols))

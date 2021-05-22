@@ -41,7 +41,6 @@ static ivlc_slice get_strip(const ivlc_ptr& lc, int rows)
 static bool test_schur_lrskew(const iv_ptr& out, const iv_ptr& inn, int rows, int cols)
 {
 	iv_ptr sh = iv_create(uint32_t(rows));
-	if (!sh) return false;
 	ivlc_ptr lc{schur_skew(out.get(), inn.get(), -1, rows)};
 	if (!lc) return false;
 
@@ -75,9 +74,7 @@ int main(int ac, char** av)
 	if (rows < 0 || cols < 0) print_usage();
 
 	iv_ptr out = iv_create(uint32_t(rows));
-	if (!out) out_of_memory();
 	iv_ptr inn = iv_create(uint32_t(rows));
-	if (!inn) out_of_memory();
 
 	for ([[maybe_unused]] auto& itr1 : pitr::box(out.get(), rows, cols))
 		for ([[maybe_unused]] auto& itr2 : pitr::box(inn.get(), rows, cols))

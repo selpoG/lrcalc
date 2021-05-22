@@ -29,7 +29,6 @@ lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* 
 	if (inner != nullptr && !part_leq(inner, outer))
 	{
 		iv_ptr cont = iv_create(1);
-		if (!cont) return nullptr;
 		auto lrit = new (std::nothrow) lrtab_iter;
 		if (lrit == nullptr) return nullptr;
 		lrit->cont = cont.release();
