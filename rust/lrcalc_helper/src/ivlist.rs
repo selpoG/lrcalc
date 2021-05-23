@@ -25,7 +25,7 @@ pub extern "C" fn ivl_new(length: u64) -> *mut IntVectorList {
 			IntVectorList {
 				length: 0,
 				allocated: 0,
-				array: std::ptr::null_mut(),
+				array: std::ptr::NonNull::dangling().as_ptr(),
 			}
 		} else {
 			let vec = vec![std::ptr::null_mut(); length as usize];
@@ -83,7 +83,7 @@ fn _ivl_free(lst: *mut IntVectorList, all: bool) {
 	if lst == std::ptr::null_mut() {
 		return;
 	}
-	if unsafe { (*lst).array } != std::ptr::null_mut() {
+	if unsafe { (*lst).allocated } != 0 {
 		let lst = unsafe { &*lst };
 		let s = unsafe { std::slice::from_raw_parts_mut(lst.array, lst.allocated as usize) };
 		if all {

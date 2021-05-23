@@ -1,5 +1,6 @@
 use super::bindings;
 use super::ivlincomb::{LinearCombination, LinearCombinationIter};
+use super::part::{part_length, part_qdegree, part_qentry};
 
 #[repr(C)]
 #[derive(Clone)]
@@ -13,7 +14,7 @@ impl IntVector {
 		if buf.len() == 0 {
 			return IntVector {
 				length: 0,
-				array: std::ptr::null_mut(),
+				array: std::ptr::NonNull::dangling().as_ptr(),
 			};
 		}
 		let v = IntVector {
@@ -125,18 +126,8 @@ pub extern "C" fn iv_printnl(v: *const IntVector) {
 	println!()
 }
 
-#[no_mangle]
-pub extern "C" fn part_length(v: *const IntVector) -> u32 {
-	let v = unsafe { &(*v)[..] };
-	let mut n = v.len();
-	while n > 0 && v[n - 1] == 0 {
-		n -= 1
-	}
-	n as u32
-}
-
 pub fn iv_free_rs(v: &mut IntVector) {
-	if v.array == std::ptr::null_mut() {
+	if v.length == 0 {
 		return;
 	}
 	let s = unsafe { std::slice::from_raw_parts_mut((*v).array, (*v).length as usize) };
@@ -153,20 +144,6 @@ pub extern "C" fn iv_free(v: *mut IntVector) {
 }
 
 #[no_mangle]
-pub extern "C" fn part_valid(p: *const IntVector) -> bool {
-	let mut x = 0;
-	let p = unsafe { &(*p)[..] };
-	for i in (0..p.len()).rev() {
-		let y = p[i as usize];
-		if y < x {
-			return false;
-		}
-		x = y;
-	}
-	return true;
-}
-
-#[no_mangle]
 pub extern "C" fn puts_r(s: *const std::os::raw::c_char) {
 	let slice = unsafe { std::ffi::CStr::from_ptr(s) };
 	println!("{}", slice.to_str().unwrap())
@@ -175,95 +152,6 @@ pub extern "C" fn puts_r(s: *const std::os::raw::c_char) {
 #[no_mangle]
 pub extern "C" fn putchar_r(c: i32) {
 	print!("{}", std::char::from_u32(c as u32).unwrap())
-}
-
-#[no_mangle]
-pub extern "C" fn part_print(p: *const IntVector) {
-	print!("(");
-	let p = unsafe { &(*p)[..] };
-	for i in 0..p.len() {
-		if p[i] == 0 {
-			break;
-		}
-		if i > 0 {
-			print!(",")
-		}
-		print!("{}", p[i])
-	}
-	print!(")")
-}
-
-#[no_mangle]
-pub extern "C" fn part_printnl(p: *const IntVector) {
-	part_print(p);
-	println!()
-}
-
-#[no_mangle]
-pub extern "C" fn part_print_lincomb(lc: *const LinearCombination) {
-	for kv in LinearCombinationIter::from(lc) {
-		if kv.value == 0 {
-			continue;
-		}
-		print!("{}  ", kv.value);
-		part_printnl(kv.key);
-	}
-}
-
-#[no_mangle]
-pub extern "C" fn part_qprint(p: *const IntVector, level: i32) {
-	let d = part_qdegree(p, level);
-	print!("(");
-	let v = unsafe { &(*p)[..] };
-	for i in 0..v.len() {
-		let x = part_qentry(p, i as i32, d, level);
-		if x == 0 {
-			break;
-		}
-		if i > 0 {
-			print!(",")
-		}
-		print!("{}", x)
-	}
-	print!(")");
-}
-
-#[no_mangle]
-pub extern "C" fn part_qprintnl(p: *const IntVector, level: i32) {
-	part_qprint(p, level);
-	println!()
-}
-
-#[no_mangle]
-pub extern "C" fn part_qprint_lincomb(lc: *const LinearCombination, level: i32) {
-	for kv in LinearCombinationIter::from(lc) {
-		if kv.value == 0 {
-			continue;
-		}
-		print!("{}  ", kv.value);
-		part_qprintnl(kv.key, level);
-	}
-}
-
-#[no_mangle]
-pub extern "C" fn part_qdegree(p: *const IntVector, level: i32) -> i32 {
-	let p = unsafe { &(*p)[..] };
-	let n = (p.len() as i32) + level;
-	let mut d = 0;
-	for i in 0..p.len() {
-		let a = p[i] + (p.len() as i32) - (i as i32) - 1;
-		let b = if a >= 0 { a / n } else { -((n - 1 - a) / n) };
-		d += b;
-	}
-	d
-}
-
-#[no_mangle]
-pub extern "C" fn part_qentry(p: *const IntVector, i: i32, d: i32, level: i32) -> i32 {
-	let p = unsafe { &(*p)[..] };
-	let rows = p.len() as i32;
-	let k = (i + d) % rows;
-	p[k as usize] - ((i + d) / rows) * level - d
 }
 
 fn _maple_print_term(c: i32, v: &IntVector, letter: &str, nz: bool) {

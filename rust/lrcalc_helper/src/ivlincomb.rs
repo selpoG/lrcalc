@@ -85,7 +85,7 @@ pub extern "C" fn ivlc_card(ht: *const LinearCombination) -> u32 {
 pub extern "C" fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
 	let ivlc = {
 		let table = if tabsz == 0 {
-			std::ptr::null_mut()
+			std::ptr::NonNull::dangling().as_ptr()
 		} else {
 			let vec = vec![0u32; tabsz as usize];
 			let mut buf = vec.into_boxed_slice();
@@ -94,7 +94,7 @@ pub extern "C" fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
 			p
 		};
 		let elts = if eltsz == 0 {
-			std::ptr::null_mut()
+			std::ptr::NonNull::dangling().as_ptr()
 		} else {
 			let mut vec = Vec::with_capacity(eltsz as usize);
 			unsafe {
@@ -124,13 +124,14 @@ pub extern "C" fn ivlc_free(ht: *mut LinearCombination) {
 	if ht == std::ptr::null_mut() {
 		return;
 	}
-	if unsafe { (*ht).table } != std::ptr::null_mut() {
+	if unsafe { (*ht).table_sz } != 0 {
 		let ht = unsafe { &*ht };
+
 		let s = unsafe { std::slice::from_raw_parts_mut(ht.table, ht.table_sz as usize) };
 		let s = s.as_mut_ptr();
 		unsafe { drop(Box::from_raw(s)) }
 	}
-	if unsafe { (*ht).elts } != std::ptr::null_mut() {
+	if unsafe { (*ht).elts_sz } != 0 {
 		let ht = unsafe { &*ht };
 		let s = unsafe { std::slice::from_raw_parts_mut(ht.elts, ht.elts_sz as usize) };
 		let s = s.as_mut_ptr();

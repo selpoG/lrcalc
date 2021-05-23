@@ -1,4 +1,5 @@
-use super::ivector::{iv_free, part_length, part_valid, IntVector};
+use super::ivector::{iv_free, IntVector};
+use super::part::{part_length, part_valid};
 
 #[repr(C)]
 pub struct SkewShape {
