@@ -5,3 +5,4 @@ pub mod ivlincomb;
 pub mod ivlist;
 pub mod optim;
 pub mod part;
+pub mod perm;

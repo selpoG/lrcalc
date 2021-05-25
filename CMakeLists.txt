@@ -33,7 +33,6 @@ add_library(${MY_TARGET} STATIC
 	src/lrcoef.cpp
 	src/lriter.cpp
 	src/optshape.cpp
-	src/perm.cpp
 	src/schublib.cpp
 	src/schur.cpp
 	src/vectarg.cpp

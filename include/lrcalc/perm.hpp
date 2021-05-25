@@ -8,7 +8,7 @@
 extern "C"
 {
 #endif
-	bool perm_valid(ivector* w);
+	bool perm_valid(const ivector* w);
 
 	int perm_length(const ivector* w);
 
