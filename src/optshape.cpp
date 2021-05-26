@@ -37,39 +37,6 @@ skew_shape optim_coef(const ivector* out, const ivector* sh1, const ivector* sh2
 	return ss;
 }
 
-void sksh_print(const ivector* outer, const ivector* inner, const ivector* cont)
-{
-	uint32_t len = part_length(outer);
-	uint32_t ilen = (inner == nullptr) ? 0 : iv_length(inner);
-	uint32_t clen = (cont == nullptr) ? 0 : part_length(cont);
-	if (len <= ilen)
-	{
-		while (len > 0 && iv_elem(inner, len - 1) == iv_elem(outer, len - 1)) len--;
-		ilen = len;
-	}
-	uint32_t r0 = 0;
-	while (r0 < ilen && iv_elem(inner, r0) == iv_elem(outer, r0)) r0++;
-	int ss_left = (len == 0 || ilen < len) ? 0 : iv_elem(inner, len - 1);
-	int ss_right = (len == 0) ? 0 : iv_elem(outer, 0);
-
-	for (uint32_t r = 0; r < clen; r++)
-	{
-		for (int c = ss_left; c < ss_right; c++) putchar_r(' ');
-		for (int c = 0; c < iv_elem(cont, r); c++) putchar_r('c');
-		putchar_r('\n');
-	}
-
-	for (uint32_t r = r0; r < len; r++)
-	{
-		int innr = (r < ilen) ? iv_elem(inner, r) : 0;
-		int outr = iv_elem(outer, r);
-		int c = 0;
-		for (c = 0; c < innr; c++) putchar_r(' ');
-		for (; c < outr; c++) putchar_r('s');
-		putchar_r('\n');
-	}
-}
-
 /* Find optimal shape for fusion product. */
 
 void _optim_fusion(skew_shape* ss, const ivector* sh1, const ivector* sh2, int rows, int level)

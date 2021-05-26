@@ -92,8 +92,7 @@ pub extern "C" fn part_leq(p1: *const IntVector, p2: *const IntVector) -> bool {
 	true
 }
 
-#[no_mangle]
-pub extern "C" fn part_print(p: *const IntVector) {
+fn part_print(p: *const IntVector) {
 	print!("(");
 	let p = unsafe { &(*p)[..] };
 	for i in 0..p.len() {
@@ -107,8 +106,8 @@ pub extern "C" fn part_print(p: *const IntVector) {
 	}
 	print!(")")
 }
-#[no_mangle]
-pub extern "C" fn part_printnl(p: *const IntVector) {
+
+fn part_printnl(p: *const IntVector) {
 	part_print(p);
 	println!()
 }
@@ -147,8 +146,7 @@ pub extern "C" fn part_qentry(p: *const IntVector, i: i32, d: i32, level: i32) -
 	p[k as usize] - ((i + d) / rows) * level - d
 }
 
-#[no_mangle]
-pub extern "C" fn part_qprint(p: *const IntVector, level: i32) {
+fn part_qprint(p: *const IntVector, level: i32) {
 	let d = part_qdegree(p, level);
 	print!("(");
 	let v = unsafe { &(*p)[..] };
@@ -164,8 +162,8 @@ pub extern "C" fn part_qprint(p: *const IntVector, level: i32) {
 	}
 	print!(")");
 }
-#[no_mangle]
-pub extern "C" fn part_qprintnl(p: *const IntVector, level: i32) {
+
+fn part_qprintnl(p: *const IntVector, level: i32) {
 	part_qprint(p, level);
 	println!()
 }

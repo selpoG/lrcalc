@@ -21,8 +21,6 @@ extern "C"
 
 	ivector* iv_new_copy(const ivector* v);
 
-	void iv_set_zero(ivector* v);
-
 	int iv_cmp(const ivector* v1, const ivector* v2);
 
 	uint32_t iv_hash(const ivector* v);
@@ -33,7 +31,6 @@ extern "C"
 	void iv_printnl(const ivector* v);
 
 	void puts_r(const char* s);
-	void putchar_r(int ch);
 
 #define iv_length(v) ((v)->length)
 

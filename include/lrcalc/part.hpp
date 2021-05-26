@@ -23,9 +23,6 @@ extern "C"
 
 	bool part_leq(const ivector* p1, const ivector* p2);
 
-	void part_print(const ivector* p);
-	void part_printnl(const ivector* p);
-
 	void part_print_lincomb(const ivlincomb* lc);
 
 	/* Translate fusion algebra partitions to quantum cohomology notation. */
@@ -33,9 +30,6 @@ extern "C"
 	int part_qdegree(const ivector* p, int level);
 
 	int part_qentry(const ivector* p, int i, int d, int level);
-
-	void part_qprint(const ivector* p, int level);
-	void part_qprintnl(const ivector* p, int level);
 
 	void part_qprint_lincomb(const ivlincomb* lc, int level);
 

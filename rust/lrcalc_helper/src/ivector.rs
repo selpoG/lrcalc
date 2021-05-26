@@ -80,12 +80,6 @@ pub extern "C" fn iv_new_copy(v: *const IntVector) -> *mut IntVector {
 }
 
 #[no_mangle]
-pub extern "C" fn iv_set_zero(v: *mut IntVector) {
-	let v = unsafe { &mut (*v)[..] };
-	v.fill(0)
-}
-
-#[no_mangle]
 pub extern "C" fn iv_cmp(v1: *const IntVector, v2: *const IntVector) -> i32 {
 	let c = unsafe { (*v1).cmp(&*v2) };
 	c as i32
@@ -147,11 +141,6 @@ pub extern "C" fn iv_free(v: *mut IntVector) {
 pub extern "C" fn puts_r(s: *const std::os::raw::c_char) {
 	let slice = unsafe { std::ffi::CStr::from_ptr(s) };
 	println!("{}", slice.to_str().unwrap())
-}
-
-#[no_mangle]
-pub extern "C" fn putchar_r(c: i32) {
-	print!("{}", std::char::from_u32(c as u32).unwrap())
 }
 
 fn _maple_print_term(c: i32, v: &IntVector, letter: &str, nz: bool) {

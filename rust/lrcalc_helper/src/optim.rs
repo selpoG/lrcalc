@@ -9,6 +9,65 @@ pub struct SkewShape {
 	sign: i32,
 }
 
+#[no_mangle]
+pub extern "C" fn sksh_print(
+	outer: *const IntVector,
+	inner: *const IntVector,
+	cont: *const IntVector,
+) {
+	let mut len = part_length(outer);
+	let outer = unsafe { &(*outer)[..] };
+	let inner = if inner == std::ptr::null() {
+		None
+	} else {
+		Some(unsafe { &(*inner)[..] })
+	};
+	let mut ilen = inner.map(|v| v.len()).unwrap_or(0) as u32;
+	let (cont, clen) = if cont == std::ptr::null() {
+		(None, 0)
+	} else {
+		(Some(unsafe { &(*cont)[..] }), part_length(cont))
+	};
+	if len <= ilen {
+		while len > 0 && inner.unwrap()[(len - 1) as usize] == outer[(len - 1) as usize] {
+			len -= 1;
+		}
+		ilen = len;
+	}
+	let mut r0 = 0;
+	while r0 < ilen && inner.unwrap()[r0 as usize] == outer[r0 as usize] {
+		r0 += 1;
+	}
+	let ss_left = if len == 0 || ilen < len {
+		0
+	} else {
+		inner.unwrap()[(len - 1) as usize]
+	};
+	let ss_right = if len == 0 { 0 } else { outer[0] };
+
+	for r in 0..clen {
+		println!(
+			"{}{}",
+			" ".repeat((ss_right - ss_left) as usize),
+			"c".repeat(cont.unwrap()[r as usize] as usize)
+		);
+	}
+
+	for r in r0..len {
+		let innr = if r < ilen {
+			inner.unwrap()[r as usize]
+		} else {
+			0
+		};
+		let outr = outer[r as usize];
+		println!(
+			"{}{}",
+			" ".repeat(innr as usize),
+			"s".repeat((outr - innr) as usize)
+		);
+	}
+}
+
 /// Find optimal shape for product of Schur functions.
 ///
 /// 1) Let outer0 be outer minus all rows of size maxcols and all columns of size maxrows.
