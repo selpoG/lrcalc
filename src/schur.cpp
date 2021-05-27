@@ -203,7 +203,6 @@ static ivlc_ptr _schur_coprod_count(lrtab_iter* lrit, int rows, int cols)
 static ivlc_ptr _schur_coprod_expand(const ivector* outer, const ivector* content, int rows, int cols, int partsz)
 {
 	lrtab_iter* lrit = lrit_new(outer, nullptr, content, -1, -1, partsz);
-	if (lrit == nullptr) return {};
 	ivlc_ptr lc = _schur_coprod_count(lrit, rows, cols);
 	lrit_free(lrit);
 	return lc;

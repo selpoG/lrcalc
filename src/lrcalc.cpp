@@ -230,7 +230,6 @@ static void tab_main(int ac, char* const* av)
 	if (!inner || !part_valid(inner.get())) cmd_error(tab_usage, "inner shape not a valid partition.");
 
 	lrtab_iter* lrit = lrit_new(outer.get(), inner.get(), nullptr, opt_rows, -1, -1);
-	if (lrit == nullptr) out_of_memory();
 	for (; lrit_good(lrit); lrit_next(lrit))
 	{
 		lrit_print_skewtab(lrit, outer.get(), inner.get());
