@@ -1,6 +1,5 @@
-use super::bindings;
 use super::ivlincomb::{LinearCombination, LinearCombinationIter};
-use super::part::{part_length, part_qdegree, part_qentry};
+use super::part::{part_qdegree, part_qentry};
 
 #[repr(C)]
 #[derive(Clone)]
@@ -209,60 +208,4 @@ pub extern "C" fn maple_qprint_lincomb(
 		_maple_qprint_term(kv.value, unsafe { &*kv.key }, level, letter);
 	}
 	println!();
-}
-
-#[no_mangle]
-pub extern "C" fn lrit_print_skewtab(
-	lrit: *const bindings::lrtab_iter,
-	outer: *const IntVector,
-	inner: *const IntVector,
-) {
-	let lrit = unsafe { &*lrit };
-	let array = lrit.array;
-	let mut size = lrit.size;
-	let array = unsafe { std::slice::from_raw_parts(array, size as usize) };
-
-	let inner = if inner == std::ptr::null() {
-		None
-	} else {
-		unsafe { Some(&(*inner)[..]) }
-	};
-	let ilen = inner.map(|v| v.len()).unwrap_or(0) as u32;
-	let mut len = part_length(outer);
-	let outer = unsafe { &(*outer)[..] };
-	if len <= ilen {
-		let inner = inner.unwrap();
-		while len > 0 && inner[(len - 1) as usize] == outer[(len - 1) as usize] {
-			len -= 1;
-		}
-	}
-	if len == 0 {
-		return;
-	}
-
-	let col_first = if ilen < len {
-		0
-	} else {
-		inner.unwrap()[(len - 1) as usize]
-	};
-	let mut r = 0;
-	while r < ilen && inner.unwrap()[r as usize] == outer[r as usize] {
-		r += 1;
-	}
-	while r < len {
-		let inn_r = if r >= ilen {
-			0
-		} else {
-			inner.unwrap()[r as usize]
-		};
-		let out_r = outer[r as usize];
-		let row_sz = out_r - inn_r;
-		size -= row_sz;
-		print!("{}", " ".repeat(2 * (inn_r - col_first) as usize));
-		for c in 0..row_sz {
-			print!("{:2}", array[(size + c) as usize].value)
-		}
-		println!();
-		r += 1
-	}
 }

@@ -31,7 +31,6 @@ set(MY_TARGET lrcalc)
 
 add_library(${MY_TARGET} STATIC
 	src/lrcoef.cpp
-	src/lriter.cpp
 	src/optshape.cpp
 	src/schublib.cpp
 	src/schur.cpp
