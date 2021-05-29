@@ -30,7 +30,6 @@ set_flags()
 set(MY_TARGET lrcalc)
 
 add_library(${MY_TARGET} STATIC
-	src/lrcoef.cpp
 	src/optshape.cpp
 	src/schur.cpp
 	src/vectarg.cpp

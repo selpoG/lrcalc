@@ -51,15 +51,18 @@ pub extern "C" fn part_length(v: *const IntVector) -> u32 {
 	n as u32
 }
 
-#[no_mangle]
-pub extern "C" fn part_entry(p: *const IntVector, i: i32) -> i32 {
-	let p = unsafe { &(*p)[..] };
+pub fn part_entry_rs(p: &[i32], i: i32) -> i32 {
 	let i = i as usize;
 	if i < p.len() {
 		p[i]
 	} else {
 		0
 	}
+}
+
+#[no_mangle]
+pub extern "C" fn part_entry(p: *const IntVector, i: i32) -> i32 {
+	part_entry_rs(unsafe { &(*p)[..] }, i)
 }
 
 /// Must have len >= iv_length(p) and p was allocated with enough space.
