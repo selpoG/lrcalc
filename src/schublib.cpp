@@ -155,7 +155,29 @@ static void _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 	}
 }
 
-static void _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res);
+struct Poly
+{
+	ivector* key;
+	int val;
+	Poly() : key(nullptr), val(0) {}
+	Poly(ivector* key, int val) : key(key), val(val) {}
+	Poly(const Poly&) = delete;
+	Poly(Poly&& p) : key(p.key), val(p.val) { p.key = nullptr; }
+	Poly& operator=(const Poly& p) = delete;
+	Poly& operator=(Poly&& p)
+	{
+		key = p.key;
+		val = p.val;
+		p.key = nullptr;
+		return *this;
+	}
+	~Poly()
+	{
+		if (key != nullptr) iv_free(key);
+	}
+};
+
+static void _mult_ps(Poly* poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res);
 
 ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 {
@@ -165,7 +187,7 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 
 	if (rank == 0) rank = std::numeric_limits<int>::max();
 
-	auto p = new (std::nothrow) void*[2 * n];
+	auto p = new (std::nothrow) Poly[n];
 	if (p == nullptr) return nullptr;
 	uint32_t i = 0;
 	uint32_t maxvar = 0;
@@ -176,10 +198,9 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 		while (j > 0 && iv_elem(xx, j - 1) == 0) j--;
 		xx->length = j;
 		if (maxvar < j) maxvar = j;
-		p[i++] = kv.key;
-		p[i++] = reinterpret_cast<void*>(long(kv.value));
+		p[i++] = Poly(kv.key, kv.value);
 	}
-	assert(i == 2 * n);
+	assert(i == n);
 	ivlc_reset(poly_ptr.get());
 
 	uint32_t svlen = iv_length(perm);
@@ -187,19 +208,17 @@ ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank)
 	_mult_ps(p, n, maxvar, perm, rank, poly_ptr);
 	perm->length = svlen;
 
-	for (i = 0; i < n; i++) iv_free(static_cast<ivector*>(p[2 * i]));
 	delete[] p;
 
 	return poly_ptr.release();
 }
 
-static void _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res)
+static void _mult_ps(Poly* poly, uint32_t n, uint32_t maxvar, const ivector* perm, int rank, ivlc_ptr& res)
 {
 	if (maxvar == 0)
 	{
 		ivector* w = iv_new_copy(perm); /* FIXME: OPTIMIZE! */
-		int c = int(reinterpret_cast<long>(poly[1]));
-		ivlc_add_element(res.get(), c, w, iv_hash(w), LC_FREE_ZERO);
+		ivlc_add_element(res.get(), poly[0].val, w, iv_hash(w), LC_FREE_ZERO);
 		return;
 	}
 
@@ -208,7 +227,7 @@ static void _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* pe
 	uint32_t j = 0;
 	for (uint32_t i = 0; i < n; i++)
 	{
-		ivector* xx = static_cast<ivector*>(poly[2 * i]);
+		ivector* xx = poly[i].key;
 		uint32_t lnxx = iv_length(xx);
 		if (lnxx < maxvar)
 		{
@@ -220,9 +239,7 @@ static void _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* pe
 			while (lnxx > 0 && iv_elem(xx, lnxx - 1) == 0) lnxx--;
 			xx->length = lnxx;
 			if (mv1 < lnxx) mv1 = lnxx;
-			poly[2 * i] = poly[2 * j];
-			poly[2 * j] = xx;
-			std::swap(poly[2 * i + 1], poly[2 * j + 1]);
+			std::swap(poly[i], poly[j]);
 			j++;
 		}
 	}
@@ -231,7 +248,7 @@ static void _mult_ps(void** poly, uint32_t n, uint32_t maxvar, const ivector* pe
 	_mult_ps(poly, j, mv1, perm, rank, res1);
 	_monk_add(maxvar, res1, rank, res);
 
-	if (j < n) _mult_ps(poly + 2 * j, n - j, mv0, perm, rank, res);
+	if (j < n) _mult_ps(poly + j, n - j, mv0, perm, rank, res);
 }
 
 ivlincomb* mult_schubert(ivector* w1, ivector* w2, int rank)
