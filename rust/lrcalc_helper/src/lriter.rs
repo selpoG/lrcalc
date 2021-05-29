@@ -1,7 +1,5 @@
 use super::ivector::{iv_free, iv_hash, IntVector};
-use super::ivlincomb::{
-	ivlc_add_element, ivlc_new, LinearCombination, IVLC_ARRAY_SZ, IVLC_HASHTABLE_SZ, LC_COPY_KEY,
-};
+use super::ivlincomb::{ivlc_add_element, ivlc_new_default, LinearCombination, LC_COPY_KEY};
 use super::part::{part_decr, part_length, part_leq, part_valid};
 
 #[repr(C)]
@@ -356,7 +354,7 @@ pub extern "C" fn lrit_expand(
 ) -> *mut LinearCombination {
 	let lrit_raw = lrit_new(outer, inner, content, maxrows, maxcols, partsz);
 	let cont = unsafe { &*lrit_raw }.cont;
-	let lc = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
+	let lc = ivlc_new_default();
 	while lrit_good(lrit_raw) {
 		ivlc_add_element(lc, 1, cont, iv_hash(cont), LC_COPY_KEY);
 		lrit_next(lrit_raw);

@@ -91,7 +91,7 @@ impl LinearCombination {
     #[allow(dead_code)]
     pub fn new<T: IntoIterator<Item = (Vec<i32>, i32)>>(it: T) -> LinearCombination {
         unsafe {
-            let ptr = bindings::ivlc_new(bindings::IVLC_HASHTABLE_SZ, bindings::IVLC_ARRAY_SZ);
+            let ptr = bindings::ivlc_new_default();
             if ptr == std::ptr::null_mut() {
                 panic!("Memory Error")
             }

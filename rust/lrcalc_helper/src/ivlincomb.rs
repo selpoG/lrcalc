@@ -28,8 +28,8 @@ pub const LC_FREE_KEY: i32 = 0;
 
 pub const LC_FREE_ZERO: i32 = 2;
 
-pub const IVLC_HASHTABLE_SZ: u32 = 2003;
-pub const IVLC_ARRAY_SZ: u32 = 100;
+const IVLC_HASHTABLE_SZ: u32 = 2003;
+const IVLC_ARRAY_SZ: u32 = 100;
 
 impl LinearCombination {
 	pub fn iter(&self) -> LinearCombinationIter {
@@ -79,6 +79,11 @@ impl Iterator for LinearCombinationIter {
 #[no_mangle]
 pub extern "C" fn ivlc_card(ht: *const LinearCombination) -> u32 {
 	unsafe { &*ht }.card
+}
+
+#[no_mangle]
+pub extern "C" fn ivlc_new_default() -> *mut LinearCombination {
+	ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)
 }
 
 #[no_mangle]

@@ -35,8 +35,8 @@ using ivlc_slice = std::unique_ptr<ivlincomb, ivlc_slice_deleter>;
 inline iv_ptr iv_create(uint32_t len) { return iv_ptr{iv_new(len)}; }
 inline iv_ptr iv_create_zero(uint32_t len) { return iv_ptr{iv_new_zero(len)}; }
 
-inline ivlc_ptr ivlc_create() { return ivlc_ptr{ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)}; }
-inline ivlc_slice ivlc_create_slice() { return ivlc_slice{ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)}; }
+inline ivlc_ptr ivlc_create() { return ivlc_ptr{ivlc_new_default()}; }
+inline ivlc_slice ivlc_create_slice() { return ivlc_slice{ivlc_new_default()}; }
 
 struct ivlc_iterator
 {

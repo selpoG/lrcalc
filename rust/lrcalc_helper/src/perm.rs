@@ -32,14 +32,17 @@ pub extern "C" fn perm_length(w: *const IntVector) -> i32 {
 	res
 }
 
-#[no_mangle]
-pub extern "C" fn perm_group(w: *const IntVector) -> i32 {
-	let w = unsafe { &(*w)[..] };
+pub fn perm_group_rs(w: &[i32]) -> i32 {
 	let mut i = w.len() as i32;
 	while i > 0 && w[(i - 1) as usize] == i {
 		i -= 1
 	}
 	i
+}
+
+#[no_mangle]
+pub extern "C" fn perm_group(w: *const IntVector) -> i32 {
+	perm_group_rs(unsafe { &(*w)[..] })
 }
 
 #[no_mangle]

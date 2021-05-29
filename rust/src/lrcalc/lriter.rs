@@ -14,9 +14,6 @@ impl LRTableauIterator {
     ) -> LRTableauIterator {
         unsafe {
             let it = bindings::lrit_new(outer, inner, std::ptr::null(), maxrows, maxcols, partsz);
-            if it == std::ptr::null_mut() {
-                panic!("Memory Error")
-            }
             LRTableauIterator { it: it }
         }
     }

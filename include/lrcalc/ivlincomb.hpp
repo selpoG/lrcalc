@@ -39,6 +39,7 @@ extern "C"
 	uint32_t ivlc_card(const ivlincomb* ht);
 
 	ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz);
+	ivlincomb* ivlc_new_default();
 
 	void ivlc_free(ivlincomb* ht);
 
@@ -87,9 +88,6 @@ extern "C"
 	void ivlc_print(const ivlincomb* ht);
 
 	void ivlc_print_coprod(const ivlincomb* ht, uint32_t rows, int cols);
-
-	constexpr uint32_t IVLC_HASHTABLE_SZ = 2003;
-	constexpr uint32_t IVLC_ARRAY_SZ = 100;
 #ifdef __cplusplus
 }
 #endif

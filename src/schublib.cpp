@@ -17,75 +17,6 @@
 #include "lrcalc/ivlincomb.hpp"
 #include "lrcalc/perm.hpp"
 
-static void _trans(ivector* w, int vars, ivlincomb* res);
-
-ivlincomb* trans(ivector* w, int vars)
-{
-	ivlc_ptr res = ivlc_create();
-	_trans(w, vars, res.get());
-	return res.release();
-}
-
-static void _trans(ivector* w, int vars, ivlincomb* res)
-{
-	ivlc_reset(res);
-
-	uint32_t nw = iv_length(w);
-	int n = perm_group(w);
-	w->length = uint32_t(n);
-
-	int r = n - 1;
-	while (r > 0 && iv_elem(w, r - 1) < iv_elem(w, r)) r--;
-	if (r <= 0)
-	{
-		ivector* xx = iv_new_zero(vars ? uint32_t(vars) : 1);
-		w->length = nw;
-		ivlc_insert(res, xx, iv_hash(xx), 1);
-		return;
-	}
-	if (vars < r) vars = r;
-
-	int s = r + 1;
-	while (s < n && iv_elem(w, r - 1) > iv_elem(w, s)) s++;
-
-	int wr = iv_elem(w, r - 1);
-	int ws = iv_elem(w, s - 1);
-
-	ivector* v = w;
-	iv_elem(v, s - 1) = wr;
-	iv_elem(v, r - 1) = ws;
-
-	ivlincomb* tmp = trans(v, vars);
-	for (auto& kv : ivlc_iterator(tmp))
-	{
-		ivector* xx = kv.key;
-		iv_elem(xx, r - 1)++;
-		uint32_t hash = iv_hash(xx);
-		ivlc_insert(res, xx, hash, kv.value);
-	}
-
-	int last = 0;
-	int vr = iv_elem(v, r - 1);
-	for (int i = r - 1; i >= 1; i--)
-	{
-		int vi = iv_elem(v, i - 1);
-		if (last < vi && vi < vr)
-		{
-			last = vi;
-			iv_elem(v, i - 1) = vr;
-			iv_elem(v, r - 1) = vi;
-			_trans(v, vars, tmp);
-			ivlc_add_multiple(res, 1, tmp, LC_FREE_ZERO);
-			iv_elem(v, i - 1) = vi;
-		}
-	}
-
-	w->length = nw;
-	iv_elem(w, s - 1) = ws;
-	iv_elem(w, r - 1) = wr;
-	ivlc_free(tmp);
-}
-
 static void _monk_add(uint32_t i, const ivlc_ptr& slc, int rank, ivlc_ptr& res)
 {
 	for (const auto& kv : ivlc_iterator(slc))
@@ -271,7 +202,7 @@ ivlincomb* mult_schubert(ivector* w1, ivector* w2, int rank)
 		rank = std::numeric_limits<int>::max();
 	else if (2 * (w1len + w2len) > rank * (rank - 1) || bruhat_zero(w1, w2, rank))
 	{
-		lc = ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ);
+		lc = ivlc_new_default();
 		goto free_return;
 	}
 

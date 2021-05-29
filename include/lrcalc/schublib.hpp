@@ -10,7 +10,7 @@
 extern "C"
 {
 #endif
-	ivlincomb* trans(ivector* w, int vars);
+	ivlincomb* trans(const ivector* w, int vars);
 	ivlincomb* monk(uint32_t i, const ivlincomb* slc, int rank);
 	ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank);
 	ivlincomb* mult_schubert(ivector* ww1, ivector* ww2, int rank);
