@@ -46,7 +46,6 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 	{
 		ivlc_ptr poly{trans(w1, 0)};
 		prd12.reset(mult_poly_schubert(poly.release(), w2, 0));
-		if (!prd12) return false;
 	}
 
 	{
@@ -54,7 +53,6 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 		{
 			ivlc_ptr poly{trans(w2, 0)};
 			prd21.reset(mult_poly_schubert(poly.release(), w1, 0));
-			if (!prd21) return false;
 		}
 		assert(ivlc_equals(prd12.get(), prd21.get()));
 		prd21.reset();
@@ -70,7 +68,6 @@ static bool test_mult_schubert(ivector* w1, ivector* w2)
 	for (int r = 0; r <= maxrank; r++)
 	{
 		ivlc_ptr prd_sm{mult_schubert(w1, w2, r)};
-		if (!prd_sm) return false;
 
 		ivlc_slice prd_gr = get_rank(prd12, r);
 		assert(ivlc_equals(prd_sm.get(), prd_gr.get()));

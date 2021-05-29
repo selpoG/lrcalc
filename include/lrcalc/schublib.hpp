@@ -11,7 +11,7 @@ extern "C"
 {
 #endif
 	ivlincomb* trans(const ivector* w, int vars);
-	ivlincomb* monk(uint32_t i, const ivlincomb* slc, int rank);
+	// poly must not be nullptr
 	ivlincomb* mult_poly_schubert(ivlincomb* poly, ivector* perm, int rank);
 	ivlincomb* mult_schubert(ivector* ww1, ivector* ww2, int rank);
 	ivlincomb* mult_schubert_str(const ivector* str1, const ivector* str2);

@@ -16,9 +16,6 @@ pub(crate) fn _mult_poly_schubert(
     unsafe {
         let ans = bindings::mult_poly_schubert(poly.data, perm.data, rank);
         poly.owned = false;
-        if ans == std::ptr::null_mut() {
-            panic!("Memory Error")
-        }
         ans.into()
     }
 }
@@ -96,9 +93,6 @@ pub(crate) fn _mult_schubert(
 ) -> LinearCombination {
     unsafe {
         let ans = bindings::mult_schubert(ww1.data, ww2.data, rank);
-        if ans == std::ptr::null_mut() {
-            panic!("Memory Error")
-        }
         ans.into()
     }
 }

@@ -148,6 +148,7 @@ struct Poly {
 	val: i32,
 }
 
+/// poly must not be nullptr
 #[no_mangle]
 pub extern "C" fn mult_poly_schubert(
 	poly: *mut LinearCombination,
