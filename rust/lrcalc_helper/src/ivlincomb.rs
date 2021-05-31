@@ -56,6 +56,23 @@ impl From<*const LinearCombination> for LinearCombinationIter {
 	}
 }
 
+impl LinearCombinationIter {
+	pub fn visit<F>(mut self, mut f: F)
+	where
+		F: FnMut(&mut LinearCombinationElement),
+	{
+		if !self.initialized {
+			ivlc_first(self.ht, &mut self);
+			self.initialized = true
+		}
+		while ivlc_good(&self) {
+			let kv = unsafe { &mut *ivlc_keyval(&mut self) };
+			f(kv);
+			ivlc_next(&mut self)
+		}
+	}
+}
+
 impl Iterator for LinearCombinationIter {
 	type Item = LinearCombinationElement;
 	fn next(&mut self) -> Option<Self::Item> {

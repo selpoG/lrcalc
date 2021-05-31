@@ -4,7 +4,7 @@ use super::part::{part_decr, part_length, part_leq, part_valid};
 
 #[repr(C)]
 pub struct LRIteratorBox {
-	value: i32,
+	pub value: i32,
 	max: i32,
 	above: i32,
 	right: i32,
@@ -12,10 +12,10 @@ pub struct LRIteratorBox {
 
 #[repr(C)]
 pub struct LRTableauIterator {
-	cont: *mut IntVector,
-	size: i32,
+	pub cont: *mut IntVector,
+	pub size: i32,
 	array_len: i32,
-	array: *mut LRIteratorBox,
+	pub array: *mut LRIteratorBox,
 }
 
 #[no_mangle]

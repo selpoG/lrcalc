@@ -3,10 +3,10 @@ use super::part::{part_entry, part_length, part_leq, part_valid};
 
 #[repr(C)]
 pub struct SkewShape {
-	outer: *mut IntVector,
-	inner: *mut IntVector,
-	cont: *mut IntVector,
-	sign: i32,
+	pub outer: *mut IntVector,
+	pub inner: *mut IntVector,
+	pub cont: *mut IntVector,
+	pub sign: i32,
 }
 
 #[no_mangle]
