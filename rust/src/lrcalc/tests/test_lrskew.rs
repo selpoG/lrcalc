@@ -1,11 +1,12 @@
 #![cfg(test)]
+
+use anyhow::{ensure, Context, Result};
+
 use super::super::{
     func::{_schur_lrcoef, _schur_skew},
     ivector::IntVector,
     part::PartIter,
 };
-
-use anyhow::{ensure, Context, Result};
 
 pub fn test_schur_lrskew(outer: &IntVector, inner: &IntVector, rows: i32, cols: i32) -> Result<()> {
     let lc = _schur_skew(outer, inner, -1, rows);
@@ -15,7 +16,7 @@ pub fn test_schur_lrskew(outer: &IntVector, inner: &IntVector, rows: i32, cols: 
         let coef = _schur_lrcoef(outer, inner, &sh);
         ensure!(coef >= 0, "memory error: sh={:?}", sh.to_vec());
         let expected = if let Some(d) = lc.find(sh) {
-            d.data.value as i64
+            d.value as i64
         } else {
             0
         };

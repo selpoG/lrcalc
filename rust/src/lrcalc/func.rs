@@ -1,11 +1,19 @@
-use super::bindings;
+use lrcalc_helper::{
+    part::{pitr_first, pitr_good, pitr_next, PartitionIterator},
+    perm::{all_perms as _all_perms, all_strings as _all_strings},
+    schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},
+    schur::{
+        fusion_reduce_lc, schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew,
+    },
+};
+
 use super::ivector::IntVector;
 use super::ivlist::VectorList;
 use super::lincomb::LinearCombination;
 use super::lriter::LRTableauIterator;
 
 pub(crate) fn _schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
-    unsafe { bindings::schur_lrcoef(outer.data, inner1.data, inner2.data) }
+    unsafe { schur_lrcoef(outer.data, inner1.data, inner2.data) }
 }
 
 pub(crate) fn _mult_poly_schubert(
@@ -14,7 +22,7 @@ pub(crate) fn _mult_poly_schubert(
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
     unsafe {
-        let ans = bindings::mult_poly_schubert(poly.data, perm.data, rank);
+        let ans = mult_poly_schubert(poly.data, perm.data, rank);
         poly.owned = false;
         ans.into()
     }
@@ -28,7 +36,7 @@ pub(crate) fn _schur_mult(
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
     unsafe {
-        let ans = bindings::schur_mult(sh1.data, sh2.data, rows, cols, partsz);
+        let ans = schur_mult(sh1.data, sh2.data, rows, cols, partsz);
         if ans == std::ptr::null_mut() {
             panic!("Memory Error")
         }
@@ -43,7 +51,7 @@ pub(crate) fn _schur_mult_fusion(
     level: ::std::os::raw::c_int,
 ) -> LinearCombination {
     unsafe {
-        let ans = bindings::schur_mult_fusion(sh1.data, sh2.data, rows, level);
+        let ans = schur_mult_fusion(sh1.data, sh2.data, rows, level);
         if ans == std::ptr::null_mut() {
             panic!("Memory Error")
         }
@@ -58,7 +66,7 @@ pub(crate) fn _schur_skew(
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
     unsafe {
-        let ans = bindings::schur_skew(outer.data, inner.data, rows, partsz);
+        let ans = schur_skew(outer.data, inner.data, rows, partsz);
         if ans == std::ptr::null_mut() {
             panic!("Memory Error")
         }
@@ -68,7 +76,7 @@ pub(crate) fn _schur_skew(
 
 pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
     unsafe {
-        let ans = bindings::schur_coprod(sh.data, sh.rows() as i32, sh.cols() as i32, -1, all);
+        let ans = schur_coprod(sh.data, sh.rows() as i32, sh.cols() as i32, -1, all);
         if ans == std::ptr::null_mut() {
             panic!("Memory Error")
         }
@@ -78,7 +86,7 @@ pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
 
 pub(crate) fn _trans(w: &IntVector, vars: ::std::os::raw::c_int) -> LinearCombination {
     unsafe {
-        let ans = bindings::trans(w.data, vars);
+        let ans = trans(w.data, vars);
         if ans == std::ptr::null_mut() {
             panic!("Memory Error")
         }
@@ -92,14 +100,14 @@ pub(crate) fn _mult_schubert(
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
     unsafe {
-        let ans = bindings::mult_schubert(ww1.data, ww2.data, rank);
+        let ans = mult_schubert(ww1.data, ww2.data, rank);
         ans.into()
     }
 }
 
 pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearCombination {
     unsafe {
-        let ans = bindings::mult_schubert_str(ww1.data, ww2.data);
+        let ans = mult_schubert_str(ww1.data, ww2.data);
         if ans == std::ptr::null_mut() {
             panic!("Memory Error")
         }
@@ -107,29 +115,9 @@ pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearComb
     }
 }
 
-pub(crate) fn _all_perms(n: ::std::os::raw::c_int) -> VectorList {
-    unsafe {
-        let ans = bindings::all_perms(n);
-        if ans == std::ptr::null_mut() {
-            panic!("Memory Error")
-        }
-        VectorList { data: ans }
-    }
-}
-
-pub(crate) fn _all_strings(dimvec: &IntVector) -> VectorList {
-    unsafe {
-        let ans = bindings::all_strings(dimvec.data);
-        if ans == std::ptr::null_mut() {
-            panic!("Memory Error")
-        }
-        VectorList { data: ans }
-    }
-}
-
 pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::raw::c_int) {
     unsafe {
-        if !bindings::fusion_reduce_lc(lc.data, level) {
+        if !fusion_reduce_lc(lc.data, level) {
             panic!("Memory Error")
         }
     }
@@ -301,8 +289,8 @@ pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
     let mut ans = Vec::new();
     unsafe {
         let p = IntVector::default(rows as u32);
-        let mut pitr: bindings::part_iter = std::mem::MaybeUninit::uninit().assume_init();
-        bindings::pitr_first(
+        let mut pitr: PartitionIterator = std::mem::MaybeUninit::uninit().assume_init();
+        pitr_first(
             &mut pitr,
             p.data,
             rows,
@@ -312,9 +300,9 @@ pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
             0,
             0,
         );
-        while bindings::pitr_good(&pitr) {
+        while pitr_good(&pitr) {
             ans.push(p.to_vec());
-            bindings::pitr_next(&mut pitr)
+            pitr_next(&mut pitr)
         }
     }
     ans
@@ -322,12 +310,20 @@ pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
 
 pub fn all_perms(n: i32) -> Vec<Vec<i32>> {
     let ans = _all_perms(n);
+    if ans == std::ptr::null_mut() {
+        panic!("Memory Error")
+    }
+    let ans = VectorList { data: ans };
     (0..ans.len()).map(|i| ans.at(i).to_partition()).collect()
 }
 
 pub fn all_strings(dimvec: &[i32]) -> Vec<Vec<i32>> {
     let dimvec = IntVector::new(dimvec);
     debug_assert!(dimvec.is_dimvec());
-    let ans = _all_strings(&dimvec);
+    let ans = _all_strings(dimvec.data);
+    if ans == std::ptr::null_mut() {
+        panic!("Memory Error")
+    }
+    let ans = VectorList { data: ans };
     (0..ans.len()).map(|i| ans.at(i).to_vec()).collect()
 }

@@ -1,11 +1,12 @@
 #![cfg(test)]
+
+use anyhow::{Context, Result};
+
 use super::super::{
     func::{_fusion_reduce_lc, _schur_mult, _schur_mult_fusion},
     ivector::IntVector,
     part::PartIter,
 };
-
-use anyhow::{Context, Result};
 
 pub fn test_mult_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32) -> Result<()> {
     let prd_f = _schur_mult_fusion(&sh1, &sh2, rows, level);

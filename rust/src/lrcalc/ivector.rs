@@ -1,14 +1,19 @@
-use super::bindings;
+use lrcalc_helper::{
+    ivector::IntVector as _IntVector,
+    ivector::{iv_free, iv_new},
+    part::{part_qdegree, part_qentry, part_valid},
+    perm::{dimvec_valid, perm_valid, str_iscompat},
+};
 
 pub struct IntVector {
-    pub data: *mut bindings::ivector,
+    pub data: *mut _IntVector,
     pub owned: bool,
 }
 
 impl IntVector {
     pub fn default(len: u32) -> IntVector {
         unsafe {
-            let x = bindings::iv_new(len);
+            let x = iv_new(len);
             IntVector {
                 data: x,
                 owned: true,
@@ -87,16 +92,16 @@ impl IntVector {
         self[..].iter().cloned().collect()
     }
     pub fn is_partition(&self) -> bool {
-        unsafe { bindings::part_valid(self.data) }
+        unsafe { part_valid(self.data) }
     }
     pub fn is_permutation(&self) -> bool {
-        unsafe { bindings::perm_valid(self.data) }
+        unsafe { perm_valid(self.data) }
     }
     pub fn is_dimvec(&self) -> bool {
-        unsafe { bindings::dimvec_valid(self.data) }
+        unsafe { dimvec_valid(self.data) }
     }
     pub fn is_compatible_str(&self, other: &IntVector) -> bool {
-        unsafe { bindings::str_iscompat(self.data, other.data) }
+        unsafe { str_iscompat(self.data, other.data) }
     }
     pub fn to_partition(&self) -> Vec<i32> {
         let arr = &self[..];
@@ -122,15 +127,15 @@ impl IntVector {
     }
     pub fn to_quantum(&self, level: i32) -> (i32, Vec<i32>) {
         unsafe {
-            let d = bindings::part_qdegree(self.data, level);
+            let d = part_qdegree(self.data, level);
             let mut n = self.len();
-            while n > 0 && bindings::part_qentry(self.data, (n - 1) as i32, d, level) == 0 {
+            while n > 0 && part_qentry(self.data, (n - 1) as i32, d, level) == 0 {
                 n -= 1
             }
             (
                 d,
                 (0..n)
-                    .map(|i| bindings::part_qentry(self.data, i as i32, d, level))
+                    .map(|i| part_qentry(self.data, i as i32, d, level))
                     .collect(),
             )
         }
@@ -141,7 +146,7 @@ impl Drop for IntVector {
     fn drop(&mut self) {
         unsafe {
             if self.owned && self.data != std::ptr::null_mut() {
-                bindings::iv_free(self.data)
+                iv_free(self.data)
             }
         }
     }

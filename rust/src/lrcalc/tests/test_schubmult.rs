@@ -1,11 +1,11 @@
 #![cfg(test)]
 
+use anyhow::{Context, Result};
+
 use super::super::{
     func::{_mult_poly_schubert, _mult_schubert, _trans, all_perms},
     ivector::IntVector,
 };
-
-use anyhow::{Context, Result};
 
 pub fn test_mult_schubert(w1: &Vec<i32>, w2: &Vec<i32>) -> Result<()> {
     let w1 = IntVector::new(w1);

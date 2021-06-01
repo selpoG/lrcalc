@@ -1,11 +1,14 @@
 #![allow(dead_code)]
-use super::bindings;
+
+use lrcalc_helper::part::{
+    pitr_box_first, pitr_box_sz_first, pitr_first, pitr_good, pitr_next, PartitionIterator,
+};
 
 use super::ivector::IntVector;
 
 pub struct PartIter {
     p: IntVector,
-    it: bindings::part_iter,
+    it: PartitionIterator,
     initialized: bool,
 }
 
@@ -25,7 +28,7 @@ impl PartIter {
                 it: std::mem::MaybeUninit::uninit().assume_init(),
                 initialized: false,
             };
-            bindings::pitr_first(
+            pitr_first(
                 &mut pitr.it,
                 pitr.p.data,
                 rows,
@@ -51,7 +54,7 @@ impl PartIter {
                 it: std::mem::MaybeUninit::uninit().assume_init(),
                 initialized: false,
             };
-            bindings::pitr_box_first(&mut pitr.it, pitr.p.data, rows, cols);
+            pitr_box_first(&mut pitr.it, pitr.p.data, rows, cols);
             pitr
         }
     }
@@ -62,7 +65,7 @@ impl PartIter {
                 it: std::mem::MaybeUninit::uninit().assume_init(),
                 initialized: false,
             };
-            bindings::pitr_box_sz_first(&mut pitr.it, pitr.p.data, rows, cols, size);
+            pitr_box_sz_first(&mut pitr.it, pitr.p.data, rows, cols, size);
             pitr
         }
     }
@@ -71,9 +74,9 @@ impl PartIter {
             if !self.initialized {
                 self.initialized = true
             } else {
-                bindings::pitr_next(&mut self.it)
+                pitr_next(&mut self.it)
             }
-            if bindings::pitr_good(&self.it) {
+            if pitr_good(&self.it) {
                 Some(&self.p)
             } else {
                 None

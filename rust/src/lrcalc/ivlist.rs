@@ -1,9 +1,9 @@
-use super::bindings;
+use lrcalc_helper::ivlist::{ivl_free_all, IntVectorList};
 
 use super::ivector::IntVector;
 
 pub struct VectorList {
-    pub data: *mut bindings::ivlist,
+    pub data: *mut IntVectorList,
 }
 
 impl VectorList {
@@ -24,7 +24,7 @@ impl Drop for VectorList {
     fn drop(&mut self) {
         unsafe {
             if self.data != std::ptr::null_mut() {
-                bindings::ivl_free_all(self.data)
+                ivl_free_all(self.data)
             }
         }
     }

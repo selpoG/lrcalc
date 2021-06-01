@@ -1,11 +1,11 @@
 #![cfg(test)]
 
+use anyhow::{Context, Result};
+
 use super::super::{
     func::_mult_schubert_str, func::_schur_mult, ivector::IntVector, lincomb::LinearCombination,
     part::PartIter,
 };
-
-use anyhow::{Context, Result};
 
 fn part_to_string(p: &IntVector, rows: i32, cols: i32) -> IntVector {
     let mut s = vec![1; (rows + cols) as usize];

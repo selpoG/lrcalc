@@ -1,12 +1,10 @@
 #![cfg(test)]
 
-use super::super::{
-    bindings::{PITR_USE_INNER, PITR_USE_OUTER, PITR_USE_SIZE},
-    ivector::IntVector,
-    part::PartIter,
-};
-
 use anyhow::{ensure, Context, Result};
+
+use lrcalc_helper::part::{PITR_USE_INNER, PITR_USE_OUTER, PITR_USE_SIZE};
+
+use super::super::{ivector::IntVector, part::PartIter};
 
 fn test_part_iter_box(rows: i32, cols: i32) -> Result<()> {
     let mut np = 1;

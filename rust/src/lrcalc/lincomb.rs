@@ -1,17 +1,20 @@
-use super::bindings;
-
 use anyhow::anyhow;
+
+use lrcalc_helper::{
+    ivector::iv_hash,
+    ivlincomb::{
+        ivlc_first, ivlc_free_all, ivlc_good, ivlc_insert, ivlc_keyval, ivlc_lookup,
+        ivlc_new_default, ivlc_next, LinearCombination as _LinearCombination,
+        LinearCombinationElement, LinearCombinationIter,
+    },
+};
 
 use super::ivector::IntVector;
 
 pub struct LinearCombination {
-    pub data: *mut bindings::ivlincomb,
-    pub it: bindings::ivlc_iter,
+    pub data: *mut _LinearCombination,
+    pub it: LinearCombinationIter,
     pub(crate) owned: bool,
-}
-
-pub struct LinearCombinationElement {
-    pub data: bindings::ivlc_keyval_t,
 }
 
 #[allow(dead_code)]
@@ -72,11 +75,11 @@ impl std::fmt::Display for DiffResult {
     }
 }
 
-impl From<*mut bindings::ivlincomb> for LinearCombination {
-    fn from(from: *mut bindings::ivlincomb) -> LinearCombination {
+impl From<*mut _LinearCombination> for LinearCombination {
+    fn from(from: *mut _LinearCombination) -> LinearCombination {
         LinearCombination {
             data: from,
-            it: bindings::ivlc_iter {
+            it: LinearCombinationIter {
                 ht: std::ptr::null(),
                 index: 0,
                 i: 0,
@@ -91,16 +94,14 @@ impl LinearCombination {
     #[allow(dead_code)]
     pub fn new<T: IntoIterator<Item = (Vec<i32>, i32)>>(it: T) -> LinearCombination {
         unsafe {
-            let ptr = bindings::ivlc_new_default();
+            let ptr = ivlc_new_default();
             if ptr == std::ptr::null_mut() {
                 panic!("Memory Error")
             }
             let lc: LinearCombination = ptr.into();
             for (key, val) in it {
                 let mut key = IntVector::new(&key[..]);
-                if bindings::ivlc_insert(lc.data, key.data, bindings::iv_hash(key.data), val)
-                    == std::ptr::null_mut()
-                {
+                if ivlc_insert(lc.data, key.data, iv_hash(key.data), val) == std::ptr::null_mut() {
                     panic!("Memory Error")
                 }
                 key.owned = false;
@@ -112,7 +113,7 @@ impl LinearCombination {
     pub fn iter(&self) -> LinearCombination {
         LinearCombination {
             data: self.data,
-            it: bindings::ivlc_iter {
+            it: LinearCombinationIter {
                 ht: std::ptr::null(),
                 index: 0,
                 i: 0,
@@ -124,11 +125,11 @@ impl LinearCombination {
     #[allow(dead_code)]
     pub fn find(&self, key: &IntVector) -> Option<LinearCombinationElement> {
         unsafe {
-            let kv = bindings::ivlc_lookup(self.data, key.data, bindings::iv_hash(key.data) as u32);
+            let kv = ivlc_lookup(self.data, key.data, iv_hash(key.data) as u32);
             if kv == std::ptr::null_mut() {
                 None
             } else {
-                Some(LinearCombinationElement { data: *kv })
+                Some(*kv)
             }
         }
     }
@@ -143,8 +144,8 @@ impl LinearCombination {
                     return DiffResult::KeyMismatch(sh, Which::Left);
                 }
                 Some(kv) => {
-                    if kv.data.value != n {
-                        return DiffResult::ValueMismatch(sh, n, kv.data.value);
+                    if kv.value != n {
+                        return DiffResult::ValueMismatch(sh, n, kv.value);
                     }
                 }
             }
@@ -169,13 +170,13 @@ impl Iterator for LinearCombination {
     fn next(&mut self) -> Option<Self::Item> {
         unsafe {
             if !self.it.initialized {
-                bindings::ivlc_first(self.data, &mut self.it);
+                ivlc_first(self.data, &mut self.it);
                 self.it.initialized = true
             } else {
-                bindings::ivlc_next(&mut self.it)
+                ivlc_next(&mut self.it)
             }
-            if bindings::ivlc_good(&mut self.it) {
-                let kv = *bindings::ivlc_keyval(&self.it);
+            if ivlc_good(&mut self.it) {
+                let kv = *ivlc_keyval(&self.it);
                 Some((
                     IntVector {
                         data: kv.key,
@@ -194,7 +195,7 @@ impl Drop for LinearCombination {
     fn drop(&mut self) {
         unsafe {
             if self.owned && self.data != std::ptr::null_mut() {
-                bindings::ivlc_free_all(self.data)
+                ivlc_free_all(self.data)
             }
         }
     }

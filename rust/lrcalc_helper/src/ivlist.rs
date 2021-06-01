@@ -1,4 +1,3 @@
-use super::bindings;
 use super::ivector::{iv_free, IntVector};
 
 #[repr(C)]
@@ -6,16 +5,6 @@ pub struct IntVectorList {
 	pub array: *mut *mut IntVector,
 	pub allocated: u64,
 	pub length: u64,
-}
-
-impl From<&bindings::ivlist> for IntVectorList {
-	fn from(v: &bindings::ivlist) -> Self {
-		IntVectorList {
-			array: v.array as *mut *mut IntVector,
-			allocated: v.allocated,
-			length: v.length,
-		}
-	}
 }
 
 #[no_mangle]

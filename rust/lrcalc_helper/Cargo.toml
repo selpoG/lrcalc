@@ -10,4 +10,3 @@ path = "src/lib.rs"
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
-lrcalc_system = { path="../lrcalc_system" }
