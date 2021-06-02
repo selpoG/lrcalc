@@ -34,9 +34,6 @@ extern "C"
 	bool lrit_good(const lrtab_iter* lrit);
 
 	void lrit_next(lrtab_iter* lrit);
-
-	ivlincomb* lrit_expand(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
-	                       int partsz);
 #ifdef __cplusplus
 }
 #endif

@@ -44,8 +44,7 @@ ivector* get_vect_arg(int ac, const char* const* av)
 
 	if (n == 0) return nullptr;
 
-	iv_ptr res = iv_create(n);
-	for (uint32_t i = 0; i < n; i++) iv_elem(res, i) = tmp[i];
+	iv_ptr res{into_iv(tmp, n)};
 	delete[] tmp;
 
 	return res.release();

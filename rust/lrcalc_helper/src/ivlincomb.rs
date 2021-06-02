@@ -1,4 +1,4 @@
-use super::ivector::{iv_cmp, iv_free, iv_free_rs, iv_new_copy, iv_print, IntVector};
+use super::ivector::{iv_free, iv_free_rs, iv_print, IntVector};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -20,7 +20,7 @@ pub struct LinearCombination {
 	pub table_sz: u32,
 }
 
-/* Minimal number of table entries for each element. */
+/// Minimal number of table entries for each element.
 pub const USE_FACTOR: u32 = 2;
 
 pub const LC_COPY_KEY: i32 = 1;
@@ -94,17 +94,11 @@ impl Iterator for LinearCombinationIter {
 }
 
 #[no_mangle]
-pub extern "C" fn ivlc_card(ht: *const LinearCombination) -> u32 {
-	unsafe { &*ht }.card
-}
-
-#[no_mangle]
 pub extern "C" fn ivlc_new_default() -> *mut LinearCombination {
 	ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
+pub fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
 	let ivlc = {
 		let table = if tabsz == 0 {
 			std::ptr::NonNull::dangling().as_ptr()
@@ -162,8 +156,7 @@ pub extern "C" fn ivlc_free(ht: *mut LinearCombination) {
 	unsafe { drop(Box::from_raw(ht)) }
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_reset(ht: *mut LinearCombination) {
+pub fn ivlc_reset(ht: *mut LinearCombination) {
 	let ht = unsafe { &mut *ht };
 	unsafe {
 		std::slice::from_raw_parts_mut(ht.table, ht.table_sz as usize).fill(0);
@@ -244,7 +237,8 @@ pub extern "C" fn ivlc_lookup(
 	let elts = unsafe { std::slice::from_raw_parts_mut(ht.elts, ht.elts_sz as usize) };
 	let index = hash % ht.table_sz;
 	let mut i = table[index as usize];
-	while i != 0 && iv_cmp(key, elts[i as usize].key) != 0 {
+	let key = unsafe { &*key };
+	while i != 0 && key.cmp(unsafe { &*elts[i as usize].key }) != std::cmp::Ordering::Equal {
 		i = elts[i as usize].next;
 	}
 	if i == 0 {
@@ -325,7 +319,8 @@ fn _ivlc_remove(
 	if i == 0 {
 		return None;
 	}
-	if iv_cmp(key, elts[i].key) == 0 {
+	let key = unsafe { &*key };
+	if key.cmp(unsafe { &*elts[i].key }) == std::cmp::Ordering::Equal {
 		ht.card -= 1;
 		*pi = elts[i].next;
 		elts[i].next = ht.free_elts;
@@ -334,7 +329,7 @@ fn _ivlc_remove(
 	}
 	let mut ipi = i;
 	let mut i = elts[ipi].next as usize;
-	while i != 0 && iv_cmp(key, elts[i].key) != 0 {
+	while i != 0 && key.cmp(unsafe { &*elts[i].key }) != std::cmp::Ordering::Equal {
 		ipi = i;
 		i = elts[ipi].next as usize;
 	}
@@ -356,8 +351,7 @@ pub extern "C" fn ivlc_free_all(ht: *mut LinearCombination) {
 	ivlc_free(ht);
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_add_element(
+pub fn ivlc_add_element(
 	ht: *mut LinearCombination,
 	c: i32,
 	mut key: *mut IntVector,
@@ -386,13 +380,12 @@ pub extern "C" fn ivlc_add_element(
 	}
 	_ivlc_require(ht, (ht.card + 1) as usize);
 	if (opt & LC_COPY_KEY) != 0 {
-		key = iv_new_copy(key);
+		key = IntVector::from_vec(unsafe { &(*key)[..] }.to_vec());
 	}
 	ivlc_insert(ht, key, hash, c);
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_add_multiple(
+pub fn ivlc_add_multiple(
 	dst: *mut LinearCombination,
 	c: i32,
 	src: *mut LinearCombination,
@@ -452,6 +445,10 @@ pub extern "C" fn ivlc_next(itr: *mut LinearCombinationIter) {
 #[no_mangle]
 pub extern "C" fn ivlc_keyval(itr: *const LinearCombinationIter) -> *mut LinearCombinationElement {
 	unsafe { (*(*itr).ht).elts.offset((*itr).i as isize) }
+}
+
+pub fn ivlc_keyval_rs(itr: &LinearCombinationIter) -> LinearCombinationElement {
+	unsafe { *ivlc_keyval(itr) }
 }
 
 #[no_mangle]

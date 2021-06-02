@@ -12,8 +12,6 @@ extern "C"
 #endif
 	bool part_valid(const ivector* p);
 
-	bool part_decr(const ivector* p);
-
 	uint32_t part_length(const ivector* p);
 
 	int part_entry(const ivector* p, int i);
@@ -26,10 +24,6 @@ extern "C"
 	void part_print_lincomb(const ivlincomb* lc);
 
 	/* Translate fusion algebra partitions to quantum cohomology notation. */
-
-	int part_qdegree(const ivector* p, int level);
-
-	int part_qentry(const ivector* p, int i, int d, int level);
 
 	void part_qprint_lincomb(const ivlincomb* lc, int level);
 
@@ -59,10 +53,6 @@ extern "C"
 	/* void pitr_first(part_iter *itr, ivector *p, int rows, int cols,
 	 *                 const ivector *outer, const ivector *inner, int size, int opt)
 	 */
-
-	void pitr_box_first(part_iter* itr, ivector* p, int rows, int cols);
-
-	void pitr_box_sz_first(part_iter* itr, ivector* p, int rows, int cols, int size);
 
 	void pitr_next(part_iter* itr);
 #ifdef __cplusplus

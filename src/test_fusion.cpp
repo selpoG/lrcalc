@@ -35,7 +35,7 @@ static bool test_mult_fusion(const iv_ptr& sh1, const iv_ptr& sh2, int rows, int
 	ivlc_ptr prd_s{schur_mult(sh1.get(), sh2.get(), rows, -1, rows)};
 	if (!prd_s) return false;
 
-	if (!fusion_reduce_lc(prd_s.get(), level)) return false;
+	fusion_reduce_lc(prd_s.get(), level);
 
 	assert(ivlc_equals(prd_f.get(), prd_s.get()));
 
@@ -57,6 +57,6 @@ int main(int ac, char** av)
 			for (int level = 0; level <= cols; level++)
 				if (!test_mult_fusion(sh1, sh2, rows, level)) out_of_memory();
 
-	puts_r("success");
+	puts("success");
 	return 0;
 }

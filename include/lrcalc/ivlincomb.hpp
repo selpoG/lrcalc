@@ -33,17 +33,9 @@ extern "C"
 		uint32_t table_sz;   /* Allocated hash table size. */
 	};
 
-	/* Minimal number of table entries for each element. */
-	constexpr uint32_t USE_FACTOR = 2;
-
-	uint32_t ivlc_card(const ivlincomb* ht);
-
-	ivlincomb* ivlc_new(uint32_t tabsz, uint32_t eltsz);
 	ivlincomb* ivlc_new_default();
 
 	void ivlc_free(ivlincomb* ht);
-
-	void ivlc_reset(ivlincomb* ht);
 
 	/* Return pointer to keyval_t, nullptr if key not in table. */
 	ivlc_keyval_t* ivlc_lookup(const ivlincomb* ht, const ivector* key, uint32_t hash);
@@ -73,17 +65,6 @@ extern "C"
 	ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr);
 
 	void ivlc_free_all(ivlincomb* ht);
-
-	constexpr int LC_COPY_KEY = 1;
-	constexpr int LC_FREE_KEY = 0;
-
-	constexpr int LC_FREE_ZERO = 2;
-
-	// return true if secceeded
-	void ivlc_add_element(ivlincomb* ht, int32_t c, ivector* key, uint32_t hash, int opt);
-
-	// return true if secceeded
-	void ivlc_add_multiple(ivlincomb* dst, int32_t c, ivlincomb* src, int opt);
 
 	void ivlc_print(const ivlincomb* ht);
 

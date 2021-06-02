@@ -1,7 +1,6 @@
 use super::ivector::{iv_free, IntVector};
 use super::part::{part_entry, part_length, part_leq, part_valid};
 
-#[repr(C)]
 pub struct SkewShape {
 	pub outer: *mut IntVector,
 	pub inner: *mut IntVector,
@@ -9,12 +8,15 @@ pub struct SkewShape {
 	pub sign: i32,
 }
 
-#[no_mangle]
-pub extern "C" fn sksh_print(
-	outer: *const IntVector,
-	inner: *const IntVector,
-	cont: *const IntVector,
-) {
+impl Drop for SkewShape {
+	fn drop(&mut self) {
+		iv_free(self.outer);
+		iv_free(self.inner);
+		iv_free(self.cont);
+	}
+}
+
+pub fn sksh_print(outer: *const IntVector, inner: *const IntVector, cont: *const IntVector) {
 	let mut len = part_length(outer);
 	let outer = unsafe { &(*outer)[..] };
 	let inner = if inner == std::ptr::null() {
@@ -77,8 +79,7 @@ pub extern "C" fn sksh_print(
 /// 3) New outer should be smaller of outer0, content0.
 ///
 /// 4) New content should be larger shape, plus removed rows and columns.
-#[no_mangle]
-pub extern "C" fn optim_mult(
+pub fn optim_mult(
 	sh1: *const IntVector,
 	sh2: *const IntVector,
 	maxrows: i32,
@@ -221,8 +222,7 @@ pub extern "C" fn optim_mult(
 }
 
 /// Find optimal shape for fusion product.
-#[no_mangle]
-pub extern "C" fn optim_fusion(
+pub fn optim_fusion(
 	sh1: *const IntVector,
 	sh2: *const IntVector,
 	rows: i32,
@@ -371,8 +371,7 @@ impl PartialShape {
 ///
 /// 4) New content should be largest (anti) partition shaped component
 ///    plus all columns of height maxrows.
-#[no_mangle]
-pub extern "C" fn optim_skew(
+pub fn optim_skew(
 	outer: *const IntVector,
 	inner: *const IntVector,
 	content: *const IntVector,
@@ -612,8 +611,7 @@ pub extern "C" fn optim_skew(
 	ss
 }
 
-#[no_mangle]
-pub extern "C" fn optim_coef(
+pub fn optim_coef(
 	out: *const IntVector,
 	sh1: *const IntVector,
 	sh2: *const IntVector,
@@ -1049,12 +1047,4 @@ pub extern "C" fn optim_coef(
 	ss.cont = IntVector::from_vec(mu);
 	ss.sign = 2;
 	ss
-}
-
-#[no_mangle]
-pub extern "C" fn sksh_dealloc(sksh: *mut SkewShape) {
-	let sksh = unsafe { &*sksh };
-	iv_free(sksh.outer);
-	iv_free(sksh.inner);
-	iv_free(sksh.cont);
 }

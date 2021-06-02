@@ -16,12 +16,6 @@ extern "C"
 		size_t length;
 	};
 
-	ivlist* ivl_new(size_t sz);
-
-	void ivl_append(ivlist* lst, ivector* x);
-
-	ivector* ivl_poplast(ivlist* lst);
-
 #define ivl_length(lst) ((lst)->length)
 
 #define ivl_elem(lst, i) ((lst)->array[i])

@@ -1,11 +1,11 @@
 use super::ivector::{iv_free, iv_hash, IntVector};
 use super::ivlincomb::{
-	ivlc_add_element, ivlc_card, ivlc_new, ivlc_new_default, ivlc_reset, LinearCombination,
+	ivlc_add_element, ivlc_new, ivlc_new_default, ivlc_reset, LinearCombination,
 	LinearCombinationIter, LC_COPY_KEY, LC_FREE_KEY, LC_FREE_ZERO,
 };
 use super::lrcoef::lrcoef_count;
 use super::lriter::{lrit_expand, lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator};
-use super::optim::{optim_coef, optim_fusion, optim_mult, optim_skew, sksh_dealloc};
+use super::optim::{optim_coef, optim_fusion, optim_mult, optim_skew};
 use super::part::{part_entry_rs, part_valid};
 
 #[no_mangle]
@@ -16,14 +16,12 @@ pub extern "C" fn schur_mult(
 	cols: i32,
 	partsz: i32,
 ) -> *mut LinearCombination {
-	let mut ss = optim_mult(sh1, sh2, rows, cols);
-	let lc = if ss.sign != 0 {
+	let ss = optim_mult(sh1, sh2, rows, cols);
+	if ss.sign != 0 {
 		lrit_expand(ss.outer, std::ptr::null(), ss.cont, rows, cols, partsz)
 	} else {
 		ivlc_new(5, 2)
-	};
-	sksh_dealloc(&mut ss);
-	lc
+	}
 }
 
 fn fusion_reduce(la: &mut IntVector, level: i32, tmp: &mut [i32]) -> i32 {
@@ -74,7 +72,7 @@ fn fusion_reduce(la: &mut IntVector, level: i32, tmp: &mut [i32]) -> i32 {
 }
 
 #[no_mangle]
-pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) -> bool {
+pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) {
 	struct T(Vec<*mut IntVector>);
 	impl Drop for T {
 		fn drop(&mut self) {
@@ -83,8 +81,9 @@ pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) -> bo
 			}
 		}
 	}
-	let mut parts = T(Vec::with_capacity(ivlc_card(lc) as usize));
-	let mut coefs = Vec::with_capacity(ivlc_card(lc) as usize);
+	let card = unsafe { &*lc }.card as usize;
+	let mut parts = T(Vec::with_capacity(card));
+	let mut coefs = Vec::with_capacity(card);
 
 	for kv in LinearCombinationIter::from(lc as *const _) {
 		parts.0.push(kv.key);
@@ -93,7 +92,7 @@ pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) -> bo
 	ivlc_reset(lc);
 
 	if parts.0.len() == 0 {
-		return true;
+		return;
 	}
 	let mut tmp = {
 		let sh = unsafe { &*parts.0[0] };
@@ -107,7 +106,6 @@ pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) -> bo
 		let sign = fusion_reduce(sh, level, &mut tmp[..]);
 		ivlc_add_element(lc, sign * c, sh, iv_hash(sh), LC_FREE_KEY | LC_FREE_ZERO);
 	}
-	true
 }
 
 #[no_mangle]
@@ -179,13 +177,12 @@ pub extern "C" fn schur_mult_fusion(
 		return ivlc_new(5, 2);
 	}
 
-	let mut ss = optim_fusion(sh1, sh2, rows, level);
+	let ss = optim_fusion(sh1, sh2, rows, level);
 	let lc = if ss.sign != 0 {
 		lrit_expand(ss.outer, std::ptr::null(), ss.cont, rows, -1, rows)
 	} else {
 		ivlc_new(5, 2)
 	};
-	sksh_dealloc(&mut ss);
 
 	fusion_reduce_lc(lc, level);
 
@@ -205,14 +202,12 @@ pub extern "C" fn schur_skew(
 	rows: i32,
 	partsz: i32,
 ) -> *mut LinearCombination {
-	let mut ss = optim_skew(outer, inner, std::ptr::null(), rows);
-	let lc = if ss.sign != 0 {
+	let ss = optim_skew(outer, inner, std::ptr::null(), rows);
+	if ss.sign != 0 {
 		lrit_expand(ss.outer, ss.inner, ss.cont, rows, -1, partsz)
 	} else {
 		ivlc_new(5, 2)
-	};
-	sksh_dealloc(&mut ss);
-	lc
+	}
 }
 
 fn _schur_coprod_isredundant(cont: &IntVector, rows: i32, cols: i32) -> bool {
@@ -281,11 +276,9 @@ pub extern "C" fn schur_coprod(
 		return schur_mult(sh, b, -1, -1, partsz);
 	}
 
-	let mut ss = optim_mult(sh, b, -1, -1);
+	let ss = optim_mult(sh, b, -1, -1);
 
-	let lc = _schur_coprod_expand(ss.outer, ss.cont, rows, cols, partsz);
-	sksh_dealloc(&mut ss);
-	lc
+	_schur_coprod_expand(ss.outer, ss.cont, rows, cols, partsz)
 }
 
 #[no_mangle]
@@ -294,12 +287,10 @@ pub extern "C" fn schur_lrcoef(
 	inner1: *const IntVector,
 	inner2: *const IntVector,
 ) -> i64 {
-	let mut ss = optim_coef(outer, inner1, inner2);
-	let coef = if ss.sign <= 1 {
+	let ss = optim_coef(outer, inner1, inner2);
+	if ss.sign <= 1 {
 		ss.sign as i64
 	} else {
 		lrcoef_count(ss.outer, ss.inner, ss.cont)
-	};
-	sksh_dealloc(&mut ss);
-	coef
+	}
 }

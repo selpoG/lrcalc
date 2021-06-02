@@ -106,8 +106,7 @@ fn lrcoef_new_skewtab(
 }
 
 /// This is a low level function called from schur_lrcoef().
-#[no_mangle]
-pub extern "C" fn lrcoef_count(
+pub fn lrcoef_count(
 	outer: *const IntVector,
 	inner: *const IntVector,
 	content: *const IntVector,

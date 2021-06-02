@@ -18,9 +18,7 @@ pub extern "C" fn perm_valid(w: *const IntVector) -> bool {
 	true
 }
 
-#[no_mangle]
-pub extern "C" fn perm_length(w: *const IntVector) -> i32 {
-	let w = unsafe { &(*w)[..] };
+pub fn perm_length(w: &[i32]) -> i32 {
 	let mut res = 0;
 	for i in 0..w.len() {
 		for j in i + 1..w.len() {
@@ -63,16 +61,13 @@ pub fn dimvec_valid_rs(dv: &[i32]) -> bool {
 }
 
 /// Return true if S_w1 * S_w2 = 0 in H^*(Fl(rank)).
-#[no_mangle]
-pub extern "C" fn bruhat_zero(w1: *const IntVector, w2: *const IntVector, rank: i32) -> bool {
-	let n1 = perm_group(w1);
-	let n2 = perm_group(w2);
+pub fn bruhat_zero(w1: &[i32], w2: &[i32], rank: i32) -> bool {
+	let n1 = perm_group_rs(w1);
+	let n2 = perm_group_rs(w2);
 	if n1 > rank || n2 > rank {
 		return true;
 	}
 	let (w1, w2) = if n1 <= n2 { (w1, w2) } else { (w2, w1) };
-	let w1 = unsafe { &(*w1)[..] };
-	let w2 = unsafe { &(*w2)[..] };
 	let n = std::cmp::min(n1, n2);
 	for q in 1..n {
 		let q2 = rank - q;
@@ -183,8 +178,7 @@ pub extern "C" fn all_perms(n: i32) -> *mut IntVectorList {
 	all_strings_rs(&dimvec[..])
 }
 
-#[no_mangle]
-pub extern "C" fn string2perm(str: *const IntVector) -> *mut IntVector {
+pub fn string2perm(str: *const IntVector) -> *mut IntVector {
 	let str = unsafe { &(*str)[..] };
 
 	let n = (str.iter().max().unwrap_or(&0) + 1) as usize;
@@ -240,8 +234,7 @@ pub fn str_iscompat_rs(s1: &[i32], s2: &[i32]) -> bool {
 	cnt.iter().all(|&c| c == 0)
 }
 
-#[no_mangle]
-pub extern "C" fn str2dimvec(str: *const IntVector) -> *mut IntVector {
+pub fn str2dimvec(str: *const IntVector) -> *mut IntVector {
 	let str = unsafe { &(*str)[..] };
 	let mut n = 0;
 	for &i in str.iter() {
@@ -262,8 +255,7 @@ pub extern "C" fn str2dimvec(str: *const IntVector) -> *mut IntVector {
 	IntVector::from_vec(res)
 }
 
-#[no_mangle]
-pub extern "C" fn perm2string(perm: *const IntVector, dimvec: *const IntVector) -> *mut IntVector {
+pub fn perm2string(perm: *const IntVector, dimvec: *const IntVector) -> *mut IntVector {
 	let perm = unsafe { &(*perm)[..] };
 	let dimvec = unsafe { &(*dimvec)[..] };
 	let n = if dimvec.len() > 0 {

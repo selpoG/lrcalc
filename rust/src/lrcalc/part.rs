@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use lrcalc_helper::part::{
-    pitr_box_first, pitr_box_sz_first, pitr_first, pitr_good, pitr_next, PartitionIterator,
+    pitr_box_first, pitr_box_sz_first, pitr_first_rs, pitr_good, pitr_next, PartitionIterator,
 };
 
 use super::ivector::IntVector;
@@ -22,65 +22,53 @@ impl PartIter {
         size: i32,
         opt: i32,
     ) -> PartIter {
-        unsafe {
-            let mut pitr = PartIter {
-                p: p,
-                it: std::mem::MaybeUninit::uninit().assume_init(),
-                initialized: false,
-            };
-            pitr_first(
-                &mut pitr.it,
-                pitr.p.data,
-                rows,
-                cols,
-                match outer {
-                    Some(x) => x.data,
-                    None => std::ptr::null(),
-                },
-                match inner {
-                    Some(x) => x.data,
-                    None => std::ptr::null(),
-                },
-                size,
-                opt,
-            );
-            pitr
+        let it = pitr_first_rs(
+            p.data,
+            rows,
+            cols,
+            match outer {
+                Some(x) => x.data,
+                None => std::ptr::null(),
+            },
+            match inner {
+                Some(x) => x.data,
+                None => std::ptr::null(),
+            },
+            size,
+            opt,
+        );
+        PartIter {
+            p: p,
+            it: it,
+            initialized: false,
         }
     }
     pub fn new_box(p: IntVector, rows: i32, cols: i32) -> PartIter {
-        unsafe {
-            let mut pitr = PartIter {
-                p: p,
-                it: std::mem::MaybeUninit::uninit().assume_init(),
-                initialized: false,
-            };
-            pitr_box_first(&mut pitr.it, pitr.p.data, rows, cols);
-            pitr
+        let it = pitr_box_first(p.data, rows, cols);
+        PartIter {
+            p: p,
+            it: it,
+            initialized: false,
         }
     }
     pub fn new_box_sz(p: IntVector, rows: i32, cols: i32, size: i32) -> PartIter {
-        unsafe {
-            let mut pitr = PartIter {
-                p: p,
-                it: std::mem::MaybeUninit::uninit().assume_init(),
-                initialized: false,
-            };
-            pitr_box_sz_first(&mut pitr.it, pitr.p.data, rows, cols, size);
-            pitr
+        let it = pitr_box_sz_first(p.data, rows, cols, size);
+        PartIter {
+            p: p,
+            it: it,
+            initialized: false,
         }
     }
     pub fn next(&mut self) -> Option<&IntVector> {
-        unsafe {
-            if !self.initialized {
-                self.initialized = true
-            } else {
-                pitr_next(&mut self.it)
-            }
-            if pitr_good(&self.it) {
-                Some(&self.p)
-            } else {
-                None
-            }
+        if !self.initialized {
+            self.initialized = true
+        } else {
+            pitr_next(&mut self.it)
+        }
+        if pitr_good(&self.it) {
+            Some(&self.p)
+        } else {
+            None
         }
     }
 }

@@ -295,6 +295,7 @@ pub extern "C" fn lrit_print_skewtab(
 		println!();
 		r += 1
 	}
+	println!();
 }
 
 #[no_mangle]
@@ -343,8 +344,7 @@ pub extern "C" fn lrit_next(lrit: *mut LRTableauIterator) {
 	lrit.size = -1;
 }
 
-#[no_mangle]
-pub extern "C" fn lrit_expand(
+pub fn lrit_expand(
 	outer: *const IntVector,
 	inner: *const IntVector,
 	content: *const IntVector,

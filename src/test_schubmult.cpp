@@ -94,6 +94,6 @@ int main(int ac, char** av)
 			assert(int(iv_length(w1)) == n && int(iv_length(w2)) == n);
 		}
 
-	puts_r("success");
+	puts("success");
 	return 0;
 }

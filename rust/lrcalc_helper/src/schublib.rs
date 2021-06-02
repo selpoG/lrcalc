@@ -1,7 +1,7 @@
 use super::ivector::{iv_free, iv_hash, iv_new_zero, IntVector};
 use super::ivlincomb::{
-	ivlc_add_element, ivlc_add_multiple, ivlc_card, ivlc_free, ivlc_free_all, ivlc_insert,
-	ivlc_new_default, ivlc_reset, LinearCombination, LinearCombinationIter, LC_FREE_ZERO,
+	ivlc_add_element, ivlc_add_multiple, ivlc_free, ivlc_free_all, ivlc_insert, ivlc_new_default,
+	ivlc_reset, LinearCombination, LinearCombinationIter, LC_FREE_ZERO,
 };
 use super::perm::{
 	bruhat_zero, perm2string, perm_group_rs, perm_length, str2dimvec, str_iscompat, string2perm,
@@ -155,7 +155,7 @@ pub extern "C" fn mult_poly_schubert(
 	perm: *mut IntVector,
 	mut rank: i32,
 ) -> *mut LinearCombination {
-	let n = ivlc_card(poly);
+	let n = unsafe { &*poly }.card;
 	if n == 0 {
 		ivlc_free_all(poly);
 		return poly;
@@ -253,16 +253,16 @@ pub extern "C" fn mult_schubert(
 	w2: *mut IntVector,
 	mut rank: i32,
 ) -> *mut LinearCombination {
-	let w1len = perm_length(w1);
-	let w2len = perm_length(w2);
+	let w1 = unsafe { &mut *w1 };
+	let w2 = unsafe { &mut *w2 };
+	let w1len = perm_length(&w1[..]);
+	let w2len = perm_length(&w2[..]);
 	let (w1, w2, w1len, w2len) = if w1len <= w2len {
 		(w1, w2, w1len, w2len)
 	} else {
 		(w2, w1, w2len, w1len)
 	};
 
-	let w1 = unsafe { &mut *w1 };
-	let w2 = unsafe { &mut *w2 };
 	let svlen1 = w1.length;
 	let svlen2 = w2.length;
 	w1.length = perm_group_rs(&w1[..]) as u32;
@@ -270,7 +270,7 @@ pub extern "C" fn mult_schubert(
 
 	if rank == 0 {
 		rank = i32::MAX;
-	} else if 2 * (w1len + w2len) > rank * (rank - 1) || bruhat_zero(w1, w2, rank) {
+	} else if 2 * (w1len + w2len) > rank * (rank - 1) || bruhat_zero(&w1[..], &w2[..], rank) {
 		w1.length = svlen1;
 		w2.length = svlen2;
 		return ivlc_new_default();

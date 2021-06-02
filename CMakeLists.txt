@@ -34,10 +34,8 @@ add_library(${MY_TARGET} STATIC
 	include/lrcalc/ivector.hpp
 	include/lrcalc/ivlincomb.hpp
 	include/lrcalc/ivlist.hpp
-	include/lrcalc/lrcoef.hpp
 	include/lrcalc/lriter.hpp
 	include/lrcalc/maple.hpp
-	include/lrcalc/optshape.hpp
 	include/lrcalc/part.hpp
 	include/lrcalc/perm.hpp
 	include/lrcalc/cpp_lib.hpp

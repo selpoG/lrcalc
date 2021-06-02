@@ -30,8 +30,7 @@ pub extern "C" fn part_valid(p: *const IntVector) -> bool {
 	return true;
 }
 
-#[no_mangle]
-pub extern "C" fn part_decr(p: *const IntVector) -> bool {
+pub fn part_decr(p: *const IntVector) -> bool {
 	let p = unsafe { &(*p)[..] };
 	for i in 1..p.len() {
 		if p[i - 1] < p[i] {
@@ -327,26 +326,26 @@ pub extern "C" fn pitr_first(
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn pitr_box_first(
-	itr: *mut PartitionIterator,
+pub fn pitr_first_rs(
 	p: *mut IntVector,
 	rows: i32,
 	cols: i32,
-) {
-	pitr_first(itr, p, rows, cols, std::ptr::null(), std::ptr::null(), 0, 0);
+	outer: *const IntVector,
+	inner: *const IntVector,
+	size: i32,
+	opt: i32,
+) -> PartitionIterator {
+	let mut pitr: PartitionIterator = unsafe { std::mem::MaybeUninit::uninit().assume_init() };
+	pitr_first(&mut pitr, p, rows, cols, outer, inner, size, opt);
+	pitr
 }
 
-#[no_mangle]
-pub extern "C" fn pitr_box_sz_first(
-	itr: *mut PartitionIterator,
-	p: *mut IntVector,
-	rows: i32,
-	cols: i32,
-	size: i32,
-) {
-	pitr_first(
-		itr,
+pub fn pitr_box_first(p: *mut IntVector, rows: i32, cols: i32) -> PartitionIterator {
+	pitr_first_rs(p, rows, cols, std::ptr::null(), std::ptr::null(), 0, 0)
+}
+
+pub fn pitr_box_sz_first(p: *mut IntVector, rows: i32, cols: i32, size: i32) -> PartitionIterator {
+	pitr_first_rs(
 		p,
 		rows,
 		cols,
@@ -354,7 +353,7 @@ pub extern "C" fn pitr_box_sz_first(
 		std::ptr::null(),
 		size,
 		PITR_USE_SIZE,
-	);
+	)
 }
 
 #[no_mangle]

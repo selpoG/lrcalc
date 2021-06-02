@@ -12,12 +12,10 @@ pub struct IntVector {
 
 impl IntVector {
     pub fn default(len: u32) -> IntVector {
-        unsafe {
-            let x = iv_new(len);
-            IntVector {
-                data: x,
-                owned: true,
-            }
+        let x = iv_new(len);
+        IntVector {
+            data: x,
+            owned: true,
         }
     }
     pub fn new(v: &[i32]) -> IntVector {
@@ -92,16 +90,16 @@ impl IntVector {
         self[..].iter().cloned().collect()
     }
     pub fn is_partition(&self) -> bool {
-        unsafe { part_valid(self.data) }
+        part_valid(self.data)
     }
     pub fn is_permutation(&self) -> bool {
-        unsafe { perm_valid(self.data) }
+        perm_valid(self.data)
     }
     pub fn is_dimvec(&self) -> bool {
-        unsafe { dimvec_valid(self.data) }
+        dimvec_valid(self.data)
     }
     pub fn is_compatible_str(&self, other: &IntVector) -> bool {
-        unsafe { str_iscompat(self.data, other.data) }
+        str_iscompat(self.data, other.data)
     }
     pub fn to_partition(&self) -> Vec<i32> {
         let arr = &self[..];
@@ -126,28 +124,24 @@ impl IntVector {
         )
     }
     pub fn to_quantum(&self, level: i32) -> (i32, Vec<i32>) {
-        unsafe {
-            let d = part_qdegree(self.data, level);
-            let mut n = self.len();
-            while n > 0 && part_qentry(self.data, (n - 1) as i32, d, level) == 0 {
-                n -= 1
-            }
-            (
-                d,
-                (0..n)
-                    .map(|i| part_qentry(self.data, i as i32, d, level))
-                    .collect(),
-            )
+        let d = part_qdegree(self.data, level);
+        let mut n = self.len();
+        while n > 0 && part_qentry(self.data, (n - 1) as i32, d, level) == 0 {
+            n -= 1
         }
+        (
+            d,
+            (0..n)
+                .map(|i| part_qentry(self.data, i as i32, d, level))
+                .collect(),
+        )
     }
 }
 
 impl Drop for IntVector {
     fn drop(&mut self) {
-        unsafe {
-            if self.owned && self.data != std::ptr::null_mut() {
-                iv_free(self.data)
-            }
+        if self.owned && self.data != std::ptr::null_mut() {
+            iv_free(self.data)
         }
     }
 }
@@ -155,18 +149,14 @@ impl Drop for IntVector {
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::Index<I> for IntVector {
     type Output = I::Output;
     fn index(&self, index: I) -> &Self::Output {
-        unsafe {
-            let ptr = std::slice::from_raw_parts((*self.data).array, self.len());
-            std::ops::Index::index(ptr, index)
-        }
+        let ptr = unsafe { std::slice::from_raw_parts((*self.data).array, self.len()) };
+        std::ops::Index::index(ptr, index)
     }
 }
 
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for IntVector {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        unsafe {
-            let ptr = std::slice::from_raw_parts_mut((*self.data).array, self.len());
-            std::ops::IndexMut::index_mut(ptr, index)
-        }
+        let ptr = unsafe { std::slice::from_raw_parts_mut((*self.data).array, self.len()) };
+        std::ops::IndexMut::index_mut(ptr, index)
     }
 }

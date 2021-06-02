@@ -60,6 +60,6 @@ int main(int ac, char** av)
 		for ([[maybe_unused]] auto& itr2 : pitr::box(p2.get(), rows, cols))
 			if (!test_schur_lrcoef(p1, p2, rows, cols)) out_of_memory();
 
-	puts_r("success");
+	puts("success");
 	return 0;
 }
