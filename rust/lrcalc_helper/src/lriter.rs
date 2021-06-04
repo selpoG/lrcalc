@@ -20,19 +20,24 @@ pub struct LRTableauIterator {
 
 #[no_mangle]
 pub extern "C" fn lrit_new(
-	outer: *const IntVector,
+	outer: &IntVector,
 	inner: *const IntVector,
 	content: *const IntVector,
 	mut maxrows: i32,
 	maxcols: i32,
 	mut partsz: i32,
 ) -> *mut LRTableauIterator {
+	let inner = if inner == std::ptr::null() {
+		None
+	} else {
+		unsafe { Some(&*inner) }
+	};
 	debug_assert!(part_valid(outer));
-	debug_assert!(inner == std::ptr::null() || part_valid(inner));
-	debug_assert!(content == std::ptr::null() || part_decr(content));
+	debug_assert!(inner.is_none() || part_valid(inner.unwrap()));
+	debug_assert!(content == std::ptr::null() || part_decr(unsafe { &(*content)[..] }));
 
 	/* Empty result if inner not contained in outer. */
-	if inner != std::ptr::null() && !part_leq(inner, outer) {
+	if inner.is_some() && !part_leq(inner.unwrap(), outer) {
 		let lrit = LRTableauIterator {
 			cont: IntVector::from_vec(vec![0]),
 			size: -1,
@@ -43,12 +48,8 @@ pub extern "C" fn lrit_new(
 	}
 
 	let len = part_length(outer);
-	let outer = unsafe { &(*outer)[..] };
-	let inner = if inner == std::ptr::null() {
-		None
-	} else {
-		unsafe { Some(&(*inner)[..]) }
-	};
+	let outer = &outer[..];
+	let inner = inner.map(|v| &v[..]);
 	let mut ilen = inner.map(|v| v.len() as u32).unwrap_or(0);
 	if ilen > len {
 		ilen = len;
@@ -56,7 +57,8 @@ pub extern "C" fn lrit_new(
 	let (content, clen) = if content == std::ptr::null() {
 		(None, 0)
 	} else {
-		(Some(unsafe { &(*content)[..] }), part_length(content))
+		let content = unsafe { &*content };
+		(Some(&content[..]), part_length(content))
 	};
 	let out0 = if len == 0 { 0 } else { outer[0] };
 	debug_assert!(maxcols < 0 || ilen == 0 || inner.unwrap()[0] == 0);
@@ -243,11 +245,10 @@ pub extern "C" fn lrit_free(lrit: *mut LRTableauIterator) {
 
 #[no_mangle]
 pub extern "C" fn lrit_print_skewtab(
-	lrit: *const LRTableauIterator,
-	outer: *const IntVector,
+	lrit: &LRTableauIterator,
+	outer: &IntVector,
 	inner: *const IntVector,
 ) {
-	let lrit = unsafe { &*lrit };
 	let array = lrit.array;
 	let mut size = lrit.size;
 	let array = unsafe { std::slice::from_raw_parts(array, size as usize) };
@@ -259,7 +260,7 @@ pub extern "C" fn lrit_print_skewtab(
 	};
 	let ilen = inner.map(|v| v.len()).unwrap_or(0) as u32;
 	let mut len = part_length(outer);
-	let outer = unsafe { &(*outer)[..] };
+	let outer = &outer[..];
 	if len <= ilen {
 		let inner = inner.unwrap();
 		while len > 0 && inner[(len - 1) as usize] == outer[(len - 1) as usize] {
@@ -299,13 +300,12 @@ pub extern "C" fn lrit_print_skewtab(
 }
 
 #[no_mangle]
-pub extern "C" fn lrit_good(lrit: *const LRTableauIterator) -> bool {
-	unsafe { &*lrit }.size >= 0
+pub extern "C" fn lrit_good(lrit: &LRTableauIterator) -> bool {
+	lrit.size >= 0
 }
 
 #[no_mangle]
-pub extern "C" fn lrit_next(lrit: *mut LRTableauIterator) {
-	let lrit = unsafe { &mut *lrit };
+pub extern "C" fn lrit_next(lrit: &mut LRTableauIterator) {
 	let cont = unsafe { &mut (*lrit.cont)[..] };
 	let array = unsafe { std::slice::from_raw_parts_mut(lrit.array, lrit.array_len as usize) };
 	let size = lrit.size;
@@ -345,16 +345,16 @@ pub extern "C" fn lrit_next(lrit: *mut LRTableauIterator) {
 }
 
 pub fn lrit_expand(
-	outer: *const IntVector,
+	outer: &IntVector,
 	inner: *const IntVector,
 	content: *const IntVector,
 	maxrows: i32,
 	maxcols: i32,
 	partsz: i32,
 ) -> *mut LinearCombination {
-	let lrit_raw = lrit_new(outer, inner, content, maxrows, maxcols, partsz);
-	let cont = unsafe { &*lrit_raw }.cont;
-	let lc = ivlc_new_default();
+	let lrit_raw = unsafe { &mut *lrit_new(outer, inner, content, maxrows, maxcols, partsz) };
+	let cont = unsafe { &mut *lrit_raw.cont };
+	let lc = unsafe { &mut *ivlc_new_default() };
 	while lrit_good(lrit_raw) {
 		ivlc_add_element(lc, 1, cont, iv_hash(cont), LC_COPY_KEY);
 		lrit_next(lrit_raw);

@@ -40,17 +40,17 @@ inline ivlc_slice ivlc_create_slice() { return ivlc_slice{ivlc_new_default()}; }
 
 struct ivlc_iterator
 {
-	ivlc_iterator(const ivlincomb* lc) { ivlc_first(lc, &itr); }
-	ivlc_iterator(const ivlc_ptr& lc) { ivlc_first(lc.get(), &itr); }
+	ivlc_iterator(const ivlincomb* lc) { ivlc_first(*lc, itr); }
+	ivlc_iterator(const ivlc_ptr& lc) { ivlc_first(*lc, itr); }
 	auto begin() const { return *this; }
 	auto end() const { return nullptr; }
 	ivlc_iterator& operator++()
 	{
-		ivlc_next(&itr);
+		ivlc_next(itr);
 		return *this;
 	}
-	ivlc_keyval_t& operator*() { return *ivlc_keyval(&itr); }
-	bool operator==([[maybe_unused]] nullptr_t _) { return !ivlc_good(&itr); }
+	ivlc_keyval_t& operator*() { return *ivlc_keyval(itr); }
+	bool operator==([[maybe_unused]] nullptr_t _) { return !ivlc_good(itr); }
 
 private:
 	ivlc_iter itr{};
@@ -58,24 +58,24 @@ private:
 
 struct pitr
 {
-	static pitr box(ivector* p, int rows, int cols) { return {p, rows, cols, nullptr, nullptr, 0, 0}; }
-	static pitr box_sz(ivector* p, int rows, int cols, int size)
+	static pitr box(ivector& p, int rows, int cols) { return {p, rows, cols, nullptr, nullptr, 0, 0}; }
+	static pitr box_sz(ivector& p, int rows, int cols, int size)
 	{
 		return {p, rows, cols, nullptr, nullptr, size, PITR_USE_SIZE};
 	}
-	pitr(ivector* p, int rows, int cols, const ivector* outer, const ivector* inner, int size, int opt)
+	pitr(ivector& p, int rows, int cols, const ivector* outer, const ivector* inner, int size, int opt)
 	{
-		pitr_first(&itr, p, rows, cols, outer, inner, size, opt);
+		pitr_first(itr, p, rows, cols, outer, inner, size, opt);
 	}
 	auto begin() const { return *this; }
 	auto end() const { return nullptr; }
 	pitr& operator++()
 	{
-		pitr_next(&itr);
+		pitr_next(itr);
 		return *this;
 	}
 	part_iter& operator*() { return itr; }
-	bool operator==([[maybe_unused]] nullptr_t _) { return !pitr_good(&itr); }
+	bool operator==([[maybe_unused]] nullptr_t _) { return !pitr_good(itr); }
 
 private:
 	part_iter itr{};

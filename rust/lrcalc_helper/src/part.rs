@@ -16,22 +16,24 @@ pub const PITR_USE_OUTER: i32 = 1;
 pub const PITR_USE_INNER: i32 = 2;
 pub const PITR_USE_SIZE: i32 = 4;
 
-#[no_mangle]
-pub extern "C" fn part_valid(p: *const IntVector) -> bool {
+pub fn part_valid_rs(p: &[i32]) -> bool {
 	let mut x = 0;
-	let p = unsafe { &(*p)[..] };
 	for i in (0..p.len()).rev() {
-		let y = p[i as usize];
+		let y = p[i];
 		if y < x {
 			return false;
 		}
 		x = y;
 	}
-	return true;
+	true
 }
 
-pub fn part_decr(p: *const IntVector) -> bool {
-	let p = unsafe { &(*p)[..] };
+#[no_mangle]
+pub extern "C" fn part_valid(p: &IntVector) -> bool {
+	part_valid_rs(&p[..])
+}
+
+pub fn part_decr(p: &[i32]) -> bool {
 	for i in 1..p.len() {
 		if p[i - 1] < p[i] {
 			return false;
@@ -40,14 +42,17 @@ pub fn part_decr(p: *const IntVector) -> bool {
 	true
 }
 
-#[no_mangle]
-pub extern "C" fn part_length(v: *const IntVector) -> u32 {
-	let v = unsafe { &(*v)[..] };
+pub fn part_length_rs(v: &[i32]) -> u32 {
 	let mut n = v.len();
 	while n > 0 && v[n - 1] == 0 {
 		n -= 1
 	}
 	n as u32
+}
+
+#[no_mangle]
+pub extern "C" fn part_length(v: &IntVector) -> u32 {
+	part_length_rs(&v[..])
 }
 
 pub fn part_entry_rs(p: &[i32], i: i32) -> i32 {
@@ -60,30 +65,25 @@ pub fn part_entry_rs(p: &[i32], i: i32) -> i32 {
 }
 
 #[no_mangle]
-pub extern "C" fn part_entry(p: *const IntVector, i: i32) -> i32 {
-	part_entry_rs(unsafe { &(*p)[..] }, i)
+pub extern "C" fn part_entry(p: &IntVector, i: i32) -> i32 {
+	part_entry_rs(&p[..], i)
 }
 
 /// Must have len >= iv_length(p) and p was allocated with enough space.
 /// Caller of this function must reset the length of p before iv_free(p) is called.
 #[no_mangle]
-pub extern "C" fn part_unchop(p: *mut IntVector, len_: i32) {
-	let p_v = unsafe { &mut (*p)[..] };
-	let len0 = p_v.len();
+pub extern "C" fn part_unchop(p: &mut IntVector, len_: i32) {
+	let len0 = p.length as usize;
 	let len = len_ as usize;
 	debug_assert!(len0 <= len);
-	unsafe {
-		(*p).length = len as u32;
-	}
-	p_v[len0..len].fill(0);
+	p.length = len as u32;
+	p[len0..len].fill(0);
 }
 
 #[no_mangle]
-pub extern "C" fn part_leq(p1: *const IntVector, p2: *const IntVector) -> bool {
-	let p1 = unsafe { &(*p1)[..] };
-	let p2 = unsafe { &(*p2)[..] };
-	let len = p1.len();
-	if len > p2.len() {
+pub extern "C" fn part_leq(p1: &IntVector, p2: &IntVector) -> bool {
+	let len = p1.length as usize;
+	if len > p2.length as usize {
 		return false;
 	}
 	for i in (0..len).rev() {
@@ -94,10 +94,9 @@ pub extern "C" fn part_leq(p1: *const IntVector, p2: *const IntVector) -> bool {
 	true
 }
 
-fn part_print(p: *const IntVector) {
+fn part_print(p: &IntVector) {
 	print!("(");
-	let p = unsafe { &(*p)[..] };
-	for i in 0..p.len() {
+	for i in 0..p.length as usize {
 		if p[i] == 0 {
 			break;
 		}
@@ -109,31 +108,30 @@ fn part_print(p: *const IntVector) {
 	print!(")")
 }
 
-fn part_printnl(p: *const IntVector) {
+fn part_printnl(p: &IntVector) {
 	part_print(p);
 	println!()
 }
 
 #[no_mangle]
-pub extern "C" fn part_print_lincomb(lc: *const LinearCombination) {
-	for kv in LinearCombinationIter::from(lc) {
+pub extern "C" fn part_print_lincomb(lc: &LinearCombination) {
+	for kv in LinearCombinationIter::from(lc as *const _) {
 		if kv.value == 0 {
 			continue;
 		}
 		print!("{}  ", kv.value);
-		part_printnl(kv.key);
+		part_printnl(unsafe { &*kv.key });
 	}
 }
 
 // Translate fusion algebra partitions to quantum cohomology notation.
 
 #[no_mangle]
-pub extern "C" fn part_qdegree(p: *const IntVector, level: i32) -> i32 {
-	let p = unsafe { &(*p)[..] };
-	let n = (p.len() as i32) + level;
+pub extern "C" fn part_qdegree(p: &IntVector, level: i32) -> i32 {
+	let n = (p.length as i32) + level;
 	let mut d = 0;
-	for i in 0..p.len() {
-		let a = p[i] + (p.len() as i32) - (i as i32) - 1;
+	for i in 0..p.length as usize {
+		let a = p[i] + (p.length as i32) - (i as i32) - 1;
 		let b = if a >= 0 { a / n } else { -((n - 1 - a) / n) };
 		d += b;
 	}
@@ -141,18 +139,16 @@ pub extern "C" fn part_qdegree(p: *const IntVector, level: i32) -> i32 {
 }
 
 #[no_mangle]
-pub extern "C" fn part_qentry(p: *const IntVector, i: i32, d: i32, level: i32) -> i32 {
-	let p = unsafe { &(*p)[..] };
-	let rows = p.len() as i32;
+pub extern "C" fn part_qentry(p: &IntVector, i: i32, d: i32, level: i32) -> i32 {
+	let rows = p.length as i32;
 	let k = (i + d) % rows;
 	p[k as usize] - ((i + d) / rows) * level - d
 }
 
-fn part_qprint(p: *const IntVector, level: i32) {
+fn part_qprint(p: &IntVector, level: i32) {
 	let d = part_qdegree(p, level);
 	print!("(");
-	let v = unsafe { &(*p)[..] };
-	for i in 0..v.len() {
+	for i in 0..p.length as usize {
 		let x = part_qentry(p, i as i32, d, level);
 		if x == 0 {
 			break;
@@ -165,25 +161,25 @@ fn part_qprint(p: *const IntVector, level: i32) {
 	print!(")");
 }
 
-fn part_qprintnl(p: *const IntVector, level: i32) {
+fn part_qprintnl(p: &IntVector, level: i32) {
 	part_qprint(p, level);
 	println!()
 }
 
 #[no_mangle]
-pub extern "C" fn part_qprint_lincomb(lc: *const LinearCombination, level: i32) {
-	for kv in LinearCombinationIter::from(lc) {
+pub extern "C" fn part_qprint_lincomb(lc: &LinearCombination, level: i32) {
+	for kv in LinearCombinationIter::from(lc as *const _) {
 		if kv.value == 0 {
 			continue;
 		}
 		print!("{}  ", kv.value);
-		part_qprintnl(kv.key, level);
+		part_qprintnl(unsafe { &*kv.key }, level);
 	}
 }
 
 #[no_mangle]
-pub extern "C" fn pitr_good(itr: *const PartitionIterator) -> bool {
-	unsafe { &*itr }.rows >= 0
+pub extern "C" fn pitr_good(itr: &PartitionIterator) -> bool {
+	itr.rows >= 0
 }
 
 fn _pitr_first(
@@ -299,8 +295,8 @@ fn _pitr_first(
 
 #[no_mangle]
 pub extern "C" fn pitr_first(
-	itr: *mut PartitionIterator,
-	p: *mut IntVector,
+	itr: &mut PartitionIterator,
+	p: &mut IntVector,
 	rows: i32,
 	cols: i32,
 	outer: *const IntVector,
@@ -308,8 +304,6 @@ pub extern "C" fn pitr_first(
 	size: i32,
 	opt: i32,
 ) {
-	let itr = unsafe { &mut *itr };
-	let p = unsafe { &mut *p };
 	let outer = if outer == std::ptr::null() {
 		None
 	} else {
@@ -327,7 +321,7 @@ pub extern "C" fn pitr_first(
 }
 
 pub fn pitr_first_rs(
-	p: *mut IntVector,
+	p: &mut IntVector,
 	rows: i32,
 	cols: i32,
 	outer: *const IntVector,
@@ -340,11 +334,11 @@ pub fn pitr_first_rs(
 	pitr
 }
 
-pub fn pitr_box_first(p: *mut IntVector, rows: i32, cols: i32) -> PartitionIterator {
+pub fn pitr_box_first(p: &mut IntVector, rows: i32, cols: i32) -> PartitionIterator {
 	pitr_first_rs(p, rows, cols, std::ptr::null(), std::ptr::null(), 0, 0)
 }
 
-pub fn pitr_box_sz_first(p: *mut IntVector, rows: i32, cols: i32, size: i32) -> PartitionIterator {
+pub fn pitr_box_sz_first(p: &mut IntVector, rows: i32, cols: i32, size: i32) -> PartitionIterator {
 	pitr_first_rs(
 		p,
 		rows,
@@ -357,8 +351,7 @@ pub fn pitr_box_sz_first(p: *mut IntVector, rows: i32, cols: i32, size: i32) -> 
 }
 
 #[no_mangle]
-pub extern "C" fn pitr_next(itr: *mut PartitionIterator) {
-	let itr = unsafe { &mut *itr };
+pub extern "C" fn pitr_next(itr: &mut PartitionIterator) {
 	let p = unsafe { &mut (*itr.part)[..] };
 	let outer = if itr.outer == std::ptr::null() {
 		None

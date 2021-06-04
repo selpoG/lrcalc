@@ -29,15 +29,15 @@
 
 static bool test_mult_fusion(const iv_ptr& sh1, const iv_ptr& sh2, int rows, int level)
 {
-	ivlc_ptr prd_f{schur_mult_fusion(sh1.get(), sh2.get(), rows, level)};
+	ivlc_ptr prd_f{schur_mult_fusion(*sh1, *sh2, rows, level)};
 	if (!prd_f) return false;
 
-	ivlc_ptr prd_s{schur_mult(sh1.get(), sh2.get(), rows, -1, rows)};
+	ivlc_ptr prd_s{schur_mult(*sh1, sh2.get(), rows, -1, rows)};
 	if (!prd_s) return false;
 
-	fusion_reduce_lc(prd_s.get(), level);
+	fusion_reduce_lc(*prd_s, level);
 
-	assert(ivlc_equals(prd_f.get(), prd_s.get()));
+	assert(ivlc_equals(*prd_f, *prd_s));
 
 	return true;
 }
@@ -52,8 +52,8 @@ int main(int ac, char** av)
 	iv_ptr sh1 = iv_create(uint32_t(rows));
 	iv_ptr sh2 = iv_create(uint32_t(rows));
 
-	for ([[maybe_unused]] auto& itr1 : pitr::box(sh1.get(), rows, cols))
-		for ([[maybe_unused]] auto& itr2 : pitr::box(sh2.get(), rows, cols))
+	for ([[maybe_unused]] auto& itr1 : pitr::box(*sh1, rows, cols))
+		for ([[maybe_unused]] auto& itr2 : pitr::box(*sh2, rows, cols))
 			for (int level = 0; level <= cols; level++)
 				if (!test_mult_fusion(sh1, sh2, rows, level)) out_of_memory();
 

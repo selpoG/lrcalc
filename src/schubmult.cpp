@@ -65,22 +65,22 @@ int main(int ac, char** av)
 	if (opt_string)
 	{
 		if (rank > 0) error("options -r and -s cannot be used together.");
-		if (!str_iscompat(w1.get(), w2.get())) error("incompatible strings.");
-		lc = mult_schubert_str(w1.get(), w2.get());
+		if (!str_iscompat(*w1, *w2)) error("incompatible strings.");
+		lc = mult_schubert_str(*w1, *w2);
 	}
 	else
 	{
-		if (!perm_valid(w1.get())) error("perm1 not a valid permutation.");
-		if (!perm_valid(w2.get())) error("perm2 not a valid permutation.");
-		lc = mult_schubert(w1.get(), w2.get(), rank);
+		if (!perm_valid(*w1)) error("perm1 not a valid permutation.");
+		if (!perm_valid(*w2)) error("perm2 not a valid permutation.");
+		lc = mult_schubert(*w1, *w2, rank);
 	}
 
 	if (lc == nullptr) out_of_memory();
 
 	if (opt_maple)
-		maple_print_lincomb(lc, "X", false);
+		maple_print_lincomb(*lc, "X", false);
 	else
-		ivlc_print(lc);
+		ivlc_print(*lc);
 
 	return 0;
 }

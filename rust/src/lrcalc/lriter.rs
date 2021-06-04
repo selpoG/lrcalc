@@ -15,6 +15,7 @@ impl LRTableauIterator {
         maxcols: i32,
         partsz: i32,
     ) -> LRTableauIterator {
+        let outer = unsafe { &*outer };
         let it = lrit_new(outer, inner, std::ptr::null(), maxrows, maxcols, partsz);
         LRTableauIterator { it: it }
     }
@@ -23,11 +24,12 @@ impl LRTableauIterator {
 impl Iterator for LRTableauIterator {
     type Item = Vec<i32>;
     fn next(&mut self) -> Option<Self::Item> {
-        if lrit_good(self.it) {
-            let len = unsafe { (*self.it).size };
-            let arr = unsafe { std::slice::from_raw_parts((*self.it).array, len as usize) };
+        let it = unsafe { &mut *self.it };
+        if lrit_good(it) {
+            let len = it.size;
+            let arr = unsafe { std::slice::from_raw_parts(it.array, len as usize) };
             let val = arr.iter().map(|x| x.value).collect();
-            lrit_next(self.it);
+            lrit_next(it);
             Some(val)
         } else {
             None

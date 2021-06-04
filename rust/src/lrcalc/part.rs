@@ -23,7 +23,7 @@ impl PartIter {
         opt: i32,
     ) -> PartIter {
         let it = pitr_first_rs(
-            p.data,
+            unsafe { &mut *p.data },
             rows,
             cols,
             match outer {
@@ -44,7 +44,7 @@ impl PartIter {
         }
     }
     pub fn new_box(p: IntVector, rows: i32, cols: i32) -> PartIter {
-        let it = pitr_box_first(p.data, rows, cols);
+        let it = pitr_box_first(unsafe { &mut *p.data }, rows, cols);
         PartIter {
             p: p,
             it: it,
@@ -52,7 +52,7 @@ impl PartIter {
         }
     }
     pub fn new_box_sz(p: IntVector, rows: i32, cols: i32, size: i32) -> PartIter {
-        let it = pitr_box_sz_first(p.data, rows, cols, size);
+        let it = pitr_box_sz_first(unsafe { &mut *p.data }, rows, cols, size);
         PartIter {
             p: p,
             it: it,

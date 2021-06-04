@@ -27,19 +27,19 @@ static bool test_part_iter_box(int rows, int cols)
 	for (int i = 1; i <= rows; i++) np = np * (cols + i) / i;
 
 	int np1 = 0;
-	for ([[maybe_unused]] auto& itr : pitr::box(p.get(), rows, cols))
+	for ([[maybe_unused]] auto& itr : pitr::box(*p, rows, cols))
 	{
-		assert(part_valid(p.get()));
+		assert(part_valid(*p));
 		np1++;
 	}
 	assert(np1 == np);
 
 	np1 = 0;
 	for (int size = 0; size < rows * cols + 2; size++)
-		for ([[maybe_unused]] auto& itr : pitr::box_sz(p.get(), rows, cols, size))
+		for ([[maybe_unused]] auto& itr : pitr::box_sz(*p, rows, cols, size))
 		{
-			assert(part_valid(p.get()));
-			assert(iv_sum(p.get()) == size);
+			assert(part_valid(*p));
+			assert(iv_sum(*p) == size);
 			np1++;
 		}
 	assert(np1 == np);
@@ -48,36 +48,36 @@ static bool test_part_iter_box(int rows, int cols)
 
 static bool test_part_iter_sub(int rows, int cols, const iv_ptr& outer)
 {
-	int size_bound = iv_sum(outer.get()) + 2;
+	int size_bound = iv_sum(*outer) + 2;
 	iv_ptr count = iv_create_zero(uint32_t(size_bound));
 
 	iv_ptr p = iv_create(uint32_t(rows));
 
-	for ([[maybe_unused]] auto& itr : pitr::box(p.get(), rows, cols))
-		if (part_leq(p.get(), outer.get()))
+	for ([[maybe_unused]] auto& itr : pitr::box(*p, rows, cols))
+		if (part_leq(*p, *outer))
 		{
-			int sz = iv_sum(p.get());
+			int sz = iv_sum(*p);
 			iv_elem(count, sz)++;
 		}
 
 	int np = 0;
-	for ([[maybe_unused]] auto& itr : pitr(p.get(), rows, cols, outer.get(), nullptr, 0, PITR_USE_OUTER))
+	for ([[maybe_unused]] auto& itr : pitr(*p, rows, cols, outer.get(), nullptr, 0, PITR_USE_OUTER))
 	{
-		assert(part_valid(p.get()));
-		assert(part_leq(p.get(), outer.get()));
+		assert(part_valid(*p));
+		assert(part_leq(*p, *outer));
 		np++;
 	}
-	assert(np == iv_sum(count.get()));
+	assert(np == iv_sum(*count));
 
 	for (int size = 0; size < size_bound; size++)
 	{
 		np = 0;
 		for ([[maybe_unused]] auto& itr :
-		     pitr(p.get(), rows, cols, outer.get(), nullptr, size, PITR_USE_OUTER | PITR_USE_SIZE))
+		     pitr(*p, rows, cols, outer.get(), nullptr, size, PITR_USE_OUTER | PITR_USE_SIZE))
 		{
-			assert(part_valid(p.get()));
-			assert(part_leq(p.get(), outer.get()));
-			assert(iv_sum(p.get()) == size);
+			assert(part_valid(*p));
+			assert(part_leq(*p, *outer));
+			assert(iv_sum(*p) == size);
 			np++;
 		}
 		assert(np == iv_elem(count, size));
@@ -93,31 +93,31 @@ static bool test_part_iter_super(int rows, int cols, const iv_ptr& inner)
 
 	iv_ptr p = iv_create(uint32_t(rows));
 
-	for ([[maybe_unused]] auto& itr : pitr::box(p.get(), rows, cols))
-		if (part_leq(inner.get(), p.get()))
+	for ([[maybe_unused]] auto& itr : pitr::box(*p, rows, cols))
+		if (part_leq(*inner, *p))
 		{
-			int sz = iv_sum(p.get());
+			int sz = iv_sum(*p);
 			iv_elem(count, sz)++;
 		}
 
 	int np = 0;
-	for ([[maybe_unused]] auto& itr : pitr(p.get(), rows, cols, nullptr, inner.get(), 0, PITR_USE_INNER))
+	for ([[maybe_unused]] auto& itr : pitr(*p, rows, cols, nullptr, inner.get(), 0, PITR_USE_INNER))
 	{
-		assert(part_valid(p.get()));
-		assert(part_leq(inner.get(), p.get()));
+		assert(part_valid(*p));
+		assert(part_leq(*inner, *p));
 		np++;
 	}
-	assert(np == iv_sum(count.get()));
+	assert(np == iv_sum(*count));
 
 	for (int size = 0; size < size_bound; size++)
 	{
 		np = 0;
 		for ([[maybe_unused]] auto& itr :
-		     pitr(p.get(), rows, cols, nullptr, inner.get(), size, PITR_USE_INNER | PITR_USE_SIZE))
+		     pitr(*p, rows, cols, nullptr, inner.get(), size, PITR_USE_INNER | PITR_USE_SIZE))
 		{
-			assert(part_valid(p.get()));
-			assert(part_leq(inner.get(), p.get()));
-			assert(iv_sum(p.get()) == size);
+			assert(part_valid(*p));
+			assert(part_leq(*inner, *p));
+			assert(iv_sum(*p) == size);
 			np++;
 		}
 		assert(np == iv_elem(count, size));
@@ -128,39 +128,39 @@ static bool test_part_iter_super(int rows, int cols, const iv_ptr& inner)
 
 static bool test_part_iter_between(int rows, int cols, const iv_ptr& outer, const iv_ptr& inner)
 {
-	int size_bound = iv_sum(outer.get()) + 2;
+	int size_bound = iv_sum(*outer) + 2;
 	iv_ptr count = iv_create_zero(uint32_t(size_bound));
 
 	iv_ptr p = iv_create(uint32_t(rows));
 
-	for ([[maybe_unused]] auto& itr : pitr::box(p.get(), rows, cols))
-		if (part_leq(inner.get(), p.get()) && part_leq(p.get(), outer.get()))
+	for ([[maybe_unused]] auto& itr : pitr::box(*p, rows, cols))
+		if (part_leq(*inner, *p) && part_leq(*p, *outer))
 		{
-			int sz = iv_sum(p.get());
+			int sz = iv_sum(*p);
 			iv_elem(count, sz)++;
 		}
 
 	int np = 0;
 	for ([[maybe_unused]] auto& itr :
-	     pitr(p.get(), rows, cols, outer.get(), inner.get(), 0, PITR_USE_OUTER | PITR_USE_INNER))
+	     pitr(*p, rows, cols, outer.get(), inner.get(), 0, PITR_USE_OUTER | PITR_USE_INNER))
 	{
-		assert(part_valid(p.get()));
-		assert(part_leq(inner.get(), p.get()));
-		assert(part_leq(p.get(), outer.get()));
+		assert(part_valid(*p));
+		assert(part_leq(*inner, *p));
+		assert(part_leq(*p, *outer));
 		np++;
 	}
-	assert(np == iv_sum(count.get()));
+	assert(np == iv_sum(*count));
 
 	for (int size = 0; size < size_bound; size++)
 	{
 		np = 0;
 		for ([[maybe_unused]] auto& itr :
-		     pitr(p.get(), rows, cols, outer.get(), inner.get(), size, PITR_USE_OUTER | PITR_USE_INNER | PITR_USE_SIZE))
+		     pitr(*p, rows, cols, outer.get(), inner.get(), size, PITR_USE_OUTER | PITR_USE_INNER | PITR_USE_SIZE))
 		{
-			assert(part_valid(p.get()));
-			assert(part_leq(inner.get(), p.get()));
-			assert(part_leq(p.get(), outer.get()));
-			assert(iv_sum(p.get()) == size);
+			assert(part_valid(*p));
+			assert(part_leq(*inner, *p));
+			assert(part_leq(*p, *outer));
+			assert(iv_sum(*p) == size);
 			np++;
 		}
 		assert(np == iv_elem(count, size));
@@ -186,10 +186,10 @@ int main(int ac, char** av)
 
 	if (!test_part_iter_box(rows, cols)) out_of_memory();
 
-	for ([[maybe_unused]] auto& itr_p2 : pitr::box(p2.get(), rows, cols))
+	for ([[maybe_unused]] auto& itr_p2 : pitr::box(*p2, rows, cols))
 	{
 		uint32_t p2_len = iv_length(p2);
-		part_unchop(p2.get(), rows);
+		part_unchop(*p2, rows);
 
 		if (!test_part_iter_sub(rows, cols, p2)) out_of_memory();
 		if (!test_part_iter_sub(rows0, cols, p2)) out_of_memory();
@@ -200,10 +200,10 @@ int main(int ac, char** av)
 		if (!test_part_iter_super(rows, cols0, p2)) out_of_memory();
 		if (!test_part_iter_super(rows, cols + 2, p2)) out_of_memory();
 
-		for ([[maybe_unused]] auto& itr_p1 : pitr(p1.get(), rows, cols, p2.get(), nullptr, 0, PITR_USE_OUTER))
+		for ([[maybe_unused]] auto& itr_p1 : pitr(*p1, rows, cols, p2.get(), nullptr, 0, PITR_USE_OUTER))
 		{
 			uint32_t p1_len = iv_length(p1);
-			part_unchop(p1.get(), rows);
+			part_unchop(*p1, rows);
 
 			if (!test_part_iter_between(rows, cols, p2, p1)) out_of_memory();
 			if (!test_part_iter_between(rows0, cols, p2, p1)) out_of_memory();

@@ -31,10 +31,10 @@ int main(int ac, char** av)
 {
 	iv_ptr dv{get_vect_arg(ac, av)};
 	if (!dv) print_usage();
-	if (dimvec_valid(dv.get()) == 0) print_usage();
+	if (dimvec_valid(*dv) == 0) print_usage();
 
-	ivl_ptr lst{all_strings(dv.get())};
+	ivl_ptr lst{all_strings(*dv)};
 	if (!lst) out_of_memory();
 
-	for (uint32_t i = 0; i < ivl_length(lst); i++) iv_printnl(ivl_elem(lst, i));
+	for (uint32_t i = 0; i < ivl_length(lst); i++) iv_printnl(*ivl_elem(lst, i));
 }

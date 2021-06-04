@@ -8,15 +8,15 @@
 extern "C"
 {
 #endif
-	bool perm_valid(const ivector* w);
+	bool perm_valid(const ivector& w);
 
-	int perm_group(const ivector* w);
+	int perm_group(const ivector& w);
 
-	bool dimvec_valid(const ivector* dv);
+	bool dimvec_valid(const ivector& dv);
 
-	bool str_iscompat(const ivector* str1, const ivector* str2);
+	bool str_iscompat(const ivector& str1, const ivector& str2);
 
-	ivlist* all_strings(const ivector* dimvec);
+	ivlist* all_strings(const ivector& dimvec);
 	ivlist* all_perms(int n);
 #ifdef __cplusplus
 }

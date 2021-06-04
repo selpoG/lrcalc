@@ -97,15 +97,23 @@ impl LinearCombination {
         if ptr == std::ptr::null_mut() {
             panic!("Memory Error")
         }
-        let lc: LinearCombination = ptr.into();
+        let mut lc: LinearCombination = ptr.into();
+        let lc_data = lc.deref_mut();
         for (key, val) in it {
             let mut key = IntVector::new(&key[..]);
-            if ivlc_insert(lc.data, key.data, iv_hash(key.data), val) == std::ptr::null_mut() {
+            let v = unsafe { &mut *key.data };
+            if ivlc_insert(lc_data, v, iv_hash(v), val) == std::ptr::null_mut() {
                 panic!("Memory Error")
             }
             key.owned = false;
         }
         lc
+    }
+    fn deref(&self) -> &_LinearCombination {
+        unsafe { &*self.data }
+    }
+    fn deref_mut(&mut self) -> &mut _LinearCombination {
+        unsafe { &mut *self.data }
     }
     #[allow(dead_code)]
     pub fn iter(&self) -> LinearCombination {
@@ -122,7 +130,8 @@ impl LinearCombination {
     }
     #[allow(dead_code)]
     pub fn find(&self, key: &IntVector) -> Option<LinearCombinationElement> {
-        let kv = ivlc_lookup(self.data, key.data, iv_hash(key.data) as u32);
+        let v = unsafe { &*key.data };
+        let kv = ivlc_lookup(self.deref(), v, iv_hash(v) as u32);
         if kv == std::ptr::null_mut() {
             None
         } else {
@@ -165,12 +174,12 @@ impl Iterator for LinearCombination {
     type Item = (IntVector, i32);
     fn next(&mut self) -> Option<Self::Item> {
         if !self.it.initialized {
-            ivlc_first(self.data, &mut self.it);
+            ivlc_first(unsafe { &*self.data }, &mut self.it);
             self.it.initialized = true
         } else {
             ivlc_next(&mut self.it)
         }
-        if ivlc_good(&mut self.it) {
+        if ivlc_good(&self.it) {
             let kv = ivlc_keyval_rs(&self.it);
             Some((
                 IntVector {

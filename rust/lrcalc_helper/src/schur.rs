@@ -10,15 +10,27 @@ use super::part::{part_entry_rs, part_valid};
 
 #[no_mangle]
 pub extern "C" fn schur_mult(
-	sh1: *const IntVector,
+	sh1: &IntVector,
 	sh2: *const IntVector,
 	rows: i32,
 	cols: i32,
 	partsz: i32,
 ) -> *mut LinearCombination {
+	let sh2 = if sh2 == std::ptr::null() {
+		None
+	} else {
+		Some(unsafe { &*sh2 })
+	};
 	let ss = optim_mult(sh1, sh2, rows, cols);
 	if ss.sign != 0 {
-		lrit_expand(ss.outer, std::ptr::null(), ss.cont, rows, cols, partsz)
+		lrit_expand(
+			unsafe { &*ss.outer },
+			std::ptr::null(),
+			ss.cont,
+			rows,
+			cols,
+			partsz,
+		)
 	} else {
 		ivlc_new(5, 2)
 	}
@@ -72,7 +84,7 @@ fn fusion_reduce(la: &mut IntVector, level: i32, tmp: &mut [i32]) -> i32 {
 }
 
 #[no_mangle]
-pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) {
+pub extern "C" fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
 	struct T(Vec<*mut IntVector>);
 	impl Drop for T {
 		fn drop(&mut self) {
@@ -81,7 +93,7 @@ pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) {
 			}
 		}
 	}
-	let card = unsafe { &*lc }.card as usize;
+	let card = lc.card as usize;
 	let mut parts = T(Vec::with_capacity(card));
 	let mut coefs = Vec::with_capacity(card);
 
@@ -110,14 +122,12 @@ pub extern "C" fn fusion_reduce_lc(lc: *mut LinearCombination, level: i32) {
 
 #[no_mangle]
 pub extern "C" fn schur_mult_fusion(
-	sh1: *const IntVector,
-	sh2: *const IntVector,
+	mut sh1: &IntVector,
+	mut sh2: &IntVector,
 	rows: i32,
 	level: i32,
 ) -> *mut LinearCombination {
 	debug_assert!(part_valid(sh1) && part_valid(sh2));
-	let mut sh1 = unsafe { &*sh1 };
-	let mut sh2 = unsafe { &*sh2 };
 	if part_entry_rs(&sh1[..], rows) != 0 || part_entry_rs(&sh2[..], rows) != 0 {
 		return ivlc_new(5, 2);
 	}
@@ -179,12 +189,19 @@ pub extern "C" fn schur_mult_fusion(
 
 	let ss = optim_fusion(sh1, sh2, rows, level);
 	let lc = if ss.sign != 0 {
-		lrit_expand(ss.outer, std::ptr::null(), ss.cont, rows, -1, rows)
+		lrit_expand(
+			unsafe { &*ss.outer },
+			std::ptr::null(),
+			ss.cont,
+			rows,
+			-1,
+			rows,
+		)
 	} else {
 		ivlc_new(5, 2)
 	};
 
-	fusion_reduce_lc(lc, level);
+	fusion_reduce_lc(unsafe { &mut *lc }, level);
 
 	if sign < 0 {
 		LinearCombinationIter::from(lc as *const _).visit(|kv| {
@@ -197,14 +214,19 @@ pub extern "C" fn schur_mult_fusion(
 
 #[no_mangle]
 pub extern "C" fn schur_skew(
-	outer: *const IntVector,
+	outer: &IntVector,
 	inner: *const IntVector,
 	rows: i32,
 	partsz: i32,
 ) -> *mut LinearCombination {
-	let ss = optim_skew(outer, inner, std::ptr::null(), rows);
+	let inner = if inner == std::ptr::null() {
+		None
+	} else {
+		unsafe { Some(&*inner) }
+	};
+	let ss = optim_skew(outer, inner, None, rows);
 	if ss.sign != 0 {
-		lrit_expand(ss.outer, ss.inner, ss.cont, rows, -1, partsz)
+		lrit_expand(unsafe { &*ss.outer }, ss.inner, ss.cont, rows, -1, partsz)
 	} else {
 		ivlc_new(5, 2)
 	}
@@ -236,10 +258,10 @@ fn _schur_coprod_count(
 	rows: i32,
 	cols: i32,
 ) -> *mut LinearCombination {
-	let cont = lrit.cont;
-	let lc = ivlc_new_default();
+	let cont = unsafe { &mut *lrit.cont };
+	let lc = unsafe { &mut *ivlc_new_default() };
 	while lrit_good(lrit) {
-		if _schur_coprod_isredundant(unsafe { &*cont }, rows, cols) {
+		if _schur_coprod_isredundant(cont, rows, cols) {
 			lrit_next(lrit);
 			continue;
 		}
@@ -250,7 +272,7 @@ fn _schur_coprod_count(
 }
 
 fn _schur_coprod_expand(
-	outer: *const IntVector,
+	outer: &IntVector,
 	content: *const IntVector,
 	rows: i32,
 	cols: i32,
@@ -264,7 +286,7 @@ fn _schur_coprod_expand(
 
 #[no_mangle]
 pub extern "C" fn schur_coprod(
-	sh: *const IntVector,
+	sh: &IntVector,
 	rows: i32,
 	cols: i32,
 	partsz: i32,
@@ -276,21 +298,17 @@ pub extern "C" fn schur_coprod(
 		return schur_mult(sh, b, -1, -1, partsz);
 	}
 
-	let ss = optim_mult(sh, b, -1, -1);
+	let ss = optim_mult(sh, Some(unsafe { &*b }), -1, -1);
 
-	_schur_coprod_expand(ss.outer, ss.cont, rows, cols, partsz)
+	_schur_coprod_expand(unsafe { &*ss.outer }, ss.cont, rows, cols, partsz)
 }
 
 #[no_mangle]
-pub extern "C" fn schur_lrcoef(
-	outer: *const IntVector,
-	inner1: *const IntVector,
-	inner2: *const IntVector,
-) -> i64 {
+pub extern "C" fn schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
 	let ss = optim_coef(outer, inner1, inner2);
 	if ss.sign <= 1 {
 		ss.sign as i64
 	} else {
-		lrcoef_count(ss.outer, ss.inner, ss.cont)
+		unsafe { lrcoef_count(&*ss.outer, &*ss.inner, &*ss.cont) }
 	}
 }

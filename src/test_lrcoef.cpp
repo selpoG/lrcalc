@@ -32,14 +32,14 @@ static bool test_schur_lrcoef(const iv_ptr& p1, const iv_ptr& p2, int rows, int 
 {
 	iv_ptr outer = iv_create(uint32_t(rows));
 
-	ivlc_ptr prd{schur_mult(p1.get(), p2.get(), rows, cols, rows)};
+	ivlc_ptr prd{schur_mult(*p1, p2.get(), rows, cols, rows)};
 	if (!prd) return false;
 
-	for ([[maybe_unused]] auto& itr : pitr::box(outer.get(), rows, cols))
+	for ([[maybe_unused]] auto& itr : pitr::box(*outer, rows, cols))
 	{
-		long long coef = schur_lrcoef(outer.get(), p1.get(), p2.get());
+		long long coef = schur_lrcoef(*outer, *p1, *p2);
 		if (coef < 0) return false;
-		[[maybe_unused]] const ivlc_keyval_t* kv = ivlc_lookup(prd.get(), outer.get(), iv_hash(outer.get()));
+		[[maybe_unused]] const ivlc_keyval_t* kv = ivlc_lookup(*prd, *outer, iv_hash(*outer));
 		assert(coef == (kv ? kv->value : 0));
 	}
 
@@ -56,8 +56,8 @@ int main(int ac, char** av)
 	iv_ptr p1 = iv_create(uint32_t(rows));
 	iv_ptr p2 = iv_create(uint32_t(rows));
 
-	for ([[maybe_unused]] auto& itr1 : pitr::box(p1.get(), rows, cols))
-		for ([[maybe_unused]] auto& itr2 : pitr::box(p2.get(), rows, cols))
+	for ([[maybe_unused]] auto& itr1 : pitr::box(*p1, rows, cols))
+		for ([[maybe_unused]] auto& itr2 : pitr::box(*p2, rows, cols))
 			if (!test_schur_lrcoef(p1, p2, rows, cols)) out_of_memory();
 
 	puts("success");

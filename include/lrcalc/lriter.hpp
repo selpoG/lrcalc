@@ -24,16 +24,16 @@ extern "C"
 		lrit_box* array;
 	};
 
-	lrtab_iter* lrit_new(const ivector* outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
+	lrtab_iter* lrit_new(const ivector& outer, const ivector* inner, const ivector* content, int maxrows, int maxcols,
 	                     int partsz);
 
 	void lrit_free(lrtab_iter* lrit);
 
-	void lrit_print_skewtab(const lrtab_iter* lrit, const ivector* outer, const ivector* inner);
+	void lrit_print_skewtab(const lrtab_iter& lrit, const ivector& outer, const ivector* inner);
 
-	bool lrit_good(const lrtab_iter* lrit);
+	bool lrit_good(const lrtab_iter& lrit);
 
-	void lrit_next(lrtab_iter* lrit);
+	void lrit_next(lrtab_iter& lrit);
 #ifdef __cplusplus
 }
 #endif

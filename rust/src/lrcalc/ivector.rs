@@ -1,8 +1,8 @@
 use lrcalc_helper::{
     ivector::IntVector as _IntVector,
     ivector::{iv_free, iv_new},
-    part::{part_qdegree, part_qentry, part_valid},
-    perm::{dimvec_valid, perm_valid, str_iscompat},
+    part::{part_qdegree, part_qentry, part_valid_rs},
+    perm::{dimvec_valid_rs, perm_group_rs, perm_valid_rs, str_iscompat_rs},
 };
 
 pub struct IntVector {
@@ -23,8 +23,14 @@ impl IntVector {
         c_v[..].copy_from_slice(&v);
         c_v
     }
+    fn deref(&self) -> &_IntVector {
+        unsafe { &*self.data }
+    }
+    fn deref_mut(&mut self) -> &mut _IntVector {
+        unsafe { &mut *self.data }
+    }
     pub fn len(&self) -> usize {
-        unsafe { (*self.data).length as usize }
+        self.deref().length as usize
     }
     #[allow(dead_code)]
     pub fn size(&self) -> i32 {
@@ -79,27 +85,22 @@ impl IntVector {
     }
     #[allow(dead_code)]
     pub fn perm_group(&self) -> i32 {
-        let mut i = self.len() as i32;
-        let v = &self[..];
-        while i > 0 && v[(i - 1) as usize] == i {
-            i -= 1
-        }
-        i
+        perm_group_rs(&self[..])
     }
     pub fn to_vec(&self) -> Vec<i32> {
         self[..].iter().cloned().collect()
     }
     pub fn is_partition(&self) -> bool {
-        part_valid(self.data)
+        part_valid_rs(&self[..])
     }
     pub fn is_permutation(&self) -> bool {
-        perm_valid(self.data)
+        perm_valid_rs(&self[..])
     }
     pub fn is_dimvec(&self) -> bool {
-        dimvec_valid(self.data)
+        dimvec_valid_rs(&self[..])
     }
     pub fn is_compatible_str(&self, other: &IntVector) -> bool {
-        str_iscompat(self.data, other.data)
+        str_iscompat_rs(&self[..], &other[..])
     }
     pub fn to_partition(&self) -> Vec<i32> {
         let arr = &self[..];
@@ -124,16 +125,15 @@ impl IntVector {
         )
     }
     pub fn to_quantum(&self, level: i32) -> (i32, Vec<i32>) {
-        let d = part_qdegree(self.data, level);
+        let p = self.deref();
+        let d = part_qdegree(p, level);
         let mut n = self.len();
-        while n > 0 && part_qentry(self.data, (n - 1) as i32, d, level) == 0 {
+        while n > 0 && part_qentry(p, (n - 1) as i32, d, level) == 0 {
             n -= 1
         }
         (
             d,
-            (0..n)
-                .map(|i| part_qentry(self.data, i as i32, d, level))
-                .collect(),
+            (0..n).map(|i| part_qentry(p, i as i32, d, level)).collect(),
         )
     }
 }
@@ -149,14 +149,12 @@ impl Drop for IntVector {
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::Index<I> for IntVector {
     type Output = I::Output;
     fn index(&self, index: I) -> &Self::Output {
-        let ptr = unsafe { std::slice::from_raw_parts((*self.data).array, self.len()) };
-        std::ops::Index::index(ptr, index)
+        &self.deref()[index]
     }
 }
 
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for IntVector {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        let ptr = unsafe { std::slice::from_raw_parts_mut((*self.data).array, self.len()) };
-        std::ops::IndexMut::index_mut(ptr, index)
+        &mut self.deref_mut()[index]
     }
 }

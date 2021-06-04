@@ -35,5 +35,5 @@ int main(int ac, char** av)
 	ivl_ptr lst{all_perms(n)};
 	if (!lst) out_of_memory();
 
-	for (uint32_t i = 0; i < ivl_length(lst); i++) iv_printnl(ivl_elem(lst, i));
+	for (uint32_t i = 0; i < ivl_length(lst); i++) iv_printnl(*ivl_elem(lst, i));
 }

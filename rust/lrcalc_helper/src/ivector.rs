@@ -78,8 +78,8 @@ pub extern "C" fn into_iv(p: *const i32, length: u32) -> *mut IntVector {
 }
 
 #[no_mangle]
-pub extern "C" fn iv_hash(v: *const IntVector) -> u32 {
-	let v = unsafe { &(*v)[..] };
+pub extern "C" fn iv_hash(v: &IntVector) -> u32 {
+	let v = &v[..];
 	let mut h = std::num::Wrapping(v.len() as u32);
 	for x in v {
 		h = ((h << 5) ^ (h >> 27)) + std::num::Wrapping(*x as u32);
@@ -88,14 +88,13 @@ pub extern "C" fn iv_hash(v: *const IntVector) -> u32 {
 }
 
 #[no_mangle]
-pub extern "C" fn iv_sum(v: *const IntVector) -> i32 {
-	let v = unsafe { &(*v)[..] };
-	v.iter().sum()
+pub extern "C" fn iv_sum(v: &IntVector) -> i32 {
+	(&v[..]).iter().sum()
 }
 
 #[no_mangle]
-pub extern "C" fn iv_print(v: *const IntVector) {
-	let v = unsafe { &(*v)[..] };
+pub extern "C" fn iv_print(v: &IntVector) {
+	let v = &v[..];
 	if v.len() == 0 {
 		return print!("()");
 	}
@@ -107,7 +106,7 @@ pub extern "C" fn iv_print(v: *const IntVector) {
 }
 
 #[no_mangle]
-pub extern "C" fn iv_printnl(v: *const IntVector) {
+pub extern "C" fn iv_printnl(v: &IntVector) {
 	iv_print(v);
 	println!()
 }
@@ -146,14 +145,14 @@ fn _maple_print_term(c: i32, v: &IntVector, letter: &str, nz: bool) {
 
 #[no_mangle]
 pub extern "C" fn maple_print_lincomb(
-	ht: *const LinearCombination,
+	ht: &LinearCombination,
 	letter: *const std::os::raw::c_char,
 	nz: bool,
 ) {
 	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
 	let letter = slice.to_str().unwrap();
 	print!("0");
-	for kv in LinearCombinationIter::from(ht) {
+	for kv in LinearCombinationIter::from(ht as *const _) {
 		if kv.value == 0 {
 			continue;
 		}
@@ -181,14 +180,14 @@ fn _maple_qprint_term(c: i32, v: &IntVector, level: i32, letter: &str) {
 
 #[no_mangle]
 pub extern "C" fn maple_qprint_lincomb(
-	ht: *const LinearCombination,
+	ht: &LinearCombination,
 	level: i32,
 	letter: *const std::os::raw::c_char,
 ) {
 	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
 	let letter = slice.to_str().unwrap();
 	print!("0");
-	for kv in LinearCombinationIter::from(ht) {
+	for kv in LinearCombinationIter::from(ht as *const _) {
 		if kv.value == 0 {
 			continue;
 		}

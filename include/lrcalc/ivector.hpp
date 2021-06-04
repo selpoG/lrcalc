@@ -21,12 +21,12 @@ extern "C"
 
 	void iv_free(ivector* v);
 
-	uint32_t iv_hash(const ivector* v);
+	uint32_t iv_hash(const ivector& v);
 
-	int32_t iv_sum(const ivector* v);
+	int32_t iv_sum(const ivector& v);
 
-	void iv_print(const ivector* v);
-	void iv_printnl(const ivector* v);
+	void iv_print(const ivector& v);
+	void iv_printnl(const ivector& v);
 
 #define iv_length(v) ((v)->length)
 

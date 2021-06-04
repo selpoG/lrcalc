@@ -38,15 +38,15 @@ extern "C"
 	void ivlc_free(ivlincomb* ht);
 
 	/* Return pointer to keyval_t, nullptr if key not in table. */
-	ivlc_keyval_t* ivlc_lookup(const ivlincomb* ht, const ivector* key, uint32_t hash);
+	ivlc_keyval_t* ivlc_lookup(const ivlincomb& ht, const ivector& key, uint32_t hash);
 
 	/* Call only if key is not in table.  Insert key into table and return
 	   a pointer to new value variable, nullptr if memory allocation
 	   error. */
-	ivlc_keyval_t* ivlc_insert(ivlincomb* ht, ivector* key, uint32_t hash, int32_t value);
+	ivlc_keyval_t* ivlc_insert(ivlincomb& ht, ivector& key, uint32_t hash, int32_t value);
 
 	/* Return true if equal; ignore zero values. */
-	bool ivlc_equals(const ivlincomb* ht1, const ivlincomb* ht2);
+	bool ivlc_equals(const ivlincomb& ht1, const ivlincomb& ht2);
 
 	struct ivlc_iter
 	{
@@ -56,19 +56,19 @@ extern "C"
 		bool initialized;
 	};
 
-	bool ivlc_good(const ivlc_iter* itr);
+	bool ivlc_good(const ivlc_iter& itr);
 
-	void ivlc_first(const ivlincomb* ht, ivlc_iter* itr);
+	void ivlc_first(const ivlincomb& ht, ivlc_iter& itr);
 
-	void ivlc_next(ivlc_iter* itr);
+	void ivlc_next(ivlc_iter& itr);
 
-	ivlc_keyval_t* ivlc_keyval(const ivlc_iter* itr);
+	ivlc_keyval_t* ivlc_keyval(const ivlc_iter& itr);
 
 	void ivlc_free_all(ivlincomb* ht);
 
-	void ivlc_print(const ivlincomb* ht);
+	void ivlc_print(const ivlincomb& ht);
 
-	void ivlc_print_coprod(const ivlincomb* ht, uint32_t rows, int cols);
+	void ivlc_print_coprod(const ivlincomb& ht, uint32_t rows, int cols);
 #ifdef __cplusplus
 }
 #endif

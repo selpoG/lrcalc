@@ -36,7 +36,7 @@ static iv_ptr part2string(const iv_ptr& p, int rows, int cols)
 {
 	iv_ptr s = iv_create(uint32_t(rows + cols));
 	for (int i = 0; uint32_t(i) < iv_length(s); i++) iv_elem(s, i) = 1;
-	for (int i = 0; i < rows; i++) iv_elem(s, i + part_entry(p.get(), rows - 1 - i)) = 0;
+	for (int i = 0; i < rows; i++) iv_elem(s, i + part_entry(*p, rows - 1 - i)) = 0;
 	return s;
 }
 
@@ -59,7 +59,7 @@ static ivlc_ptr string2part_lc(const ivlc_ptr& lc, int rows)
 	for (const auto& kv : ivlc_iterator(lc))
 	{
 		iv_ptr p = string2part(kv.key, rows);
-		ivlc_insert(res.get(), p.get(), iv_hash(p.get()), kv.value);
+		ivlc_insert(*res, *p, iv_hash(*p), kv.value);
 		p.release();
 	}
 	return res;
@@ -71,15 +71,15 @@ static ivlc_slice get_box(const ivlc_ptr& lc, int rows, int cols)
 	if (rows == -1) rows = std::numeric_limits<int>::max();
 	if (cols == -1) cols = std::numeric_limits<int>::max();
 	for (auto& kv : ivlc_iterator(lc))
-		if (part_entry(kv.key, rows) == 0 && part_entry(kv.key, 0) <= cols)
-			ivlc_insert(res.get(), kv.key, kv.hash, kv.value);
+		if (part_entry(*kv.key, rows) == 0 && part_entry(*kv.key, 0) <= cols)
+			ivlc_insert(*res, *kv.key, kv.hash, kv.value);
 	return res;
 }
 
 static bool test_schur_mult(const iv_ptr& p1, const iv_ptr& p2)
 {
-	auto rows = int(part_length(p1.get()) + part_length(p2.get()));
-	int cols = part_entry(p1.get(), 0) + part_entry(p2.get(), 0);
+	auto rows = int(part_length(*p1) + part_length(*p2));
+	int cols = part_entry(*p1, 0) + part_entry(*p2, 0);
 
 	ivlc_ptr prd;
 	{
@@ -87,25 +87,25 @@ static bool test_schur_mult(const iv_ptr& p1, const iv_ptr& p2)
 		{
 			iv_ptr s1 = part2string(p1, rows, cols);
 			iv_ptr s2 = part2string(p2, rows, cols);
-			prd_s.reset(mult_schubert_str(s1.get(), s2.get()));
+			prd_s.reset(mult_schubert_str(*s1, *s2));
 			if (!prd_s) return false;
 		}
 		prd = string2part_lc(prd_s, rows);
 	}
 
 	{
-		ivlc_ptr prd_sm{schur_mult(p1.get(), p2.get(), -1, -1, -1)};
+		ivlc_ptr prd_sm{schur_mult(*p1, p2.get(), -1, -1, -1)};
 		if (!prd_sm) return false;
-		assert(ivlc_equals(prd_sm.get(), prd.get()));
+		assert(ivlc_equals(*prd_sm, *prd));
 	}
 
 	for (int r = -1; r <= rows; r++)
 		for (int c = -1; c <= cols; c++)
 		{
-			ivlc_ptr prd_sm{schur_mult(p1.get(), p2.get(), r, c, rows)};
+			ivlc_ptr prd_sm{schur_mult(*p1, p2.get(), r, c, rows)};
 			if (!prd_sm) return false;
 			ivlc_slice prd_gb = get_box(prd, r, c);
-			assert(ivlc_equals(prd_sm.get(), prd_gb.get()));
+			assert(ivlc_equals(*prd_sm, *prd_gb));
 		}
 
 	return true;
@@ -121,8 +121,8 @@ int main(int ac, char** av)
 	iv_ptr p1 = iv_create(uint32_t(rows));
 	iv_ptr p2 = iv_create(uint32_t(rows));
 
-	for ([[maybe_unused]] auto& itr1 : pitr::box(p1.get(), rows, cols))
-		for ([[maybe_unused]] auto& itr2 : pitr::box(p2.get(), rows, cols))
+	for ([[maybe_unused]] auto& itr1 : pitr::box(*p1, rows, cols))
+		for ([[maybe_unused]] auto& itr2 : pitr::box(*p2, rows, cols))
 			if (!test_schur_mult(p1, p2)) out_of_memory();
 
 	puts("success");

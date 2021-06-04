@@ -1,6 +1,6 @@
 use lrcalc_helper::{
     part::{pitr_first_rs, pitr_good, pitr_next},
-    perm::{all_perms as _all_perms, all_strings as _all_strings},
+    perm::{all_perms as _all_perms, all_strings_rs},
     schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},
     schur::{
         fusion_reduce_lc, schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew,
@@ -13,7 +13,7 @@ use super::lincomb::LinearCombination;
 use super::lriter::LRTableauIterator;
 
 pub(crate) fn _schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
-    schur_lrcoef(outer.data, inner1.data, inner2.data)
+    unsafe { schur_lrcoef(&*outer.data, &*inner1.data, &*inner2.data) }
 }
 
 pub(crate) fn _mult_poly_schubert(
@@ -21,7 +21,7 @@ pub(crate) fn _mult_poly_schubert(
     perm: &IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    let ans = mult_poly_schubert(poly.data, perm.data, rank);
+    let ans = unsafe { mult_poly_schubert(&mut *poly.data, &mut *perm.data, rank) };
     poly.owned = false;
     ans.into()
 }
@@ -33,7 +33,7 @@ pub(crate) fn _schur_mult(
     cols: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult(sh1.data, sh2.data, rows, cols, partsz).into()
+    schur_mult(unsafe { &*sh1.data }, sh2.data, rows, cols, partsz).into()
 }
 
 pub(crate) fn _schur_mult_fusion(
@@ -42,7 +42,7 @@ pub(crate) fn _schur_mult_fusion(
     rows: ::std::os::raw::c_int,
     level: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult_fusion(sh1.data, sh2.data, rows, level).into()
+    unsafe { schur_mult_fusion(&*sh1.data, &*sh2.data, rows, level) }.into()
 }
 
 pub(crate) fn _schur_skew(
@@ -51,15 +51,22 @@ pub(crate) fn _schur_skew(
     rows: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_skew(outer.data, inner.data, rows, partsz).into()
+    schur_skew(unsafe { &*outer.data }, inner.data, rows, partsz).into()
 }
 
 pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
-    schur_coprod(sh.data, sh.rows() as i32, sh.cols() as i32, -1, all).into()
+    schur_coprod(
+        unsafe { &*sh.data },
+        sh.rows() as i32,
+        sh.cols() as i32,
+        -1,
+        all,
+    )
+    .into()
 }
 
 pub(crate) fn _trans(w: &IntVector, vars: ::std::os::raw::c_int) -> LinearCombination {
-    trans(w.data, vars).into()
+    trans(unsafe { &*w.data }, vars).into()
 }
 
 pub(crate) fn _mult_schubert(
@@ -67,11 +74,11 @@ pub(crate) fn _mult_schubert(
     ww2: &IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    mult_schubert(ww1.data, ww2.data, rank).into()
+    unsafe { mult_schubert(&mut *ww1.data, &mut *ww2.data, rank) }.into()
 }
 
 pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearCombination {
-    let ans = mult_schubert_str(ww1.data, ww2.data);
+    let ans = unsafe { mult_schubert_str(&*ww1.data, &*ww2.data) };
     if ans == std::ptr::null_mut() {
         panic!("Memory Error")
     }
@@ -79,7 +86,7 @@ pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearComb
 }
 
 pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::raw::c_int) {
-    fusion_reduce_lc(lc.data, level);
+    fusion_reduce_lc(unsafe { &mut *lc.data }, level);
 }
 
 /// check that sh represents a partition, i.e., is weakly-decreasing and nonnegative
@@ -109,33 +116,6 @@ pub fn is_permutation(p: &[i32]) -> bool {
         flag[(i - 1) as usize] = true;
     }
     true
-}
-
-pub fn are_compatible_strs(s1: &[i32], s2: &[i32]) -> bool {
-    if s1.len() != s2.len() {
-        return false;
-    }
-    if s1.len() == 0 {
-        return true;
-    }
-    let n = *s1.iter().max().unwrap();
-    if n != *s2.iter().max().unwrap() {
-        return false;
-    }
-    let mut cnt = vec![0; (n + 1) as usize];
-    for &a in s1 {
-        if a < 0 {
-            return false;
-        }
-        cnt[a as usize] += 1
-    }
-    for &a in s2 {
-        if a < 0 {
-            return false;
-        }
-        cnt[a as usize] -= 1
-    }
-    cnt.iter().all(|&c| c == 0)
 }
 
 /// outer, inner_1, inner_2 must be partitions
@@ -247,7 +227,15 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
 pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
     let mut ans = Vec::new();
     let p = IntVector::default(rows as u32);
-    let mut pitr = pitr_first_rs(p.data, rows, cols, std::ptr::null(), std::ptr::null(), 0, 0);
+    let mut pitr = pitr_first_rs(
+        unsafe { &mut *p.data },
+        rows,
+        cols,
+        std::ptr::null(),
+        std::ptr::null(),
+        0,
+        0,
+    );
     while pitr_good(&pitr) {
         ans.push(p.to_vec());
         pitr_next(&mut pitr)
@@ -267,7 +255,7 @@ pub fn all_perms(n: i32) -> Vec<Vec<i32>> {
 pub fn all_strings(dimvec: &[i32]) -> Vec<Vec<i32>> {
     let dimvec = IntVector::new(dimvec);
     debug_assert!(dimvec.is_dimvec());
-    let ans = _all_strings(dimvec.data);
+    let ans = all_strings_rs(&dimvec[..]);
     if ans == std::ptr::null_mut() {
         panic!("Memory Error")
     }
