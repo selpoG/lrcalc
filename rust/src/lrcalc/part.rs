@@ -26,14 +26,8 @@ impl PartIter {
             unsafe { &mut *p.data },
             rows,
             cols,
-            match outer {
-                Some(x) => x.data,
-                None => std::ptr::null(),
-            },
-            match inner {
-                Some(x) => x.data,
-                None => std::ptr::null(),
-            },
+            outer.map(|x| x.data as *const _),
+            inner.map(|x| x.data as *const _),
             size,
             opt,
         );

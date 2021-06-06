@@ -21,7 +21,7 @@ pub(crate) fn _mult_poly_schubert(
     perm: &IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    let ans = unsafe { mult_poly_schubert(&mut *poly.data, &mut *perm.data, rank) };
+    let ans = unsafe { mult_poly_schubert(&mut *(poly.it.ht as *mut _), &mut *perm.data, rank) };
     poly.owned = false;
     ans.into()
 }
@@ -86,7 +86,7 @@ pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearComb
 }
 
 pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::raw::c_int) {
-    fusion_reduce_lc(unsafe { &mut *lc.data }, level);
+    fusion_reduce_lc(unsafe { &mut *(lc.it.ht as *mut _) }, level);
 }
 
 /// check that sh represents a partition, i.e., is weakly-decreasing and nonnegative
@@ -227,15 +227,7 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
 pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
     let mut ans = Vec::new();
     let p = IntVector::default(rows as u32);
-    let mut pitr = pitr_first_rs(
-        unsafe { &mut *p.data },
-        rows,
-        cols,
-        std::ptr::null(),
-        std::ptr::null(),
-        0,
-        0,
-    );
+    let mut pitr = pitr_first_rs(unsafe { &mut *p.data }, rows, cols, None, None, 0, 0);
     while pitr_good(&pitr) {
         ans.push(p.to_vec());
         pitr_next(&mut pitr)

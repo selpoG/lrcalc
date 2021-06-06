@@ -1,18 +1,16 @@
 use anyhow::anyhow;
 
 use lrcalc_helper::{
-    ivector::iv_hash,
+    ivector::iv_hash_rs,
     ivlincomb::{
-        ivlc_first, ivlc_free_all, ivlc_good, ivlc_insert, ivlc_keyval_rs, ivlc_lookup,
-        ivlc_new_default, ivlc_next, LinearCombination as _LinearCombination,
-        LinearCombinationElement, LinearCombinationIter,
+        ivlc_free_all, ivlc_insert_rs, ivlc_lookup_rs, ivlc_new_default,
+        LinearCombination as _LinearCombination, LinearCombinationElement, LinearCombinationIter,
     },
 };
 
 use super::ivector::IntVector;
 
 pub struct LinearCombination {
-    pub data: *mut _LinearCombination,
     pub it: LinearCombinationIter,
     pub(crate) owned: bool,
 }
@@ -78,13 +76,7 @@ impl std::fmt::Display for DiffResult {
 impl From<*mut _LinearCombination> for LinearCombination {
     fn from(from: *mut _LinearCombination) -> LinearCombination {
         LinearCombination {
-            data: from,
-            it: LinearCombinationIter {
-                ht: std::ptr::null(),
-                index: 0,
-                i: 0,
-                initialized: false,
-            },
+            it: LinearCombinationIter::from(from as *const _),
             owned: true,
         }
     }
@@ -100,38 +92,28 @@ impl LinearCombination {
         let mut lc: LinearCombination = ptr.into();
         let lc_data = lc.deref_mut();
         for (key, val) in it {
-            let mut key = IntVector::new(&key[..]);
-            let v = unsafe { &mut *key.data };
-            if ivlc_insert(lc_data, v, iv_hash(v), val) == std::ptr::null_mut() {
+            if ivlc_insert_rs(lc_data, &key[..], val) == std::ptr::null_mut() {
                 panic!("Memory Error")
             }
-            key.owned = false;
         }
         lc
     }
     fn deref(&self) -> &_LinearCombination {
-        unsafe { &*self.data }
+        unsafe { &*self.it.ht }
     }
     fn deref_mut(&mut self) -> &mut _LinearCombination {
-        unsafe { &mut *self.data }
+        unsafe { &mut *(self.it.ht as *mut _) }
     }
     #[allow(dead_code)]
     pub fn iter(&self) -> LinearCombination {
         LinearCombination {
-            data: self.data,
-            it: LinearCombinationIter {
-                ht: std::ptr::null(),
-                index: 0,
-                i: 0,
-                initialized: false,
-            },
+            it: LinearCombinationIter::from(self.it.ht),
             owned: false,
         }
     }
     #[allow(dead_code)]
-    pub fn find(&self, key: &IntVector) -> Option<LinearCombinationElement> {
-        let v = unsafe { &*key.data };
-        let kv = ivlc_lookup(self.deref(), v, iv_hash(v) as u32);
+    pub fn find(&self, key: &[i32]) -> Option<LinearCombinationElement> {
+        let kv = ivlc_lookup_rs(self.deref(), key, iv_hash_rs(key) as u32);
         if kv == std::ptr::null_mut() {
             None
         } else {
@@ -144,7 +126,7 @@ impl LinearCombination {
             if !filter(&sh, &n) {
                 continue;
             }
-            match other.find(&sh) {
+            match other.find(&sh[..]) {
                 None => {
                     return DiffResult::KeyMismatch(sh, Which::Left);
                 }
@@ -173,31 +155,22 @@ impl LinearCombination {
 impl Iterator for LinearCombination {
     type Item = (IntVector, i32);
     fn next(&mut self) -> Option<Self::Item> {
-        if !self.it.initialized {
-            ivlc_first(unsafe { &*self.data }, &mut self.it);
-            self.it.initialized = true
-        } else {
-            ivlc_next(&mut self.it)
-        }
-        if ivlc_good(&self.it) {
-            let kv = ivlc_keyval_rs(&self.it);
-            Some((
+        self.it.next().map(|kv| {
+            (
                 IntVector {
                     data: kv.key,
                     owned: false,
                 },
                 kv.value,
-            ))
-        } else {
-            None
-        }
+            )
+        })
     }
 }
 
 impl Drop for LinearCombination {
     fn drop(&mut self) {
-        if self.owned && self.data != std::ptr::null_mut() {
-            ivlc_free_all(self.data)
+        if self.owned && self.it.ht != std::ptr::null_mut() {
+            ivlc_free_all(self.it.ht as *mut _)
         }
     }
 }

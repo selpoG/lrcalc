@@ -1,4 +1,4 @@
-use super::ivector::{iv_free, iv_free_rs, iv_print, IntVector};
+use super::ivector::{iv_cmp_rs, iv_free, iv_free_rs, iv_hash_rs, iv_print, IntVector};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -222,17 +222,18 @@ fn _ivlc_require(ht: &mut LinearCombination, sz: usize) {
 }
 
 /// Return pointer to keyval_t, nullptr if key not in table.
-#[no_mangle]
-pub extern "C" fn ivlc_lookup(
+pub fn ivlc_lookup_rs(
 	ht: &LinearCombination,
-	key: &IntVector,
+	key: &[i32],
 	hash: u32,
 ) -> *mut LinearCombinationElement {
 	let table = unsafe { std::slice::from_raw_parts_mut(ht.table, ht.table_sz as usize) };
 	let elts = unsafe { std::slice::from_raw_parts_mut(ht.elts, ht.elts_sz as usize) };
 	let index = hash % ht.table_sz;
 	let mut i = table[index as usize];
-	while i != 0 && key.cmp(unsafe { &*elts[i as usize].key }) != std::cmp::Ordering::Equal {
+	while i != 0
+		&& iv_cmp_rs(key, &unsafe { &*elts[i as usize].key }[..]) != std::cmp::Ordering::Equal
+	{
 		i = elts[i as usize].next;
 	}
 	if i == 0 {
@@ -240,6 +241,15 @@ pub extern "C" fn ivlc_lookup(
 	} else {
 		&mut elts[i as usize]
 	}
+}
+
+#[no_mangle]
+pub extern "C" fn ivlc_lookup(
+	ht: &LinearCombination,
+	key: &IntVector,
+	hash: u32,
+) -> *mut LinearCombinationElement {
+	ivlc_lookup_rs(ht, &key[..], hash)
 }
 
 #[no_mangle]
@@ -263,6 +273,16 @@ pub extern "C" fn ivlc_equals(ht1: &LinearCombination, ht2: &LinearCombination) 
 		}
 	}
 	true
+}
+
+pub fn ivlc_insert_rs(
+	ht: &mut LinearCombination,
+	key: &[i32],
+	value: i32,
+) -> *mut LinearCombinationElement {
+	let hash = iv_hash_rs(key);
+	let key = unsafe { &mut *IntVector::from_vec(key.to_vec()) };
+	ivlc_insert(ht, key, hash, value)
 }
 
 /// Call only if key is not in table.

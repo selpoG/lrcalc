@@ -28,20 +28,22 @@ impl IntVector {
 		Box::into_raw(Box::new(IntVector::from_box(buf)))
 	}
 	pub fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		let v = &self[..];
-		let other = &other[..];
-		match v.len().cmp(&other.len()) {
+		iv_cmp_rs(&self[..], &other[..])
+	}
+}
+
+pub fn iv_cmp_rs(v: &[i32], w: &[i32]) -> std::cmp::Ordering {
+	match v.len().cmp(&w.len()) {
+		std::cmp::Ordering::Equal => {}
+		c @ _ => return c,
+	}
+	for i in 0..v.len() {
+		match v[i].cmp(&w[i]) {
 			std::cmp::Ordering::Equal => {}
 			c @ _ => return c,
 		}
-		for i in 0..v.len() {
-			match v[i].cmp(&other[i]) {
-				std::cmp::Ordering::Equal => {}
-				c @ _ => return c,
-			}
-		}
-		std::cmp::Ordering::Equal
 	}
+	std::cmp::Ordering::Equal
 }
 
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::Index<I> for IntVector {
@@ -77,14 +79,17 @@ pub extern "C" fn into_iv(p: *const i32, length: u32) -> *mut IntVector {
 	IntVector::from_vec(p.to_vec())
 }
 
-#[no_mangle]
-pub extern "C" fn iv_hash(v: &IntVector) -> u32 {
-	let v = &v[..];
+pub fn iv_hash_rs(v: &[i32]) -> u32 {
 	let mut h = std::num::Wrapping(v.len() as u32);
 	for x in v {
 		h = ((h << 5) ^ (h >> 27)) + std::num::Wrapping(*x as u32);
 	}
 	h.0
+}
+
+#[no_mangle]
+pub extern "C" fn iv_hash(v: &IntVector) -> u32 {
+	iv_hash_rs(&v[..])
 }
 
 #[no_mangle]

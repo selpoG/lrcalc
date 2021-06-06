@@ -324,30 +324,30 @@ pub fn pitr_first_rs(
 	p: &mut IntVector,
 	rows: i32,
 	cols: i32,
-	outer: *const IntVector,
-	inner: *const IntVector,
+	outer: Option<*const IntVector>,
+	inner: Option<*const IntVector>,
 	size: i32,
 	opt: i32,
 ) -> PartitionIterator {
+	let outer = match outer {
+		Some(x) => x,
+		None => std::ptr::null(),
+	};
+	let inner = match inner {
+		Some(x) => x,
+		None => std::ptr::null(),
+	};
 	let mut pitr: PartitionIterator = unsafe { std::mem::MaybeUninit::uninit().assume_init() };
 	pitr_first(&mut pitr, p, rows, cols, outer, inner, size, opt);
 	pitr
 }
 
 pub fn pitr_box_first(p: &mut IntVector, rows: i32, cols: i32) -> PartitionIterator {
-	pitr_first_rs(p, rows, cols, std::ptr::null(), std::ptr::null(), 0, 0)
+	pitr_first_rs(p, rows, cols, None, None, 0, 0)
 }
 
 pub fn pitr_box_sz_first(p: &mut IntVector, rows: i32, cols: i32, size: i32) -> PartitionIterator {
-	pitr_first_rs(
-		p,
-		rows,
-		cols,
-		std::ptr::null(),
-		std::ptr::null(),
-		size,
-		PITR_USE_SIZE,
-	)
+	pitr_first_rs(p, rows, cols, None, None, size, PITR_USE_SIZE)
 }
 
 #[no_mangle]
