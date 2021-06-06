@@ -25,6 +25,8 @@ extern "C"
 
 	/* Translate fusion algebra partitions to quantum cohomology notation. */
 
+	int part_qdegree(const ivector& p, int level);
+	int part_qentry(const ivector& p, int i, int d, int level);
 	void part_qprint_lincomb(const ivlincomb& lc, int level);
 
 	/* General partition iterator that the compiler will optimize when opt

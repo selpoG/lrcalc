@@ -1,6 +1,6 @@
 """Python bindings for the Littlewood-Richardson Calculator."""
 
-
+from cython.operator cimport dereference as deref
 from liblrcalc cimport *
 
 
@@ -23,11 +23,12 @@ cdef dict ivlc_dict_tuple(ivlincomb *lc):
     cdef ivlc_iter itr
     cdef ivlc_keyval_t *kv
     res = dict()
-    ivlc_first(lc, &itr)
-    while ivlc_good(&itr):
-        kv = ivlc_keyval(&itr)
+    itr.initialized = False
+    ivlc_first(deref(lc), itr)
+    while ivlc_good(itr):
+        kv = ivlc_keyval(itr)
         res[iv_tuple(kv.key)] = kv.value
-        ivlc_next(&itr)
+        ivlc_next(itr)
     return res
 
 
@@ -42,33 +43,35 @@ cdef dict ivlc_dict_part(ivlincomb *lc):
     cdef ivlc_iter itr
     cdef ivlc_keyval_t *kv
     res = dict()
-    ivlc_first(lc, &itr)
-    while ivlc_good(&itr):
-        kv = ivlc_keyval(&itr)
+    itr.initialized = False
+    ivlc_first(deref(lc), itr)
+    while ivlc_good(itr):
+        kv = ivlc_keyval(itr)
         res[iv_part(kv.key)] = kv.value
-        ivlc_next(&itr)
+        ivlc_next(itr)
     return res
 
 
 cdef tuple iv_quantum(ivector *v, int level, bint degrees):
     cdef int i, d, n
     cdef tuple p
-    d = part_qdegree(v, level)
+    d = part_qdegree(deref(v), level)
     n = v.length
-    while n > 0 and part_qentry(v, n-1, d, level) == 0:
+    while n > 0 and part_qentry(deref(v), n-1, d, level) == 0:
         n -= 1
-    p = tuple(part_qentry(v, i, d, level) for i in range(n))
+    p = tuple(part_qentry(deref(v), i, d, level) for i in range(n))
     return (p, d) if degrees else p
 
 cdef dict ivlc_dict_quantum(ivlincomb *lc, int level, bint degrees):
     cdef ivlc_iter itr
     cdef ivlc_keyval_t *kv
     res = dict()
-    ivlc_first(lc, &itr)
-    while ivlc_good(&itr):
-        kv = ivlc_keyval(&itr)
+    itr.initialized = False
+    ivlc_first(deref(lc), itr)
+    while ivlc_good(itr):
+        kv = ivlc_keyval(itr)
         res[iv_quantum(kv.key, level, degrees)] = kv.value
-        ivlc_next(&itr)
+        ivlc_next(itr)
     return res
 
 
@@ -82,11 +85,12 @@ cdef dict ivlc_dict_pair(ivlincomb *lc, int rows, int cols):
     cdef ivlc_iter itr
     cdef ivlc_keyval_t *kv
     res = dict()
-    ivlc_first(lc, &itr)
-    while ivlc_good(&itr):
-        kv = ivlc_keyval(&itr)
+    itr.initialized = False
+    ivlc_first(deref(lc), itr)
+    while ivlc_good(itr):
+        kv = ivlc_keyval(itr)
         res[iv_pair(kv.key, rows, cols)] = kv.value
-        ivlc_next(&itr)
+        ivlc_next(itr)
     return res
 
 
@@ -100,7 +104,7 @@ def lrcoef(out, inn1, inn2):
         cout = iv_newpy(out)
         cinn1 = iv_newpy(inn1)
         cinn2 = iv_newpy(inn2)
-        return schur_lrcoef(cout, cinn1, cinn2)
+        return schur_lrcoef(deref(cout), deref(cinn1), deref(cinn2))
     finally:
         if cinn2 is not NULL:
             iv_free(cinn2)
@@ -119,7 +123,7 @@ def mult(sh1, sh2, int rows=-1, int cols=-1):
     try:
         csh1 = iv_newpy(sh1)
         csh2 = iv_newpy(sh2)
-        cprd = schur_mult(csh1, csh2, rows, cols, -1)
+        cprd = schur_mult(deref(csh1), csh2, rows, cols, -1)
         if cprd is NULL:
             raise MemoryError()
         return ivlc_dict_part(cprd)
@@ -141,7 +145,7 @@ def mult_fusion(sh1, sh2, int rows, int level):
     try:
         csh1 = iv_newpy(sh1)
         csh2 = iv_newpy(sh2)
-        cprd = schur_mult_fusion(csh1, csh2, rows, level)
+        cprd = schur_mult_fusion(deref(csh1), deref(csh2), rows, level)
         if cprd is NULL:
             raise MemoryError()
         return ivlc_dict_part(cprd)
@@ -163,7 +167,7 @@ def mult_quantum(sh1, sh2, int rows, int cols, bint degrees=False):
     try:
         csh1 = iv_newpy(sh1)
         csh2 = iv_newpy(sh2)
-        cprd = schur_mult_fusion(csh1, csh2, rows, cols)
+        cprd = schur_mult_fusion(deref(csh1), deref(csh2), rows, cols)
         if cprd is NULL:
             raise MemoryError()
         return ivlc_dict_quantum(cprd, cols, degrees)
@@ -185,7 +189,7 @@ def skew(outer, inner, int rows=-1):
     try:
         cout = iv_newpy(outer)
         cinn = iv_newpy(inner)
-        cres = schur_skew(cout, cinn, rows, -1)
+        cres = schur_skew(deref(cout), cinn, rows, -1)
         if cres is NULL:
             raise MemoryError()
         return ivlc_dict_part(cres)
@@ -210,7 +214,7 @@ def coprod(sh, bint all=False):
         while rows > 0 and csh.array[rows - 1] == 0:
             rows -= 1
         cols = 0 if rows == 0 else csh.array[0]
-        cres = schur_coprod(csh, rows, cols, -1, all)
+        cres = schur_coprod(deref(csh), rows, cols, -1, all)
         if cres is NULL:
             raise MemoryError()
         return ivlc_dict_pair(cres, rows, cols)
@@ -228,7 +232,7 @@ def schubert_poly(w):
     cdef ivlincomb *cres = NULL
     try:
         cw = iv_newpy(w)
-        cres = trans(cw, 0)
+        cres = trans(deref(cw), 0)
         if cres is NULL:
             raise MemoryError()
         return ivlc_dict_tuple(cres)
@@ -248,7 +252,7 @@ def schubmult(w1, w2, int rank=0):
     try:
         cw1 = iv_newpy(w1)
         cw2 = iv_newpy(w2)
-        cres = mult_schubert(cw1, cw2, rank)
+        cres = mult_schubert(deref(cw1), deref(cw2), rank)
         if cres is NULL:
             raise MemoryError()
         return ivlc_dict_tuple(cres)
@@ -270,7 +274,7 @@ def schubmult_str(str1, str2):
     try:
         cs1 = iv_newpy(str1)
         cs2 = iv_newpy(str2)
-        cres = mult_schubert_str(cs1, cs2)
+        cres = mult_schubert_str(deref(cs1), deref(cs2))
         if cres is NULL:
             raise MemoryError()
         return ivlc_dict_tuple(cres)
@@ -294,7 +298,7 @@ cdef class lr_iterator:
         try:
             out = iv_newpy(outer)
             inn = iv_newpy(inner)
-            self._itr = lrit_new(out, inn, NULL, rows, -1, -1)
+            self._itr = lrit_new(deref(out), inn, NULL, rows, -1, -1)
             if self._itr is NULL:
                 raise MemoryError()
         finally:
@@ -308,11 +312,11 @@ cdef class lr_iterator:
 
     def __next__(self):
         cdef int i
-        if not lrit_good(self._itr):
+        if not lrit_good(deref(self._itr)):
             raise StopIteration
         word = tuple(self._itr.array[i].value
                      for i in range(self._itr.size))
-        lrit_next(self._itr)
+        lrit_next(deref(self._itr))
         return word
 
     def __dealloc(self):
