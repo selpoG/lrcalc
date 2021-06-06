@@ -15,15 +15,9 @@ extern "C"
 
 	ivector* iv_new(uint32_t length);
 
-	ivector* iv_new_zero(uint32_t length);
-
 	ivector* into_iv(const int32_t* p, uint32_t length);
 
 	void iv_free(ivector* v);
-
-	uint32_t iv_hash(const ivector& v);
-
-	int32_t iv_sum(const ivector& v);
 
 	void iv_print(const ivector& v);
 	void iv_printnl(const ivector& v);

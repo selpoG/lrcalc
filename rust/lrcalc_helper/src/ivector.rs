@@ -67,12 +67,6 @@ pub extern "C" fn iv_new(length: u32) -> *mut IntVector {
 	IntVector::from_vec(vec![0; length as usize])
 }
 
-/// never returns null
-#[no_mangle]
-pub extern "C" fn iv_new_zero(length: u32) -> *mut IntVector {
-	iv_new(length)
-}
-
 #[no_mangle]
 pub extern "C" fn into_iv(p: *const i32, length: u32) -> *mut IntVector {
 	let p = unsafe { std::slice::from_raw_parts(p, length as usize) };
@@ -87,13 +81,11 @@ pub fn iv_hash_rs(v: &[i32]) -> u32 {
 	h.0
 }
 
-#[no_mangle]
-pub extern "C" fn iv_hash(v: &IntVector) -> u32 {
+pub fn iv_hash(v: &IntVector) -> u32 {
 	iv_hash_rs(&v[..])
 }
 
-#[no_mangle]
-pub extern "C" fn iv_sum(v: &IntVector) -> i32 {
+pub fn iv_sum(v: &IntVector) -> i32 {
 	(&v[..]).iter().sum()
 }
 

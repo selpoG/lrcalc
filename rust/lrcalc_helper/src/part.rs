@@ -69,19 +69,7 @@ pub extern "C" fn part_entry(p: &IntVector, i: i32) -> i32 {
 	part_entry_rs(&p[..], i)
 }
 
-/// Must have len >= iv_length(p) and p was allocated with enough space.
-/// Caller of this function must reset the length of p before iv_free(p) is called.
-#[no_mangle]
-pub extern "C" fn part_unchop(p: &mut IntVector, len_: i32) {
-	let len0 = p.length as usize;
-	let len = len_ as usize;
-	debug_assert!(len0 <= len);
-	p.length = len as u32;
-	p[len0..len].fill(0);
-}
-
-#[no_mangle]
-pub extern "C" fn part_leq(p1: &IntVector, p2: &IntVector) -> bool {
+pub fn part_leq(p1: &IntVector, p2: &IntVector) -> bool {
 	let len = p1.length as usize;
 	if len > p2.length as usize {
 		return false;

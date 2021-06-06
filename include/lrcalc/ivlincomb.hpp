@@ -33,21 +33,6 @@ extern "C"
 		uint32_t table_sz;   /* Allocated hash table size. */
 	};
 
-	ivlincomb* ivlc_new_default();
-
-	void ivlc_free(ivlincomb* ht);
-
-	/* Return pointer to keyval_t, nullptr if key not in table. */
-	ivlc_keyval_t* ivlc_lookup(const ivlincomb& ht, const ivector& key, uint32_t hash);
-
-	/* Call only if key is not in table.  Insert key into table and return
-	   a pointer to new value variable, nullptr if memory allocation
-	   error. */
-	ivlc_keyval_t* ivlc_insert(ivlincomb& ht, ivector& key, uint32_t hash, int32_t value);
-
-	/* Return true if equal; ignore zero values. */
-	bool ivlc_equals(const ivlincomb& ht1, const ivlincomb& ht2);
-
 	struct ivlc_iter
 	{
 		const ivlincomb* ht;

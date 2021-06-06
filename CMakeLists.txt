@@ -110,33 +110,3 @@ set(MY_TARGET allstrings)
 add_executable(${MY_TARGET} src/allstrings.cpp)
 set_default_property(${MY_TARGET} .)
 target_link_libraries(${MY_TARGET} PRIVATE lrcalc)
-
-set(MY_TARGET test_fusion)
-add_executable(${MY_TARGET} src/test_fusion.cpp)
-set_default_property(${MY_TARGET} .)
-target_link_libraries(${MY_TARGET} PRIVATE lrcalc)
-
-set(MY_TARGET test_lrcoef)
-add_executable(${MY_TARGET} src/test_lrcoef.cpp)
-set_default_property(${MY_TARGET} .)
-target_link_libraries(${MY_TARGET} PRIVATE lrcalc)
-
-set(MY_TARGET test_lrmult)
-add_executable(${MY_TARGET} src/test_lrmult.cpp)
-set_default_property(${MY_TARGET} .)
-target_link_libraries(${MY_TARGET} PRIVATE lrcalc)
-
-set(MY_TARGET test_lrskew)
-add_executable(${MY_TARGET} src/test_lrskew.cpp)
-set_default_property(${MY_TARGET} .)
-target_link_libraries(${MY_TARGET} PRIVATE lrcalc)
-
-set(MY_TARGET test_partiter)
-add_executable(${MY_TARGET} src/test_partiter.cpp)
-set_default_property(${MY_TARGET} .)
-target_link_libraries(${MY_TARGET} PRIVATE lrcalc)
-
-set(MY_TARGET test_schubmult)
-add_executable(${MY_TARGET} src/test_schubmult.cpp)
-set_default_property(${MY_TARGET} .)
-target_link_libraries(${MY_TARGET} PRIVATE lrcalc)

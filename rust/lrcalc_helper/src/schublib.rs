@@ -1,4 +1,4 @@
-use super::ivector::{iv_free_rs, iv_hash, iv_new_zero, IntVector};
+use super::ivector::{iv_free_rs, iv_hash, iv_new, IntVector};
 use super::ivlincomb::{
 	ivlc_add_element, ivlc_add_multiple, ivlc_free, ivlc_free_all, ivlc_insert, ivlc_new_default,
 	ivlc_reset, LinearCombination, LinearCombinationIter, LC_FREE_ZERO,
@@ -28,7 +28,7 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 		r -= 1;
 	}
 	if r <= 0 {
-		let xx = unsafe { &mut *iv_new_zero(std::cmp::max(vars as u32, 1)) };
+		let xx = unsafe { &mut *iv_new(std::cmp::max(vars as u32, 1)) };
 		ivlc_insert(res, xx, iv_hash(xx), 1);
 		return;
 	}
@@ -148,9 +148,7 @@ struct Poly {
 	val: i32,
 }
 
-/// poly must not be nullptr
-#[no_mangle]
-pub extern "C" fn mult_poly_schubert(
+pub fn mult_poly_schubert(
 	poly: &mut LinearCombination,
 	perm: &mut IntVector,
 	mut rank: i32,

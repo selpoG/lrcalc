@@ -90,8 +90,7 @@ impl Iterator for LinearCombinationIter {
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_new_default() -> *mut LinearCombination {
+pub fn ivlc_new_default() -> *mut LinearCombination {
 	ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)
 }
 
@@ -132,8 +131,7 @@ pub fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
 	ivlc
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_free(ht: *mut LinearCombination) {
+pub fn ivlc_free(ht: *mut LinearCombination) {
 	if ht == std::ptr::null_mut() {
 		return;
 	}
@@ -243,36 +241,12 @@ pub fn ivlc_lookup_rs(
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_lookup(
+pub fn ivlc_lookup(
 	ht: &LinearCombination,
 	key: &IntVector,
 	hash: u32,
 ) -> *mut LinearCombinationElement {
 	ivlc_lookup_rs(ht, &key[..], hash)
-}
-
-#[no_mangle]
-pub extern "C" fn ivlc_equals(ht1: &LinearCombination, ht2: &LinearCombination) -> bool {
-	for kv1 in LinearCombinationIter::from(ht1 as *const _) {
-		if kv1.value == 0 {
-			continue;
-		}
-		let kv2 = ivlc_lookup(ht2, unsafe { &*kv1.key }, kv1.hash);
-		if kv2 == std::ptr::null_mut() || kv1.value != unsafe { &*kv2 }.value {
-			return false;
-		}
-	}
-	for kv2 in LinearCombinationIter::from(ht2 as *const _) {
-		if kv2.value == 0 {
-			continue;
-		}
-		let kv1 = ivlc_lookup(ht1, unsafe { &*kv2.key }, kv2.hash);
-		if kv1 == std::ptr::null_mut() || unsafe { &*kv1 }.value != kv2.value {
-			return false;
-		}
-	}
-	true
 }
 
 pub fn ivlc_insert_rs(
@@ -287,8 +261,7 @@ pub fn ivlc_insert_rs(
 
 /// Call only if key is not in table.
 /// Insert key into table and return a pointer to new value variable.
-#[no_mangle]
-pub extern "C" fn ivlc_insert(
+pub fn ivlc_insert(
 	ht: &mut LinearCombination,
 	key: &mut IntVector,
 	hash: u32,

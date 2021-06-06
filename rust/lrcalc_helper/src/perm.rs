@@ -41,8 +41,7 @@ pub fn perm_group_rs(w: &[i32]) -> i32 {
 	i
 }
 
-#[no_mangle]
-pub extern "C" fn perm_group(w: &IntVector) -> i32 {
+pub fn perm_group(w: &IntVector) -> i32 {
 	perm_group_rs(&w[..])
 }
 

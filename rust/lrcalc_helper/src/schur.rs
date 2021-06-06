@@ -83,8 +83,7 @@ fn fusion_reduce(la: &mut IntVector, level: i32, tmp: &mut [i32]) -> i32 {
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
+pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
 	struct T(Vec<*mut IntVector>);
 	impl Drop for T {
 		fn drop(&mut self) {

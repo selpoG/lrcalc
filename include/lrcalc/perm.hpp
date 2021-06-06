@@ -10,8 +10,6 @@ extern "C"
 #endif
 	bool perm_valid(const ivector& w);
 
-	int perm_group(const ivector& w);
-
 	bool dimvec_valid(const ivector& dv);
 
 	bool str_iscompat(const ivector& str1, const ivector& str2);
