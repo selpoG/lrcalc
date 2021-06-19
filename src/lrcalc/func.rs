@@ -33,7 +33,14 @@ pub(crate) fn _schur_mult(
     cols: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult(unsafe { &*sh1.data }, sh2.data, rows, cols, partsz).into()
+    schur_mult(
+        unsafe { &*sh1.data },
+        unsafe { &*sh2.data },
+        rows,
+        cols,
+        partsz,
+    )
+    .into()
 }
 
 pub(crate) fn _schur_mult_fusion(
@@ -51,7 +58,13 @@ pub(crate) fn _schur_skew(
     rows: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_skew(unsafe { &*outer.data }, inner.data, rows, partsz).into()
+    schur_skew(
+        unsafe { &*outer.data },
+        unsafe { &*inner.data },
+        rows,
+        partsz,
+    )
+    .into()
 }
 
 pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {

@@ -1,4 +1,3 @@
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use super::ivector::{iv_free_ptr, iv_hash, IntVector};
 use super::ivlincomb::{
     ivlc_add_element, ivlc_new, ivlc_new_default, ivlc_reset, LinearCombination,
@@ -11,17 +10,12 @@ use super::part::{part_entry, part_valid};
 
 pub fn schur_mult(
     sh1: &IntVector,
-    sh2: *const IntVector,
+    sh2: &IntVector,
     rows: i32,
     cols: i32,
     partsz: i32,
 ) -> *mut LinearCombination {
-    let sh2 = if sh2.is_null() {
-        None
-    } else {
-        Some(unsafe { &*sh2 })
-    };
-    let ss = optim_mult(sh1, sh2, rows, cols);
+    let ss = optim_mult(sh1, Some(sh2), rows, cols);
     if ss.sign != 0 {
         lrit_expand(
             unsafe { &*ss.outer },
@@ -218,16 +212,11 @@ pub fn schur_mult_fusion(
 
 pub fn schur_skew(
     outer: &IntVector,
-    inner: *const IntVector,
+    inner: &IntVector,
     rows: i32,
     partsz: i32,
 ) -> *mut LinearCombination {
-    let inner = if inner.is_null() {
-        None
-    } else {
-        unsafe { Some(&*inner) }
-    };
-    let ss = optim_skew(outer, inner, None, rows);
+    let ss = optim_skew(outer, Some(inner), None, rows);
     if ss.sign != 0 {
         lrit_expand(unsafe { &*ss.outer }, ss.inner, ss.cont, rows, -1, partsz)
     } else {
@@ -294,13 +283,13 @@ pub fn schur_coprod(
     partsz: i32,
     all: bool,
 ) -> *mut LinearCombination {
-    let b = IntVector::from_vec(vec![cols; rows as usize]);
+    let b = unsafe { &*IntVector::from_vec(vec![cols; rows as usize]) };
 
     if all {
         return schur_mult(sh, b, -1, -1, partsz);
     }
 
-    let ss = optim_mult(sh, Some(unsafe { &*b }), -1, -1);
+    let ss = optim_mult(sh, Some(b), -1, -1);
 
     _schur_coprod_expand(unsafe { &*ss.outer }, ss.cont, rows, cols, partsz)
 }
