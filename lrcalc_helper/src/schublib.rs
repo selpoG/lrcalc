@@ -1,10 +1,10 @@
-use super::ivector::{iv_free_rs, iv_hash, iv_new, IntVector};
+use super::ivector::{iv_free, iv_hash, iv_new, IntVector};
 use super::ivlincomb::{
-	ivlc_add_element, ivlc_add_multiple, ivlc_free, ivlc_free_all, ivlc_insert, ivlc_new_default,
+	_ivlc_insert, ivlc_add_element, ivlc_add_multiple, ivlc_free, ivlc_free_all, ivlc_new_default,
 	ivlc_reset, LinearCombination, LinearCombinationIter, LC_FREE_ZERO,
 };
 use super::perm::{
-	bruhat_zero, perm2string, perm_group_rs, perm_length, str2dimvec, str_iscompat, string2perm,
+	bruhat_zero, perm2string, perm_group, perm_length, str2dimvec, str_iscompat, string2perm,
 };
 
 pub fn trans(w: &[i32], vars: i32) -> *mut LinearCombination {
@@ -16,7 +16,7 @@ pub fn trans(w: &[i32], vars: i32) -> *mut LinearCombination {
 fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 	ivlc_reset(res);
 
-	let n = perm_group_rs(w);
+	let n = perm_group(w);
 
 	let mut r = n - 1;
 	while r > 0 && w[(r - 1) as usize] < w[r as usize] {
@@ -24,7 +24,7 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 	}
 	if r <= 0 {
 		let xx = unsafe { &mut *iv_new(std::cmp::max(vars as u32, 1)) };
-		ivlc_insert(res, xx, iv_hash(xx), 1);
+		_ivlc_insert(res, xx, iv_hash(&xx[..]), 1);
 		return;
 	}
 	vars = std::cmp::max(vars, r);
@@ -43,7 +43,7 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 	for kv in LinearCombinationIter::from(tmp as *const _) {
 		let xx = unsafe { &mut *kv.key };
 		xx[(r - 1) as usize] += 1;
-		ivlc_insert(res, xx, iv_hash(xx), kv.value);
+		_ivlc_insert(res, xx, iv_hash(&xx[..]), kv.value);
 	}
 
 	let mut last = 0;
@@ -68,7 +68,7 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombination) {
 	let mut add = |u: Vec<i32>, c: i32| {
 		let u = unsafe { &mut *IntVector::from_vec(u) };
-		ivlc_add_element(res, c, u, iv_hash(u), LC_FREE_ZERO)
+		ivlc_add_element(res, c, u, iv_hash(&u[..]), LC_FREE_ZERO)
 	};
 	for kv in LinearCombinationIter::from(slc as *const _) {
 		let w = unsafe { &(*kv.key)[..] };
@@ -179,7 +179,7 @@ pub fn mult_poly_schubert(
 	ivlc_reset(poly);
 
 	let svlen = perm.length;
-	perm.length = perm_group_rs(&perm[..]) as u32;
+	perm.length = perm_group(&perm[..]) as u32;
 	_mult_ps(&mut p[..], n, maxvar, perm, rank, poly);
 	perm.length = svlen;
 
@@ -196,7 +196,7 @@ fn _mult_ps(
 ) {
 	if maxvar == 0 {
 		let w = unsafe { &mut *IntVector::from_vec((&perm[..]).to_vec()) };
-		ivlc_add_element(res, poly[0].val, w, iv_hash(w), LC_FREE_ZERO);
+		ivlc_add_element(res, poly[0].val, w, iv_hash(&w[..]), LC_FREE_ZERO);
 		return;
 	}
 
@@ -254,8 +254,8 @@ pub fn mult_schubert(
 
 	let svlen1 = w1.length;
 	let svlen2 = w2.length;
-	w1.length = perm_group_rs(&w1[..]) as u32;
-	w2.length = perm_group_rs(&w2[..]) as u32;
+	w1.length = perm_group(&w1[..]) as u32;
+	w2.length = perm_group(&w2[..]) as u32;
 
 	if rank == 0 {
 		rank = i32::MAX;
@@ -278,12 +278,12 @@ struct IntVectorDisposed {
 
 impl Drop for IntVectorDisposed {
 	fn drop(&mut self) {
-		iv_free_rs(&mut self.p)
+		iv_free(&mut self.p)
 	}
 }
 
 pub fn mult_schubert_str(str1: &IntVector, str2: &IntVector) -> *mut LinearCombination {
-	debug_assert!(str_iscompat(str1, str2));
+	debug_assert!(str_iscompat(&str1[..], &str2[..]));
 
 	// drop dv, w1, w2
 	let dv = IntVectorDisposed {
@@ -310,7 +310,7 @@ pub fn mult_schubert_str(str1: &IntVector, str2: &IntVector) -> *mut LinearCombi
 	let res = unsafe { &mut *ivlc_new_default() };
 	for kv in LinearCombinationIter::from(lc as *const _) {
 		let str = unsafe { &mut *perm2string(&(*kv.key)[..], &dv.p[..]) };
-		ivlc_insert(res, str, iv_hash(str), kv.value);
+		_ivlc_insert(res, str, iv_hash(&str[..]), kv.value);
 	}
 
 	ivlc_free_all(lc);

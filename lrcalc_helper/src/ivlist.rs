@@ -1,4 +1,4 @@
-use super::ivector::{iv_free, IntVector};
+use super::ivector::{iv_free_ptr, IntVector};
 
 pub struct IntVectorList {
 	pub array: *mut *mut IntVector,
@@ -33,7 +33,7 @@ pub fn ivl_free_all(lst: *mut IntVectorList) {
 		let lst = unsafe { &*lst };
 		let s = unsafe { std::slice::from_raw_parts_mut(lst.array, lst.allocated as usize) };
 		for v in s[..lst.length as usize].iter() {
-			iv_free(*v as *mut IntVector)
+			iv_free_ptr(*v as *mut IntVector)
 		}
 		let s = s.as_mut_ptr();
 		unsafe { drop(Box::from_raw(s)) }

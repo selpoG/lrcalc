@@ -1,5 +1,4 @@
 use super::ivector::IntVector;
-use super::ivlincomb::{LinearCombination, LinearCombinationIter};
 
 /// General partition iterator that the compiler will optimize when opt is known at compile time.
 pub struct PartitionIterator {
@@ -15,7 +14,7 @@ pub const PITR_USE_OUTER: i32 = 1;
 pub const PITR_USE_INNER: i32 = 2;
 pub const PITR_USE_SIZE: i32 = 4;
 
-pub fn part_valid_rs(p: &[i32]) -> bool {
+pub fn part_valid(p: &[i32]) -> bool {
 	let mut x = 0;
 	for i in (0..p.len()).rev() {
 		let y = p[i];
@@ -27,11 +26,7 @@ pub fn part_valid_rs(p: &[i32]) -> bool {
 	true
 }
 
-pub fn part_valid(p: &IntVector) -> bool {
-	part_valid_rs(&p[..])
-}
-
-pub fn part_decr(p: &[i32]) -> bool {
+pub(crate) fn part_decr(p: &[i32]) -> bool {
 	for i in 1..p.len() {
 		if p[i - 1] < p[i] {
 			return false;
@@ -40,7 +35,7 @@ pub fn part_decr(p: &[i32]) -> bool {
 	true
 }
 
-pub fn part_length_rs(v: &[i32]) -> u32 {
+pub fn part_length(v: &[i32]) -> u32 {
 	let mut n = v.len();
 	while n > 0 && v[n - 1] == 0 {
 		n -= 1
@@ -48,21 +43,13 @@ pub fn part_length_rs(v: &[i32]) -> u32 {
 	n as u32
 }
 
-pub fn part_length(v: &IntVector) -> u32 {
-	part_length_rs(&v[..])
-}
-
-pub fn part_entry_rs(p: &[i32], i: i32) -> i32 {
+pub fn part_entry(p: &[i32], i: i32) -> i32 {
 	let i = i as usize;
 	if i < p.len() {
 		p[i]
 	} else {
 		0
 	}
-}
-
-pub fn part_entry(p: &IntVector, i: i32) -> i32 {
-	part_entry_rs(&p[..], i)
 }
 
 pub fn part_leq(p1: &IntVector, p2: &IntVector) -> bool {
@@ -76,35 +63,6 @@ pub fn part_leq(p1: &IntVector, p2: &IntVector) -> bool {
 		}
 	}
 	true
-}
-
-fn part_print(p: &IntVector) {
-	print!("(");
-	for i in 0..p.length as usize {
-		if p[i] == 0 {
-			break;
-		}
-		if i > 0 {
-			print!(",")
-		}
-		print!("{}", p[i])
-	}
-	print!(")")
-}
-
-fn part_printnl(p: &IntVector) {
-	part_print(p);
-	println!()
-}
-
-pub fn part_print_lincomb(lc: &LinearCombination) {
-	for kv in LinearCombinationIter::from(lc as *const _) {
-		if kv.value == 0 {
-			continue;
-		}
-		print!("{}  ", kv.value);
-		part_printnl(unsafe { &*kv.key });
-	}
 }
 
 // Translate fusion algebra partitions to quantum cohomology notation.
@@ -126,37 +84,6 @@ pub fn part_qentry(p: &[i32], i: i32, d: i32, level: i32) -> i32 {
 	p[k as usize] - ((i + d) / rows) * level - d
 }
 
-fn part_qprint(p: &IntVector, level: i32) {
-	let d = part_qdegree(&p[..], level);
-	print!("(");
-	for i in 0..p.length as usize {
-		let x = part_qentry(&p[..], i as i32, d, level);
-		if x == 0 {
-			break;
-		}
-		if i > 0 {
-			print!(",")
-		}
-		print!("{}", x)
-	}
-	print!(")");
-}
-
-fn part_qprintnl(p: &IntVector, level: i32) {
-	part_qprint(p, level);
-	println!()
-}
-
-pub fn part_qprint_lincomb(lc: &LinearCombination, level: i32) {
-	for kv in LinearCombinationIter::from(lc as *const _) {
-		if kv.value == 0 {
-			continue;
-		}
-		print!("{}  ", kv.value);
-		part_qprintnl(unsafe { &*kv.key }, level);
-	}
-}
-
 pub fn pitr_good(itr: &PartitionIterator) -> bool {
 	itr.rows >= 0
 }
@@ -175,8 +102,8 @@ fn _pitr_first(
 	let use_inner = (opt & PITR_USE_INNER) != 0;
 	let use_size = (opt & PITR_USE_SIZE) != 0;
 
-	debug_assert!(!use_outer || part_valid(outer.unwrap()));
-	debug_assert!(!use_inner || part_valid(inner.unwrap()));
+	debug_assert!(!use_outer || part_valid(&outer.unwrap()[..]));
+	debug_assert!(!use_inner || part_valid(&inner.unwrap()[..]));
 	debug_assert!(!use_outer || !use_inner || part_leq(inner.unwrap(), outer.unwrap()));
 
 	itr.part = p;
@@ -273,32 +200,6 @@ fn _pitr_first(
 }
 
 pub fn pitr_first(
-	itr: &mut PartitionIterator,
-	p: &mut IntVector,
-	rows: i32,
-	cols: i32,
-	outer: *const IntVector,
-	inner: *const IntVector,
-	size: i32,
-	opt: i32,
-) {
-	let outer = if outer == std::ptr::null() {
-		None
-	} else {
-		unsafe { Some(&*outer) }
-	};
-	let inner = if inner == std::ptr::null() {
-		None
-	} else {
-		unsafe { Some(&*inner) }
-	};
-	match _pitr_first(itr, p, rows, cols, outer, inner, size, opt) {
-		Ok(_) => {}
-		Err(_) => itr.rows = -1,
-	}
-}
-
-pub fn pitr_first_rs(
 	p: &mut IntVector,
 	rows: i32,
 	cols: i32,
@@ -307,25 +208,22 @@ pub fn pitr_first_rs(
 	size: i32,
 	opt: i32,
 ) -> PartitionIterator {
-	let outer = match outer {
-		Some(x) => x,
-		None => std::ptr::null(),
-	};
-	let inner = match inner {
-		Some(x) => x,
-		None => std::ptr::null(),
-	};
+	let outer = outer.map(|p| unsafe { &*p });
+	let inner = inner.map(|p| unsafe { &*p });
 	let mut pitr: PartitionIterator = unsafe { std::mem::MaybeUninit::uninit().assume_init() };
-	pitr_first(&mut pitr, p, rows, cols, outer, inner, size, opt);
+	match _pitr_first(&mut pitr, p, rows, cols, outer, inner, size, opt) {
+		Ok(_) => {}
+		Err(_) => pitr.rows = -1,
+	}
 	pitr
 }
 
 pub fn pitr_box_first(p: &mut IntVector, rows: i32, cols: i32) -> PartitionIterator {
-	pitr_first_rs(p, rows, cols, None, None, 0, 0)
+	pitr_first(p, rows, cols, None, None, 0, 0)
 }
 
 pub fn pitr_box_sz_first(p: &mut IntVector, rows: i32, cols: i32, size: i32) -> PartitionIterator {
-	pitr_first_rs(p, rows, cols, None, None, size, PITR_USE_SIZE)
+	pitr_first(p, rows, cols, None, None, size, PITR_USE_SIZE)
 }
 
 pub fn pitr_next(itr: &mut PartitionIterator) {

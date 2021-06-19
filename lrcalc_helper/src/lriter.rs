@@ -1,4 +1,4 @@
-use super::ivector::{iv_free, iv_hash, IntVector};
+use super::ivector::{iv_free_ptr, iv_hash, IntVector};
 use super::ivlincomb::{ivlc_add_element, ivlc_new_default, LinearCombination, LC_COPY_KEY};
 use super::part::{part_decr, part_length, part_leq, part_valid};
 
@@ -29,8 +29,8 @@ pub fn lrit_new(
 	} else {
 		unsafe { Some(&*inner) }
 	};
-	debug_assert!(part_valid(outer));
-	debug_assert!(inner.is_none() || part_valid(inner.unwrap()));
+	debug_assert!(part_valid(&outer[..]));
+	debug_assert!(inner.is_none() || part_valid(&inner.unwrap()[..]));
 	debug_assert!(content == std::ptr::null() || part_decr(unsafe { &(*content)[..] }));
 
 	/* Empty result if inner not contained in outer. */
@@ -44,7 +44,7 @@ pub fn lrit_new(
 		return Box::into_raw(Box::new(lrit));
 	}
 
-	let len = part_length(outer);
+	let len = part_length(&outer[..]);
 	let outer = &outer[..];
 	let inner = inner.map(|v| &v[..]);
 	let mut ilen = inner.map(|v| v.len() as u32).unwrap_or(0);
@@ -55,7 +55,7 @@ pub fn lrit_new(
 		(None, 0)
 	} else {
 		let content = unsafe { &*content };
-		(Some(&content[..]), part_length(content))
+		(Some(&content[..]), part_length(&content[..]))
 	};
 	let out0 = if len == 0 { 0 } else { outer[0] };
 	debug_assert!(maxcols < 0 || ilen == 0 || inner.unwrap()[0] == 0);
@@ -230,64 +230,13 @@ pub fn lrit_free(lrit: *mut LRTableauIterator) {
 	}
 	{
 		let lrit = unsafe { &*lrit };
-		iv_free(lrit.cont);
+		iv_free_ptr(lrit.cont);
 		if lrit.array_len > 0 {
 			let s = unsafe { std::slice::from_raw_parts_mut(lrit.array, lrit.array_len as usize) };
 			unsafe { drop(Box::from_raw(s)) }
 		}
 	}
 	unsafe { drop(Box::from_raw(lrit)) }
-}
-
-pub fn lrit_print_skewtab(lrit: &LRTableauIterator, outer: &IntVector, inner: *const IntVector) {
-	let array = lrit.array;
-	let mut size = lrit.size;
-	let array = unsafe { std::slice::from_raw_parts(array, size as usize) };
-
-	let inner = if inner == std::ptr::null() {
-		None
-	} else {
-		unsafe { Some(&(*inner)[..]) }
-	};
-	let ilen = inner.map(|v| v.len()).unwrap_or(0) as u32;
-	let mut len = part_length(outer);
-	let outer = &outer[..];
-	if len <= ilen {
-		let inner = inner.unwrap();
-		while len > 0 && inner[(len - 1) as usize] == outer[(len - 1) as usize] {
-			len -= 1;
-		}
-	}
-	if len == 0 {
-		return;
-	}
-
-	let col_first = if ilen < len {
-		0
-	} else {
-		inner.unwrap()[(len - 1) as usize]
-	};
-	let mut r = 0;
-	while r < ilen && inner.unwrap()[r as usize] == outer[r as usize] {
-		r += 1;
-	}
-	while r < len {
-		let inn_r = if r >= ilen {
-			0
-		} else {
-			inner.unwrap()[r as usize]
-		};
-		let out_r = outer[r as usize];
-		let row_sz = out_r - inn_r;
-		size -= row_sz;
-		print!("{}", " ".repeat(2 * (inn_r - col_first) as usize));
-		for c in 0..row_sz {
-			print!("{:2}", array[(size + c) as usize].value)
-		}
-		println!();
-		r += 1
-	}
-	println!();
 }
 
 pub fn lrit_good(lrit: &LRTableauIterator) -> bool {
@@ -333,7 +282,7 @@ pub fn lrit_next(lrit: &mut LRTableauIterator) {
 	lrit.size = -1;
 }
 
-pub fn lrit_expand(
+pub(crate) fn lrit_expand(
 	outer: &IntVector,
 	inner: *const IntVector,
 	content: *const IntVector,
@@ -345,7 +294,7 @@ pub fn lrit_expand(
 	let cont = unsafe { &mut *lrit_raw.cont };
 	let lc = unsafe { &mut *ivlc_new_default() };
 	while lrit_good(lrit_raw) {
-		ivlc_add_element(lc, 1, cont, iv_hash(cont), LC_COPY_KEY);
+		ivlc_add_element(lc, 1, cont, iv_hash(&cont[..]), LC_COPY_KEY);
 		lrit_next(lrit_raw);
 	}
 	lrit_free(lrit_raw);

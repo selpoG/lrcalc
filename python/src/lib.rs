@@ -5,7 +5,7 @@ use pyo3::{
 };
 
 use lrcalc_helper::{
-	ivector::{iv_free, IntVector},
+	ivector::{iv_free_ptr, IntVector},
 	ivlincomb::{ivlc_free_all, LinearCombination},
 	lriter::{lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator},
 	part::{part_qdegree, part_qentry},
@@ -39,7 +39,7 @@ impl SafeIntVector {
 impl Drop for SafeIntVector {
 	fn drop(&mut self) {
 		if self.owned && self.data != std::ptr::null_mut() {
-			iv_free(self.data)
+			iv_free_ptr(self.data)
 		}
 	}
 }
@@ -101,7 +101,10 @@ fn as_quantum(v: &[i32], level: i32) -> (Vec<i32>, i32) {
 	while n > 0 && part_qentry(&v[..], n - 1, d, level) == 0 {
 		n -= 1
 	}
-	((0..n).map(|i| part_qentry(&v[..], i, d, level)).collect(), d)
+	(
+		(0..n).map(|i| part_qentry(&v[..], i, d, level)).collect(),
+		d,
+	)
 }
 
 fn to_py_dict_of_quantum(

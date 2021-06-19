@@ -1,6 +1,3 @@
-use super::ivlincomb::{LinearCombination, LinearCombinationIter};
-use super::part::{part_qdegree, part_qentry};
-
 #[derive(Clone)]
 pub struct IntVector {
 	pub length: u32,
@@ -27,11 +24,11 @@ impl IntVector {
 		Box::into_raw(Box::new(IntVector::from_box(buf)))
 	}
 	pub fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		iv_cmp_rs(&self[..], &other[..])
+		iv_cmp(&self[..], &other[..])
 	}
 }
 
-pub fn iv_cmp_rs(v: &[i32], w: &[i32]) -> std::cmp::Ordering {
+pub fn iv_cmp(v: &[i32], w: &[i32]) -> std::cmp::Ordering {
 	match v.len().cmp(&w.len()) {
 		std::cmp::Ordering::Equal => {}
 		c @ _ => return c,
@@ -65,12 +62,7 @@ pub fn iv_new(length: u32) -> *mut IntVector {
 	IntVector::from_vec(vec![0; length as usize])
 }
 
-pub fn into_iv(p: *const i32, length: u32) -> *mut IntVector {
-	let p = unsafe { std::slice::from_raw_parts(p, length as usize) };
-	IntVector::from_vec(p.to_vec())
-}
-
-pub fn iv_hash_rs(v: &[i32]) -> u32 {
+pub fn iv_hash(v: &[i32]) -> u32 {
 	let mut h = std::num::Wrapping(v.len() as u32);
 	for x in v {
 		h = ((h << 5) ^ (h >> 27)) + std::num::Wrapping(*x as u32);
@@ -78,32 +70,11 @@ pub fn iv_hash_rs(v: &[i32]) -> u32 {
 	h.0
 }
 
-pub fn iv_hash(v: &IntVector) -> u32 {
-	iv_hash_rs(&v[..])
-}
-
 pub fn iv_sum(v: &IntVector) -> i32 {
 	(&v[..]).iter().sum()
 }
 
-pub fn iv_print(v: &IntVector) {
-	let v = &v[..];
-	if v.len() == 0 {
-		return print!("()");
-	}
-	print!("({}", v[0]);
-	for i in 1..v.len() {
-		print!(",{}", v[i])
-	}
-	print!(")")
-}
-
-pub fn iv_printnl(v: &IntVector) {
-	iv_print(v);
-	println!()
-}
-
-pub fn iv_free_rs(v: &mut IntVector) {
+pub fn iv_free(v: &mut IntVector) {
 	if v.length == 0 {
 		return;
 	}
@@ -111,72 +82,10 @@ pub fn iv_free_rs(v: &mut IntVector) {
 	unsafe { drop(Box::from_raw(s)) }
 }
 
-pub fn iv_free(v: *mut IntVector) {
+pub fn iv_free_ptr(v: *mut IntVector) {
 	if v == std::ptr::null_mut() {
 		return;
 	}
-	iv_free_rs(unsafe { &mut *v });
+	iv_free(unsafe { &mut *v });
 	unsafe { drop(Box::from_raw(v)) }
-}
-
-fn _maple_print_term(c: i32, v: &IntVector, letter: &str, nz: bool) {
-	print!("{:+}*{}[", c, letter);
-
-	for i in 0..v.length as usize {
-		if nz && v[i] == 0 {
-			break;
-		}
-		if i > 0 {
-			print!(",");
-		}
-		print!("{}", v[i]);
-	}
-	print!("]")
-}
-
-pub fn maple_print_lincomb(ht: &LinearCombination, letter: *const std::os::raw::c_char, nz: bool) {
-	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
-	let letter = slice.to_str().unwrap();
-	print!("0");
-	for kv in LinearCombinationIter::from(ht as *const _) {
-		if kv.value == 0 {
-			continue;
-		}
-		_maple_print_term(kv.value, unsafe { &*kv.key }, letter, nz);
-	}
-	println!();
-}
-
-fn _maple_qprint_term(c: i32, v: &IntVector, level: i32, letter: &str) {
-	let d = part_qdegree(&v[..], level);
-	print!("{:+}*q^{}*{}[", c, d, letter);
-
-	for i in 0..(*v).length {
-		let x = part_qentry(&v[..], i as i32, d, level);
-		if x == 0 {
-			break;
-		}
-		if i > 0 {
-			print!(",");
-		}
-		print!("{}", x);
-	}
-	print!("]")
-}
-
-pub fn maple_qprint_lincomb(
-	ht: &LinearCombination,
-	level: i32,
-	letter: *const std::os::raw::c_char,
-) {
-	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
-	let letter = slice.to_str().unwrap();
-	print!("0");
-	for kv in LinearCombinationIter::from(ht as *const _) {
-		if kv.value == 0 {
-			continue;
-		}
-		_maple_qprint_term(kv.value, unsafe { &*kv.key }, level, letter);
-	}
-	println!();
 }

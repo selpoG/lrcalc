@@ -1,4 +1,4 @@
-use super::ivector::{iv_free, iv_hash, IntVector};
+use super::ivector::{iv_free_ptr, iv_hash, IntVector};
 use super::ivlincomb::{
 	ivlc_add_element, ivlc_new, ivlc_new_default, ivlc_reset, LinearCombination,
 	LinearCombinationIter, LC_COPY_KEY, LC_FREE_KEY, LC_FREE_ZERO,
@@ -6,7 +6,7 @@ use super::ivlincomb::{
 use super::lrcoef::lrcoef_count;
 use super::lriter::{lrit_expand, lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator};
 use super::optim::{optim_coef, optim_fusion, optim_mult, optim_skew};
-use super::part::{part_entry_rs, part_valid};
+use super::part::{part_entry, part_valid};
 
 pub fn schur_mult(
 	sh1: &IntVector,
@@ -87,7 +87,7 @@ pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
 	impl Drop for T {
 		fn drop(&mut self) {
 			for v in &self.0[..] {
-				iv_free(*v)
+				iv_free_ptr(*v)
 			}
 		}
 	}
@@ -114,7 +114,13 @@ pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
 		let sh = unsafe { &mut *(parts.0.pop().unwrap()) };
 		let c = coefs.pop().unwrap();
 		let sign = fusion_reduce(sh, level, &mut tmp[..]);
-		ivlc_add_element(lc, sign * c, sh, iv_hash(sh), LC_FREE_KEY | LC_FREE_ZERO);
+		ivlc_add_element(
+			lc,
+			sign * c,
+			sh,
+			iv_hash(&sh[..]),
+			LC_FREE_KEY | LC_FREE_ZERO,
+		);
 	}
 }
 
@@ -124,8 +130,8 @@ pub fn schur_mult_fusion(
 	rows: i32,
 	level: i32,
 ) -> *mut LinearCombination {
-	debug_assert!(part_valid(sh1) && part_valid(sh2));
-	if part_entry_rs(&sh1[..], rows) != 0 || part_entry_rs(&sh2[..], rows) != 0 {
+	debug_assert!(part_valid(&sh1[..]) && part_valid(&sh2[..]));
+	if part_entry(&sh1[..], rows) != 0 || part_entry(&sh2[..], rows) != 0 {
 		return ivlc_new(5, 2);
 	}
 	struct T {
@@ -136,13 +142,13 @@ pub fn schur_mult_fusion(
 	impl Drop for T {
 		fn drop(&mut self) {
 			if let Some(p) = self.tmp {
-				iv_free(p)
+				iv_free_ptr(p)
 			}
 			if let Some(p) = self.nsh1 {
-				iv_free(p)
+				iv_free_ptr(p)
 			}
 			if let Some(p) = self.nsh2 {
-				iv_free(p)
+				iv_free_ptr(p)
 			}
 		}
 	}
@@ -153,11 +159,11 @@ pub fn schur_mult_fusion(
 		nsh1: None,
 		nsh2: None,
 	};
-	if part_entry_rs(&sh1[..], 0) - part_entry_rs(&sh1[..], rows - 1) > level {
+	if part_entry(&sh1[..], 0) - part_entry(&sh1[..], rows - 1) > level {
 		t.tmp = Some(IntVector::from_vec(vec![0; rows as usize]));
 		t.nsh1 = Some(IntVector::from_vec(vec![0; rows as usize]));
 		for i in 0..rows {
-			unsafe { (*t.nsh1.unwrap())[i as usize] = part_entry_rs(&sh1[..], i) };
+			unsafe { (*t.nsh1.unwrap())[i as usize] = part_entry(&sh1[..], i) };
 		}
 		sign = fusion_reduce(unsafe { &mut *t.nsh1.unwrap() }, level, unsafe {
 			&mut (*t.tmp.unwrap())[..]
@@ -167,13 +173,13 @@ pub fn schur_mult_fusion(
 	if sign == 0 {
 		return ivlc_new(5, 2);
 	}
-	if part_entry_rs(&sh2[..], 0) - part_entry_rs(&sh2[..], rows - 1) > level {
+	if part_entry(&sh2[..], 0) - part_entry(&sh2[..], rows - 1) > level {
 		if t.tmp.is_none() {
 			t.tmp = Some(IntVector::from_vec(vec![0; rows as usize]));
 		}
 		t.nsh2 = Some(IntVector::from_vec(vec![0; rows as usize]));
 		for i in 0..rows {
-			unsafe { (*t.nsh2.unwrap())[i as usize] = part_entry_rs(&sh2[..], i) };
+			unsafe { (*t.nsh2.unwrap())[i as usize] = part_entry(&sh2[..], i) };
 		}
 		sign *= fusion_reduce(unsafe { &mut *t.nsh2.unwrap() }, level, unsafe {
 			&mut (*t.tmp.unwrap())[..]
@@ -241,7 +247,7 @@ fn _schur_coprod_isredundant(cont: &IntVector, rows: i32, cols: i32) -> bool {
 		return sz1 < sz2;
 	}
 	for i in 0..rows {
-		let df = cont[i as usize] - cols - part_entry_rs(&cont[..], rows + i);
+		let df = cont[i as usize] - cols - part_entry(&cont[..], rows + i);
 		if df != 0 {
 			return df > 0;
 		}
@@ -261,7 +267,7 @@ fn _schur_coprod_count(
 			lrit_next(lrit);
 			continue;
 		}
-		ivlc_add_element(lc, 1, cont, iv_hash(cont), LC_COPY_KEY);
+		ivlc_add_element(lc, 1, cont, iv_hash(&cont[..]), LC_COPY_KEY);
 		lrit_next(lrit);
 	}
 	lc

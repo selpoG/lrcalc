@@ -1,8 +1,8 @@
 use lrcalc_helper::{
     ivector::IntVector as _IntVector,
-    ivector::{iv_free, iv_new},
-    part::{part_qdegree, part_qentry, part_valid_rs},
-    perm::{dimvec_valid_rs, perm_group_rs, perm_valid_rs, str_iscompat_rs},
+    ivector::{iv_free_ptr, iv_new},
+    part::{part_qdegree, part_qentry, part_valid},
+    perm::{dimvec_valid, perm_group, perm_valid, str_iscompat},
 };
 
 pub struct IntVector {
@@ -85,22 +85,22 @@ impl IntVector {
     }
     #[allow(dead_code)]
     pub fn perm_group(&self) -> i32 {
-        perm_group_rs(&self[..])
+        perm_group(&self[..])
     }
     pub fn to_vec(&self) -> Vec<i32> {
         self[..].iter().cloned().collect()
     }
     pub fn is_partition(&self) -> bool {
-        part_valid_rs(&self[..])
+        part_valid(&self[..])
     }
     pub fn is_permutation(&self) -> bool {
-        perm_valid_rs(&self[..])
+        perm_valid(&self[..])
     }
     pub fn is_dimvec(&self) -> bool {
-        dimvec_valid_rs(&self[..])
+        dimvec_valid(&self[..])
     }
     pub fn is_compatible_str(&self, other: &IntVector) -> bool {
-        str_iscompat_rs(&self[..], &other[..])
+        str_iscompat(&self[..], &other[..])
     }
     pub fn to_partition(&self) -> Vec<i32> {
         let arr = &self[..];
@@ -133,7 +133,9 @@ impl IntVector {
         }
         (
             d,
-            (0..n).map(|i| part_qentry(&p[..], i as i32, d, level)).collect(),
+            (0..n)
+                .map(|i| part_qentry(&p[..], i as i32, d, level))
+                .collect(),
         )
     }
 }
@@ -141,7 +143,7 @@ impl IntVector {
 impl Drop for IntVector {
     fn drop(&mut self) {
         if self.owned && self.data != std::ptr::null_mut() {
-            iv_free(self.data)
+            iv_free_ptr(self.data)
         }
     }
 }

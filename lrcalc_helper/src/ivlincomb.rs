@@ -1,4 +1,4 @@
-use super::ivector::{iv_cmp_rs, iv_free, iv_free_rs, iv_hash_rs, iv_print, IntVector};
+use super::ivector::{iv_cmp, iv_free, iv_free_ptr, iv_hash, IntVector};
 
 #[derive(Copy, Clone)]
 pub struct LinearCombinationElement {
@@ -63,8 +63,7 @@ impl LinearCombinationIter {
 			self.initialized = true
 		}
 		while ivlc_good(&self) {
-			let kv = unsafe { &mut *ivlc_keyval(&mut self) };
-			f(kv);
+			f(ivlc_keyval(&mut self));
 			ivlc_next(&mut self)
 		}
 	}
@@ -80,7 +79,7 @@ impl Iterator for LinearCombinationIter {
 			ivlc_next(self)
 		}
 		if ivlc_good(self) {
-			Some(ivlc_keyval_rs(self))
+			Some(*ivlc_keyval(self))
 		} else {
 			None
 		}
@@ -148,7 +147,7 @@ pub fn ivlc_free(ht: *mut LinearCombination) {
 	unsafe { drop(Box::from_raw(ht)) }
 }
 
-pub fn ivlc_reset(ht: &mut LinearCombination) {
+pub(crate) fn ivlc_reset(ht: &mut LinearCombination) {
 	unsafe {
 		std::slice::from_raw_parts_mut(ht.table, ht.table_sz as usize).fill(0);
 	}
@@ -217,7 +216,7 @@ fn _ivlc_require(ht: &mut LinearCombination, sz: usize) {
 }
 
 /// Return pointer to keyval_t, nullptr if key not in table.
-pub fn ivlc_lookup_rs(
+pub fn ivlc_lookup(
 	ht: &LinearCombination,
 	key: &[i32],
 	hash: u32,
@@ -226,8 +225,7 @@ pub fn ivlc_lookup_rs(
 	let elts = unsafe { std::slice::from_raw_parts_mut(ht.elts, ht.elts_sz as usize) };
 	let index = hash % ht.table_sz;
 	let mut i = table[index as usize];
-	while i != 0
-		&& iv_cmp_rs(key, &unsafe { &*elts[i as usize].key }[..]) != std::cmp::Ordering::Equal
+	while i != 0 && iv_cmp(key, &unsafe { &*elts[i as usize].key }[..]) != std::cmp::Ordering::Equal
 	{
 		i = elts[i as usize].next;
 	}
@@ -238,27 +236,19 @@ pub fn ivlc_lookup_rs(
 	}
 }
 
-pub fn ivlc_lookup(
-	ht: &LinearCombination,
-	key: &IntVector,
-	hash: u32,
-) -> *mut LinearCombinationElement {
-	ivlc_lookup_rs(ht, &key[..], hash)
-}
-
-pub fn ivlc_insert_rs(
+pub fn ivlc_insert(
 	ht: &mut LinearCombination,
 	key: &[i32],
 	value: i32,
 ) -> *mut LinearCombinationElement {
-	let hash = iv_hash_rs(key);
+	let hash = iv_hash(key);
 	let key = unsafe { &mut *IntVector::from_vec(key.to_vec()) };
-	ivlc_insert(ht, key, hash, value)
+	_ivlc_insert(ht, key, hash, value)
 }
 
 /// Call only if key is not in table.
 /// Insert key into table and return a pointer to new value variable.
-pub fn ivlc_insert(
+pub(crate) fn _ivlc_insert(
 	ht: &mut LinearCombination,
 	key: &mut IntVector,
 	hash: u32,
@@ -320,12 +310,12 @@ fn _ivlc_remove(ht: &mut LinearCombination, key: &IntVector, hash: u32) -> bool 
 
 pub fn ivlc_free_all(ht: *mut LinearCombination) {
 	for kv in LinearCombinationIter::from(ht as *const _) {
-		iv_free_rs(unsafe { &mut *kv.key });
+		iv_free(unsafe { &mut *kv.key });
 	}
 	ivlc_free(ht);
 }
 
-pub fn ivlc_add_element(
+pub(crate) fn ivlc_add_element(
 	ht: &mut LinearCombination,
 	c: i32,
 	mut key: &mut IntVector,
@@ -334,20 +324,20 @@ pub fn ivlc_add_element(
 ) {
 	if c == 0 {
 		if (opt & LC_COPY_KEY) == 0 {
-			iv_free(key);
+			iv_free_ptr(key);
 		}
 		return;
 	}
-	let kv = ivlc_lookup(ht, key, hash);
+	let kv = ivlc_lookup(ht, &key[..], hash);
 	if kv != std::ptr::null_mut() {
 		let kv = unsafe { &mut *kv };
 		if (opt & LC_COPY_KEY) == 0 {
-			iv_free(key);
+			iv_free_ptr(key);
 		}
 		kv.value += c;
 		if kv.value == 0 && (opt & LC_FREE_ZERO) != 0 {
 			_ivlc_remove(ht, unsafe { &*kv.key }, hash);
-			iv_free(kv.key);
+			iv_free_ptr(kv.key);
 		}
 		return;
 	}
@@ -355,10 +345,10 @@ pub fn ivlc_add_element(
 	if (opt & LC_COPY_KEY) != 0 {
 		key = unsafe { &mut *IntVector::from_vec((&key[..]).to_vec()) };
 	}
-	ivlc_insert(ht, key, hash, c);
+	_ivlc_insert(ht, key, hash, c);
 }
 
-pub fn ivlc_add_multiple(
+pub(crate) fn ivlc_add_multiple(
 	dst: &mut LinearCombination,
 	c: i32,
 	src: &mut LinearCombination,
@@ -369,11 +359,11 @@ pub fn ivlc_add_multiple(
 	}
 }
 
-pub fn ivlc_good(itr: &LinearCombinationIter) -> bool {
+fn ivlc_good(itr: &LinearCombinationIter) -> bool {
 	itr.i != 0
 }
 
-pub fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombinationIter) {
+fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombinationIter) {
 	debug_assert!(!itr.initialized);
 	itr.ht = ht;
 	let mut index = 0;
@@ -390,7 +380,7 @@ pub fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombinationIter) {
 	itr.initialized = true;
 }
 
-pub fn ivlc_next(itr: &mut LinearCombinationIter) {
+fn ivlc_next(itr: &mut LinearCombinationIter) {
 	let ht = unsafe { &(*itr.ht) };
 	let elts = unsafe { std::slice::from_raw_parts(ht.elts, ht.elts_sz as usize) };
 	if elts[itr.i as usize].next != 0 {
@@ -410,52 +400,6 @@ pub fn ivlc_next(itr: &mut LinearCombinationIter) {
 	itr.i = table[index] as u64;
 }
 
-pub fn ivlc_keyval(itr: &LinearCombinationIter) -> *mut LinearCombinationElement {
-	unsafe { (*itr.ht).elts.offset(itr.i as isize) }
-}
-
-pub fn ivlc_keyval_rs(itr: &LinearCombinationIter) -> LinearCombinationElement {
-	unsafe { *ivlc_keyval(itr) }
-}
-
-pub fn ivlc_print(ht: &LinearCombination) {
-	for kv in ht.iter() {
-		if kv.value == 0 {
-			continue;
-		}
-		print!("{}  ", kv.value);
-		iv_print(unsafe { &*kv.key });
-		println!();
-	}
-}
-
-pub fn ivlc_print_coprod(ht: &LinearCombination, rows: u32, cols: i32) {
-	for kv in ht.iter() {
-		if kv.value == 0 {
-			continue;
-		}
-		print!("{}  (", kv.value);
-
-		let part = &unsafe { &*kv.key }[..];
-		for i in 0..rows {
-			if part[i as usize] <= cols {
-				break;
-			}
-			if i > 0 {
-				print!(",");
-			}
-			print!("{}", part[i as usize] - cols)
-		}
-		print!(")  (");
-		for i in rows..(part.len() as u32) {
-			if part[i as usize] == 0 {
-				break;
-			}
-			if i > rows {
-				print!(",");
-			}
-			print!("{}", part[i as usize])
-		}
-		println!(")");
-	}
+fn ivlc_keyval(itr: &LinearCombinationIter) -> &mut LinearCombinationElement {
+	unsafe { &mut *(*itr.ht).elts.offset(itr.i as isize) }
 }

@@ -2,7 +2,7 @@ use super::ivector::IntVector;
 use super::ivlist::IntVectorList;
 
 /// check w is a permutation of {1, 2, ..., n}
-pub fn perm_valid_rs(w: &[i32]) -> bool {
+pub fn perm_valid(w: &[i32]) -> bool {
 	let n = w.len();
 	let mut done = vec![false; n];
 	// check each of 1, ..., n appears only once
@@ -16,11 +16,7 @@ pub fn perm_valid_rs(w: &[i32]) -> bool {
 	true
 }
 
-pub fn perm_valid(w: &IntVector) -> bool {
-	perm_valid_rs(&w[..])
-}
-
-pub fn perm_length(w: &[i32]) -> i32 {
+pub(crate) fn perm_length(w: &[i32]) -> i32 {
 	let mut res = 0;
 	for i in 0..w.len() {
 		for j in i + 1..w.len() {
@@ -32,7 +28,7 @@ pub fn perm_length(w: &[i32]) -> i32 {
 	res
 }
 
-pub fn perm_group_rs(w: &[i32]) -> i32 {
+pub fn perm_group(w: &[i32]) -> i32 {
 	let mut i = w.len() as i32;
 	while i > 0 && w[(i - 1) as usize] == i {
 		i -= 1
@@ -40,15 +36,7 @@ pub fn perm_group_rs(w: &[i32]) -> i32 {
 	i
 }
 
-pub fn perm_group(w: &IntVector) -> i32 {
-	perm_group_rs(&w[..])
-}
-
-pub fn dimvec_valid(dv: &IntVector) -> bool {
-	dimvec_valid_rs(&dv[..])
-}
-
-pub fn dimvec_valid_rs(dv: &[i32]) -> bool {
+pub fn dimvec_valid(dv: &[i32]) -> bool {
 	if dv.len() == 0 || dv[0] < 0 {
 		return false;
 	}
@@ -61,9 +49,9 @@ pub fn dimvec_valid_rs(dv: &[i32]) -> bool {
 }
 
 /// Return true if S_w1 * S_w2 = 0 in H^*(Fl(rank)).
-pub fn bruhat_zero(w1: &[i32], w2: &[i32], rank: i32) -> bool {
-	let n1 = perm_group_rs(w1);
-	let n2 = perm_group_rs(w2);
+pub(crate) fn bruhat_zero(w1: &[i32], w2: &[i32], rank: i32) -> bool {
+	let n1 = perm_group(w1);
+	let n2 = perm_group(w2);
 	if n1 > rank || n2 > rank {
 		return true;
 	}
@@ -88,12 +76,8 @@ pub fn bruhat_zero(w1: &[i32], w2: &[i32], rank: i32) -> bool {
 	return false;
 }
 
-pub fn all_strings(dimvec: &IntVector) -> *mut IntVectorList {
-	all_strings_rs(&dimvec[..])
-}
-
-pub fn all_strings_rs(dimvec: &[i32]) -> *mut IntVectorList {
-	debug_assert!(dimvec_valid_rs(dimvec));
+pub fn all_strings(dimvec: &[i32]) -> *mut IntVectorList {
+	debug_assert!(dimvec_valid(dimvec));
 
 	let ld = dimvec.len();
 	let mut cntvec = vec![0; ld];
@@ -173,10 +157,10 @@ pub fn all_strings_rs(dimvec: &[i32]) -> *mut IntVectorList {
 pub fn all_perms(n: i32) -> *mut IntVectorList {
 	debug_assert!(n >= 0);
 	let dimvec: Vec<_> = (0..=n).collect();
-	all_strings_rs(&dimvec[..])
+	all_strings(&dimvec[..])
 }
 
-pub fn string2perm(str: &IntVector) -> IntVector {
+pub(crate) fn string2perm(str: &IntVector) -> IntVector {
 	let str = &str[..];
 
 	let n = (str.iter().max().unwrap_or(&0) + 1) as usize;
@@ -200,11 +184,7 @@ pub fn string2perm(str: &IntVector) -> IntVector {
 	IntVector::from_box(perm.into_boxed_slice())
 }
 
-pub fn str_iscompat(str1: &IntVector, str2: &IntVector) -> bool {
-	str_iscompat_rs(&str1[..], &str2[..])
-}
-
-pub fn str_iscompat_rs(s1: &[i32], s2: &[i32]) -> bool {
+pub fn str_iscompat(s1: &[i32], s2: &[i32]) -> bool {
 	if s1.len() != s2.len() {
 		return false;
 	}
@@ -231,7 +211,7 @@ pub fn str_iscompat_rs(s1: &[i32], s2: &[i32]) -> bool {
 	cnt.iter().all(|&c| c == 0)
 }
 
-pub fn str2dimvec(str: &IntVector) -> Option<IntVector> {
+pub(crate) fn str2dimvec(str: &IntVector) -> Option<IntVector> {
 	let str = &str[..];
 	let mut n = 0;
 	for &i in str.iter() {
@@ -252,7 +232,7 @@ pub fn str2dimvec(str: &IntVector) -> Option<IntVector> {
 	Some(IntVector::from_box(res.into_boxed_slice()))
 }
 
-pub fn perm2string(perm: &[i32], dimvec: &[i32]) -> *mut IntVector {
+pub(crate) fn perm2string(perm: &[i32], dimvec: &[i32]) -> *mut IntVector {
 	let n = if dimvec.len() > 0 {
 		dimvec[dimvec.len() - 1]
 	} else {

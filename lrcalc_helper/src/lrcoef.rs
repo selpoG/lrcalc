@@ -1,5 +1,5 @@
 use super::ivector::{iv_sum, IntVector};
-use super::part::{part_entry_rs, part_length, part_leq, part_valid};
+use super::part::{part_entry, part_length, part_leq, part_valid};
 
 struct LRCoefBox {
 	/// integer in box of skew tableau
@@ -28,10 +28,10 @@ struct LRCoefContent {
 }
 
 fn lrcoef_new_content(mu: &IntVector) -> Vec<LRCoefContent> {
-	debug_assert!(part_valid(mu));
-	debug_assert!(part_length(mu) > 0);
+	debug_assert!(part_valid(&mu[..]));
+	debug_assert!(part_length(&mu[..]) > 0);
 
-	let n = part_length(mu) as usize;
+	let n = part_length(&mu[..]) as usize;
 	let mu = &mu[..];
 	let mut res = Vec::with_capacity(n + 1);
 	unsafe {
@@ -51,10 +51,10 @@ fn lrcoef_new_content(mu: &IntVector) -> Vec<LRCoefContent> {
 }
 
 fn lrcoef_new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRCoefBox> {
-	debug_assert!(part_valid(nu));
-	debug_assert!(part_valid(la));
+	debug_assert!(part_valid(&nu[..]));
+	debug_assert!(part_valid(&la[..]));
 	debug_assert!(part_leq(la, nu));
-	debug_assert!(part_entry_rs(&nu[..], 0) > 0);
+	debug_assert!(part_entry(&nu[..], 0) > 0);
 
 	let n = (iv_sum(nu) - iv_sum(la)) as usize;
 	let nu = &nu[..];
@@ -70,11 +70,11 @@ fn lrcoef_new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRC
 		let la_0 = if r == 0 {
 			nu[0]
 		} else {
-			part_entry_rs(la, r as i32 - 1)
+			part_entry(la, r as i32 - 1)
 		};
 		let nu_r = nu[r];
-		let la_r = part_entry_rs(la, r as i32);
-		let nu_1 = part_entry_rs(nu, r as i32 + 1);
+		let la_r = part_entry(la, r as i32);
+		let nu_1 = part_entry(nu, r as i32 + 1);
 		for c in la_r..nu_r {
 			pos -= 1;
 			let mut b = unsafe { &mut *array.as_mut_ptr().offset(pos as isize) };
@@ -102,12 +102,12 @@ fn lrcoef_new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRC
 }
 
 /// This is a low level function called from schur_lrcoef().
-pub fn lrcoef_count(outer: &IntVector, inner: &IntVector, content: &IntVector) -> i64 {
+pub(crate) fn lrcoef_count(outer: &IntVector, inner: &IntVector, content: &IntVector) -> i64 {
 	debug_assert!(iv_sum(outer) == iv_sum(inner) + iv_sum(content));
 	debug_assert!(iv_sum(content) > 1);
 
 	#[allow(non_snake_case)]
-	let mut T = lrcoef_new_skewtab(outer, inner, part_length(content) as i32).into_boxed_slice();
+	let mut T = lrcoef_new_skewtab(outer, inner, part_length(&content[..]) as i32).into_boxed_slice();
 	#[allow(non_snake_case)]
 	let mut C = lrcoef_new_content(content).into_boxed_slice();
 

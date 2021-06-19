@@ -1,9 +1,9 @@
 use anyhow::anyhow;
 
 use lrcalc_helper::{
-    ivector::iv_hash_rs,
+    ivector::iv_hash,
     ivlincomb::{
-        ivlc_free_all, ivlc_insert_rs, ivlc_lookup_rs, ivlc_new_default,
+        ivlc_free_all, ivlc_insert, ivlc_lookup, ivlc_new_default,
         LinearCombination as _LinearCombination, LinearCombinationElement, LinearCombinationIter,
     },
 };
@@ -92,7 +92,7 @@ impl LinearCombination {
         let mut lc: LinearCombination = ptr.into();
         let lc_data = lc.deref_mut();
         for (key, val) in it {
-            if ivlc_insert_rs(lc_data, &key[..], val) == std::ptr::null_mut() {
+            if ivlc_insert(lc_data, &key[..], val) == std::ptr::null_mut() {
                 panic!("Memory Error")
             }
         }
@@ -113,7 +113,7 @@ impl LinearCombination {
     }
     #[allow(dead_code)]
     pub fn find(&self, key: &[i32]) -> Option<LinearCombinationElement> {
-        let kv = ivlc_lookup_rs(self.deref(), key, iv_hash_rs(key) as u32);
+        let kv = ivlc_lookup(self.deref(), key, iv_hash(key) as u32);
         if kv == std::ptr::null_mut() {
             None
         } else {

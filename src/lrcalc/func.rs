@@ -1,6 +1,6 @@
 use lrcalc_helper::{
-    part::{pitr_first_rs, pitr_good, pitr_next},
-    perm::{all_perms as _all_perms, all_strings_rs},
+    part::{pitr_first, pitr_good, pitr_next},
+    perm::{all_perms as _all_perms, all_strings as _all_strings},
     schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},
     schur::{
         fusion_reduce_lc, schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew,
@@ -227,7 +227,7 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
 pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
     let mut ans = Vec::new();
     let p = IntVector::default(rows as u32);
-    let mut pitr = pitr_first_rs(unsafe { &mut *p.data }, rows, cols, None, None, 0, 0);
+    let mut pitr = pitr_first(unsafe { &mut *p.data }, rows, cols, None, None, 0, 0);
     while pitr_good(&pitr) {
         ans.push(p.to_vec());
         pitr_next(&mut pitr)
@@ -247,7 +247,7 @@ pub fn all_perms(n: i32) -> Vec<Vec<i32>> {
 pub fn all_strings(dimvec: &[i32]) -> Vec<Vec<i32>> {
     let dimvec = IntVector::new(dimvec);
     debug_assert!(dimvec.is_dimvec());
-    let ans = all_strings_rs(&dimvec[..]);
+    let ans = _all_strings(&dimvec[..]);
     if ans == std::ptr::null_mut() {
         panic!("Memory Error")
     }

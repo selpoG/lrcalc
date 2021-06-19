@@ -1,5 +1,5 @@
-use super::ivector::{iv_free, IntVector};
-use super::part::{part_entry, part_length, part_length_rs, part_leq, part_valid};
+use super::ivector::{iv_free_ptr, IntVector};
+use super::part::{part_entry, part_length, part_leq, part_valid};
 
 pub struct SkewShape {
 	pub outer: *mut IntVector,
@@ -10,16 +10,16 @@ pub struct SkewShape {
 
 impl Drop for SkewShape {
 	fn drop(&mut self) {
-		iv_free(self.outer);
-		iv_free(self.inner);
-		iv_free(self.cont);
+		iv_free_ptr(self.outer);
+		iv_free_ptr(self.inner);
+		iv_free_ptr(self.cont);
 	}
 }
 
-pub fn sksh_print(outer: &[i32], inner: Option<&[i32]>, cont: Option<&[i32]>) {
-	let mut len = part_length_rs(outer);
+pub(crate) fn _sksh_print(outer: &[i32], inner: Option<&[i32]>, cont: Option<&[i32]>) {
+	let mut len = part_length(outer);
 	let mut ilen = inner.map(|v| v.len()).unwrap_or(0) as u32;
-	let clen = cont.map(|v| part_length_rs(v)).unwrap_or(0);
+	let clen = cont.map(|v| part_length(v)).unwrap_or(0);
 	if len <= ilen {
 		while len > 0 && inner.unwrap()[(len - 1) as usize] == outer[(len - 1) as usize] {
 			len -= 1;
@@ -69,16 +69,16 @@ pub fn sksh_print(outer: &[i32], inner: Option<&[i32]>, cont: Option<&[i32]>) {
 /// 3) New outer should be smaller of outer0, content0.
 ///
 /// 4) New content should be larger shape, plus removed rows and columns.
-pub fn optim_mult(
+pub(crate) fn optim_mult(
 	sh1: &IntVector,
 	sh2: Option<&IntVector>,
 	maxrows: i32,
 	maxcols: i32,
 ) -> SkewShape {
 	/* DEBUG: Check valid input. */
-	debug_assert!(part_valid(sh1), "sh1 is not a partition");
+	debug_assert!(part_valid(&sh1[..]), "sh1 is not a partition");
 	if sh2.is_some() {
-		debug_assert!(part_valid(sh2.unwrap()), "sh1 is not a partition");
+		debug_assert!(part_valid(&sh2.unwrap()[..]), "sh1 is not a partition");
 	}
 
 	let v1 = &sh1[..];
@@ -88,10 +88,10 @@ pub fn optim_mult(
 	};
 
 	/* Find length and width of shapes. */
-	let len1 = part_length_rs(v1) as i32;
+	let len1 = part_length(v1) as i32;
 	let sh10 = if len1 != 0 { v1[0] } else { 0 };
 	let len2 = if sh2.is_some() {
-		part_length_rs(v2) as i32
+		part_length(v2) as i32
 	} else {
 		0
 	};
@@ -211,12 +211,12 @@ pub fn optim_mult(
 }
 
 /// Find optimal shape for fusion product.
-pub fn optim_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32) -> SkewShape {
+pub(crate) fn optim_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32) -> SkewShape {
 	/* DEBUG: Check valid input. */
-	debug_assert!(part_valid(sh1));
-	debug_assert!(part_valid(sh2));
-	debug_assert!(part_entry(sh1, 0) - part_entry(sh1, rows - 1) <= level);
-	debug_assert!(part_entry(sh2, 0) - part_entry(sh2, rows - 1) <= level);
+	debug_assert!(part_valid(&sh1[..]));
+	debug_assert!(part_valid(&sh2[..]));
+	debug_assert!(part_entry(&sh1[..], 0) - part_entry(&sh1[..], rows - 1) <= level);
+	debug_assert!(part_entry(&sh2[..], 0) - part_entry(&sh2[..], rows - 1) <= level);
 
 	/* Empty result? */
 	let mut ss = SkewShape {
@@ -225,7 +225,7 @@ pub fn optim_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32) -> 
 		cont: std::ptr::null_mut(),
 		sign: 0,
 	};
-	if part_length(sh1) as i32 > rows || part_length(sh2) as i32 > rows {
+	if part_length(&sh1[..]) as i32 > rows || part_length(&sh2[..]) as i32 > rows {
 		return ss;
 	}
 
@@ -235,12 +235,12 @@ pub fn optim_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32) -> 
 	let mut s1 = rows * level;
 	let mut s2 = s1;
 	for d in 1..=rows {
-		let s = (rows - d) * level - rows * part_entry(sh1, d - 1);
+		let s = (rows - d) * level - rows * part_entry(&sh1[..], d - 1);
 		if s < s1 {
 			d1 = d;
 			s1 = s;
 		}
-		let s = (rows - d) * level - rows * part_entry(sh2, d - 1);
+		let s = (rows - d) * level - rows * part_entry(&sh2[..], d - 1);
 		if s < s2 {
 			d2 = d;
 			s2 = s;
@@ -251,22 +251,22 @@ pub fn optim_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32) -> 
 	} else {
 		(d2, sh2, sh1)
 	};
-	let sh1d = part_entry(sh1, d - 1);
+	let sh1d = part_entry(&sh1[..], d - 1);
 
 	/* Create shifted partitions. */
 	let mut nsh1 = vec![0; rows as usize];
 	for i in 0..(rows - d) {
-		nsh1[i as usize] = part_entry(sh1, d + i) - sh1d + level;
+		nsh1[i as usize] = part_entry(&sh1[..], d + i) - sh1d + level;
 	}
 	for i in 0..d {
-		nsh1[(rows - d + i) as usize] = part_entry(sh1, i) - sh1d;
+		nsh1[(rows - d + i) as usize] = part_entry(&sh1[..], i) - sh1d;
 	}
 	let mut nsh2 = vec![0; rows as usize];
 	for i in 0..d {
-		nsh2[i as usize] = part_entry(sh2, rows - d + i) + sh1d;
+		nsh2[i as usize] = part_entry(&sh2[..], rows - d + i) + sh1d;
 	}
 	for i in 0..(rows - d) {
-		nsh2[(d + i) as usize] = part_entry(sh2, i) + sh1d - level;
+		nsh2[(d + i) as usize] = part_entry(&sh2[..], i) + sh1d - level;
 	}
 
 	ss.outer = IntVector::from_vec(nsh1);
@@ -355,7 +355,7 @@ impl PartialShape {
 ///
 /// 4) New content should be largest (anti) partition shaped component
 ///    plus all columns of height maxrows.
-pub fn optim_skew(
+pub(crate) fn optim_skew(
 	outer: &IntVector,
 	inner: Option<&IntVector>,
 	content: Option<&IntVector>,
@@ -370,10 +370,10 @@ pub fn optim_skew(
 	};
 
 	/* DEBUG: Check valid input. */
-	debug_assert!(part_valid(outer));
-	debug_assert!(part_valid(inner));
+	debug_assert!(part_valid(&outer[..]));
+	debug_assert!(part_valid(&inner[..]));
 	if content.is_some() {
-		debug_assert!(part_valid(content.unwrap()));
+		debug_assert!(part_valid(&content.unwrap()[..]));
 	}
 
 	/* Indicate empty result. */
@@ -388,7 +388,7 @@ pub fn optim_skew(
 	}
 
 	/* Find range of non-empty rows in outer/inner. */
-	let mut row_bound = part_length(outer) as i32;
+	let mut row_bound = part_length(&outer[..]) as i32;
 	let outer = &outer[..];
 	let inner = &inner[..];
 	let mut ilen = inner.len() as i32;
@@ -407,7 +407,7 @@ pub fn optim_skew(
 	/* Bound number of rows in content of LR tableaux. */
 	let (content, mut clen) = match content {
 		None => (None, 0),
-		Some(v) => (Some(&v[..]), part_length(v) as i32),
+		Some(v) => (Some(&v[..]), part_length(&v[..]) as i32),
 	};
 	if maxrows >= 0 && clen > maxrows {
 		return ss;
@@ -588,10 +588,10 @@ pub fn optim_skew(
 	ss
 }
 
-pub fn optim_coef(out: &IntVector, sh1: &IntVector, sh2: &IntVector) -> SkewShape {
-	debug_assert!(part_valid(out));
-	debug_assert!(part_valid(sh1));
-	debug_assert!(part_valid(sh2));
+pub(crate) fn optim_coef(out: &IntVector, sh1: &IntVector, sh2: &IntVector) -> SkewShape {
+	debug_assert!(part_valid(&out[..]));
+	debug_assert!(part_valid(&sh1[..]));
+	debug_assert!(part_valid(&sh2[..]));
 
 	let mut ss = SkewShape {
 		outer: std::ptr::null_mut(),
@@ -604,7 +604,7 @@ pub fn optim_coef(out: &IntVector, sh1: &IntVector, sh2: &IntVector) -> SkewShap
 		ss
 	}
 
-	let mut n = part_length(out) as i32;
+	let mut n = part_length(&out[..]) as i32;
 	if n < sh1.length as i32 && sh1[n as usize] > 0 {
 		return ss;
 	}

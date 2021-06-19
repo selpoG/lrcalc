@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use lrcalc_helper::part::{
-    pitr_box_first, pitr_box_sz_first, pitr_first_rs, pitr_good, pitr_next, PartitionIterator,
+    pitr_box_first, pitr_box_sz_first, pitr_first, pitr_good, pitr_next, PartitionIterator,
 };
 
 use super::ivector::IntVector;
@@ -22,7 +22,7 @@ impl PartIter {
         size: i32,
         opt: i32,
     ) -> PartIter {
-        let it = pitr_first_rs(
+        let it = pitr_first(
             unsafe { &mut *p.data },
             rows,
             cols,

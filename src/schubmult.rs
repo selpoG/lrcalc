@@ -5,7 +5,7 @@ use clap::AppSettings::{AllowLeadingHyphen, DeriveDisplayOrder};
 use clap::{crate_version, Clap};
 
 use lrcalc::{is_permutation, schubmult, schubmult_str};
-use lrcalc_helper::perm::str_iscompat_rs;
+use lrcalc_helper::perm::str_iscompat;
 
 fn check_non_negative(num_str: &str) -> Result<()> {
     let num = num_str
@@ -83,7 +83,7 @@ fn main() {
             "rank option cannot be used with string option"
         );
         assert!(
-            str_iscompat_rs(&opts.perm1, &opts.perm2),
+            str_iscompat(&opts.perm1, &opts.perm2),
             "strs are not compatible"
         );
         schubmult_str(&opts.perm1, &opts.perm2)
