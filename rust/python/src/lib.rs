@@ -8,7 +8,7 @@ use lrcalc_helper::{
 	ivector::{iv_free, IntVector},
 	ivlincomb::{ivlc_free_all, LinearCombination},
 	lriter::{lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator},
-	part::{part_qdegree_rs, part_qentry_rs},
+	part::{part_qdegree, part_qentry},
 	schublib::{mult_schubert, mult_schubert_str, trans},
 	schur::{schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew},
 };
@@ -96,12 +96,12 @@ fn to_py_dict_of_part(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {
 }
 
 fn as_quantum(v: &[i32], level: i32) -> (Vec<i32>, i32) {
-	let d = part_qdegree_rs(v, level);
+	let d = part_qdegree(v, level);
 	let mut n = v.len() as i32;
-	while n > 0 && part_qentry_rs(v, n - 1, d, level) == 0 {
+	while n > 0 && part_qentry(&v[..], n - 1, d, level) == 0 {
 		n -= 1
 	}
-	((0..n).map(|i| part_qentry_rs(v, i, d, level)).collect(), d)
+	((0..n).map(|i| part_qentry(&v[..], i, d, level)).collect(), d)
 }
 
 fn to_py_dict_of_quantum(
@@ -311,7 +311,7 @@ fn schubert_poly(py: Python, w: Vec<i32>) -> PyResult<Py<PyDict>> {
 	let w = SafeIntVector::from(w);
 	let dict = to_py_dict_of_tuple(
 		py,
-		SafeLinearCombination::new(trans(w.deref(), 0)).to_dict_of_vecs(),
+		SafeLinearCombination::new(trans(&w.deref()[..], 0)).to_dict_of_vecs(),
 	);
 	Ok(Py::from(dict))
 }

@@ -159,11 +159,11 @@ pub extern "C" fn maple_print_lincomb(
 }
 
 fn _maple_qprint_term(c: i32, v: &IntVector, level: i32, letter: &str) {
-	let d = part_qdegree(v, level);
+	let d = part_qdegree(&v[..], level);
 	print!("{:+}*q^{}*{}[", c, d, letter);
 
 	for i in 0..(*v).length {
-		let x = part_qentry(v, i as i32, d, level);
+		let x = part_qentry(&v[..], i as i32, d, level);
 		if x == 0 {
 			break;
 		}

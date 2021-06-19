@@ -7,12 +7,7 @@ use super::perm::{
 	bruhat_zero, perm2string, perm_group_rs, perm_length, str2dimvec, str_iscompat, string2perm,
 };
 
-#[no_mangle]
-pub extern "C" fn trans(w: &IntVector, vars: i32) -> *mut LinearCombination {
-	trans_rs(&w[..], vars)
-}
-
-fn trans_rs(w: &[i32], vars: i32) -> *mut LinearCombination {
+pub fn trans(w: &[i32], vars: i32) -> *mut LinearCombination {
 	let res = unsafe { &mut *ivlc_new_default() };
 	_trans(&mut w.to_vec()[..], vars, res);
 	res
@@ -44,7 +39,7 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 	w[(s - 1) as usize] = wr;
 	w[(r - 1) as usize] = ws;
 
-	let tmp = unsafe { &mut *trans_rs(w, vars) };
+	let tmp = unsafe { &mut *trans(w, vars) };
 	for kv in LinearCombinationIter::from(tmp as *const _) {
 		let xx = unsafe { &mut *kv.key };
 		xx[(r - 1) as usize] += 1;
@@ -271,7 +266,7 @@ pub extern "C" fn mult_schubert(
 		return ivlc_new_default();
 	}
 
-	let lc = mult_poly_schubert(unsafe { &mut *trans(w1, 0) }, w2, rank);
+	let lc = mult_poly_schubert(unsafe { &mut *trans(&w1[..], 0) }, w2, rank);
 
 	w1.length = svlen1;
 	w2.length = svlen2;

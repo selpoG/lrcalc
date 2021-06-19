@@ -126,14 +126,14 @@ impl IntVector {
     }
     pub fn to_quantum(&self, level: i32) -> (i32, Vec<i32>) {
         let p = self.deref();
-        let d = part_qdegree(p, level);
+        let d = part_qdegree(&p[..], level);
         let mut n = self.len();
-        while n > 0 && part_qentry(p, (n - 1) as i32, d, level) == 0 {
+        while n > 0 && part_qentry(&p[..], (n - 1) as i32, d, level) == 0 {
             n -= 1
         }
         (
             d,
-            (0..n).map(|i| part_qentry(p, i as i32, d, level)).collect(),
+            (0..n).map(|i| part_qentry(&p[..], i as i32, d, level)).collect(),
         )
     }
 }

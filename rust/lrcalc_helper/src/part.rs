@@ -114,7 +114,7 @@ pub extern "C" fn part_print_lincomb(lc: &LinearCombination) {
 
 // Translate fusion algebra partitions to quantum cohomology notation.
 
-pub fn part_qdegree_rs(p: &[i32], level: i32) -> i32 {
+pub fn part_qdegree(p: &[i32], level: i32) -> i32 {
 	let n = (p.len() as i32) + level;
 	let mut d = 0;
 	for i in 0..p.len() as usize {
@@ -125,27 +125,17 @@ pub fn part_qdegree_rs(p: &[i32], level: i32) -> i32 {
 	d
 }
 
-#[no_mangle]
-pub extern "C" fn part_qdegree(p: &IntVector, level: i32) -> i32 {
-	part_qdegree_rs(&p[..], level)
-}
-
-pub fn part_qentry_rs(p: &[i32], i: i32, d: i32, level: i32) -> i32 {
+pub fn part_qentry(p: &[i32], i: i32, d: i32, level: i32) -> i32 {
 	let rows = p.len() as i32;
 	let k = (i + d) % rows;
 	p[k as usize] - ((i + d) / rows) * level - d
 }
 
-#[no_mangle]
-pub extern "C" fn part_qentry(p: &IntVector, i: i32, d: i32, level: i32) -> i32 {
-	part_qentry_rs(&p[..], i, d, level)
-}
-
 fn part_qprint(p: &IntVector, level: i32) {
-	let d = part_qdegree(p, level);
+	let d = part_qdegree(&p[..], level);
 	print!("(");
 	for i in 0..p.length as usize {
-		let x = part_qentry(p, i as i32, d, level);
+		let x = part_qentry(&p[..], i as i32, d, level);
 		if x == 0 {
 			break;
 		}

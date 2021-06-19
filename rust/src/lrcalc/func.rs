@@ -66,7 +66,7 @@ pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
 }
 
 pub(crate) fn _trans(w: &IntVector, vars: ::std::os::raw::c_int) -> LinearCombination {
-    trans(unsafe { &*w.data }, vars).into()
+    trans(&w[..], vars).into()
 }
 
 pub(crate) fn _mult_schubert(

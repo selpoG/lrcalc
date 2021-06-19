@@ -373,13 +373,11 @@ pub fn ivlc_add_multiple(
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_good(itr: &LinearCombinationIter) -> bool {
+pub fn ivlc_good(itr: &LinearCombinationIter) -> bool {
 	itr.i != 0
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombinationIter) {
+pub fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombinationIter) {
 	debug_assert!(!itr.initialized);
 	itr.ht = ht;
 	let mut index = 0;
@@ -396,8 +394,7 @@ pub extern "C" fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombination
 	itr.initialized = true;
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_next(itr: &mut LinearCombinationIter) {
+pub fn ivlc_next(itr: &mut LinearCombinationIter) {
 	let ht = unsafe { &(*itr.ht) };
 	let elts = unsafe { std::slice::from_raw_parts(ht.elts, ht.elts_sz as usize) };
 	if elts[itr.i as usize].next != 0 {
@@ -417,8 +414,7 @@ pub extern "C" fn ivlc_next(itr: &mut LinearCombinationIter) {
 	itr.i = table[index] as u64;
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_keyval(itr: &LinearCombinationIter) -> *mut LinearCombinationElement {
+pub fn ivlc_keyval(itr: &LinearCombinationIter) -> *mut LinearCombinationElement {
 	unsafe { (*itr.ht).elts.offset(itr.i as isize) }
 }
 

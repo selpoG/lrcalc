@@ -14,13 +14,7 @@ extern "C"
 	   Remove is less optimized.  Iterating through the table will be
 	   slow if lots of elements are first inserted and then removed.
 	*/
-	struct ivlc_keyval_t
-	{
-		ivector* key;
-		int32_t value;
-		uint32_t hash;
-		uint32_t next;
-	};
+	struct ivlc_keyval_t;
 
 	struct ivlincomb
 	{
@@ -40,14 +34,6 @@ extern "C"
 		size_t i;
 		bool initialized;
 	};
-
-	bool ivlc_good(const ivlc_iter& itr);
-
-	void ivlc_first(const ivlincomb& ht, ivlc_iter& itr);
-
-	void ivlc_next(ivlc_iter& itr);
-
-	ivlc_keyval_t* ivlc_keyval(const ivlc_iter& itr);
 
 	void ivlc_free_all(ivlincomb* ht);
 
