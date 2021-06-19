@@ -1,0 +1,11 @@
+[package]
+name = "lrcalc_helper"
+version = "2.1.0"
+authors = ["selpo <planet_selpo@yahoo.co.jp>"]
+edition = "2018"
+
+[lib]
+name = "lrcalc_helper"
+path = "src/lib.rs"
+
+[dependencies]

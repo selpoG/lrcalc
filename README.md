@@ -2,19 +2,25 @@
 
 - [lrcalc](#lrcalc)
   - [Build](#build)
-  - [Install](#install)
+  - [Run](#run)
+  - [Test](#test)
 
 ## Build
 
 ```sh
-mkdir build
-cd build
-cmake ..
-make
+cargo build
 ```
 
-## Install
+## Run
 
 ```sh
-make install
+$ cargo run --bin lrcalc -- lrcoef 91,84,70,56,42,28,21 49,42,35,28,21,14,7 49,42,35,28,21,14,7
+2162400
+```
+
+## Test
+
+```sh
+cargo test
+./testsuite
 ```

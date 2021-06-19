@@ -16,20 +16,16 @@ check () {
     fi
 }
 
-check "src/lrcalc lrcoef 3 2 1 - 2 1 - 2 1" "2"
+check "cargo run --bin lrcalc -- lrcoef 3,2,1 2,1 2,1" "2"
 
-check "src/lrcalc skew 3 2 1 - 2 1" "2  (2,1)
+check "cargo run --bin lrcalc -- skew 3,2,1 2,1" "2  (2,1)
 1  (1,1,1)
 1  (3)"
 
-check "src/lrcalc skew -m 3 2 1 / 2 1" "0+2*s[2,1]+1*s[1,1,1]+1*s[3]"
-
-check "src/lrcalc skew -r 2 3 2 1 / 2 1" "2  (2,1)
+check "cargo run --bin lrcalc -- skew -r 2 3,2,1 2,1" "2  (2,1)
 1  (3)"
 
-check "src/lrcalc skew -m -r 2 3 2 1 - 2 1" "0+2*s[2,1]+1*s[3]"
-
-check "src/lrcalc mult 2 1 - 2 1" "2  (3,2,1)
+check "cargo run --bin lrcalc -- mult 2,1 2,1" "2  (3,2,1)
 1  (4,2)
 1  (3,1,1,1)
 1  (3,3)
@@ -37,19 +33,13 @@ check "src/lrcalc mult 2 1 - 2 1" "2  (3,2,1)
 1  (2,2,2)
 1  (4,1,1)"
 
-check "src/lrcalc mult -m 2 1 - 2 1" "0+2*s[3,2,1]+1*s[4,2]+1*s[3,1,1,1]+1*s[3,3]+1*s[2,2,1,1]+1*s[2,2,2]+1*s[4,1,1]"
-
-check "src/lrcalc mult -f 3,2 3 2 1 - 3 2 1" "1  (4,4,4)
+check "cargo run --bin lrcalc -- mult -f -r 3 -c 2 3,2,1 3,2,1" "1  (4,4,4)
 1  (5,4,3)"
 
-check "src/lrcalc mult -m -f 3,2 3 2 1 - 3 2 1" "0+1*s[4,4,4]+1*s[5,4,3]"
-
-check "src/lrcalc mult -q 3,2 3 2 1 - 3 2 1" "1  (2)
+check "cargo run --bin lrcalc -- mult -q -r 3 -c 2 3,2,1 3,2,1" "1  (2)
 1  (1,1)"
 
-check "src/lrcalc mult -m -q 3,2 3 2 1 - 3 2 1" "0+1*q^2*s[2]+1*q^2*s[1,1]"
-
-check "src/lrcalc coprod 3 2 1" "1  (2,1,1)  (1,1)
+check "cargo run --bin lrcalc -- coprod 3,2,1" "1  (2,1,1)  (1,1)
 1  (3,2,1)  ()
 1  (3,1,1)  (1)
 1  (2,2)  (1,1)
@@ -63,53 +53,25 @@ check "src/lrcalc coprod 3 2 1" "1  (2,1,1)  (1,1)
 1  (2,1)  (3)
 1  (3,1)  (1,1)"
 
-check "src/schubmult 1 3 2 - 1 3 2" "1  (2,3,1)
+check "cargo run --bin schubmult -- 1,3,2 1,3,2" "1  (2,3,1)
 1  (1,4,2,3)"
 
-check "src/schubmult -m 1 3 4 2 - 2 1 4 5 3" "0+1*X[2,3,5,4,1]+1*X[4,1,5,2,3]+1*X[2,4,5,1,3]+1*X[3,2,4,5,1]+1*X[3,1,5,4,2]"
-
-check "src/schubmult -s 0 1 2 0 1 2 - 0 1 2 0 1 2" "1  (2,1,0,0,1,2)
+check "cargo run --bin schubmult -- -s 0,1,2,0,1,2 0,1,2,0,1,2" "1  (2,1,0,0,1,2)
 1  (1,0,2,2,0,1)
 1  (0,2,1,1,2,0)
 1  (2,0,1,1,0,2)
 1  (1,2,0,0,2,1)
 1  (0,1,2,2,1,0)"
 
-check "src/schubmult -m -s 0 2 0 2 1 2 - 0 1 2 0 2 2" "0+1*X[0,2,1,2,2,0]+1*X[2,0,1,2,0,2]+1*X[2,0,2,0,1,2]+1*X[0,2,2,1,0,2]"
+check "cargo run --bin allperms -- 0" "()"
 
-check "src/allperms 0" "()"
+check "cargo run --bin allperms -- 1" "(1)"
 
-check "src/allperms 1" "(1)"
-
-check "src/allperms 3" "(1,2,3)
+check "cargo run --bin allperms -- 3" "(1,2,3)
 (1,3,2)
 (2,1,3)
 (2,3,1)
 (3,1,2)
 (3,2,1)"
-
-check "src/test_partiter 0 0" "success"
-check "src/test_partiter 0 3" "success"
-check "src/test_partiter 2 0" "success"
-check "src/test_partiter 1 1" "success"
-check "src/test_partiter 4 4" "success"
-
-check "src/test_schubmult 1" "success"
-check "src/test_schubmult 2" "success"
-check "src/test_schubmult 4" "success"
-
-check "src/test_lrmult 2 4" "success"
-check "src/test_lrmult 3 3" "success"
-check "src/test_lrmult 4 2" "success"
-
-check "src/test_lrcoef 4 4" "success"
-
-check "src/test_lrskew 4 4" "success"
-
-check "src/test_fusion 0 5" "success"
-check "src/test_fusion 1 5" "success"
-check "src/test_fusion 2 5" "success"
-check "src/test_fusion 3 5" "success"
-check "src/test_fusion 4 5" "success"
 
 exit $failed
