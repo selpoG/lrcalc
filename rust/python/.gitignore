@@ -1,6 +1,4 @@
-lrcalc.c
-lrcalc.cpp
-*.a
+*.so
 
 /build/
 /lrcalc.*.so
