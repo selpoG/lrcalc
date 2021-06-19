@@ -30,40 +30,23 @@ impl<'a> Display for VecFormatter<'a> {
     }
 }
 
-struct LinearCombinationFormatter<'a> {
-    data: &'a [(Vec<i32>, i32)],
-    maple: bool,
-}
+struct LinearCombinationFormatter<'a>(&'a [(Vec<i32>, i32)]);
 
 impl<'a> Display for LinearCombinationFormatter<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if self.maple {
-            write!(f, "0")?;
-            for (sh, n) in self.data {
-                if *n == 0 {
-                    continue;
-                }
-                write!(f, "{:+}*X[{}]", n, VecFormatter(sh))?;
+        for (sh, n) in self.0 {
+            if *n == 0 {
+                continue;
             }
-            writeln!(f)
-        } else {
-            for (sh, n) in self.data {
-                if *n == 0 {
-                    continue;
-                }
-                writeln!(f, "{}  ({})", n, VecFormatter(sh))?;
-            }
-            Ok(())
+            writeln!(f, "{}  ({})", n, VecFormatter(sh))?;
         }
+        Ok(())
     }
 }
 
 #[derive(Clap)]
 #[clap(name="schubmult", version = crate_version!(), setting=AllowLeadingHyphen, setting=DeriveDisplayOrder)]
 struct Opts {
-    /// Print in maple format
-    #[clap(long = "--maple", short = 'm')]
-    maple: bool,
     /// perm1, perm2 in string format
     #[clap(long = "--string", short = 's')]
     string: bool,
@@ -92,11 +75,5 @@ fn main() {
         assert!(is_permutation(&opts.perm2), "perm2 is not a permutation");
         schubmult(&opts.perm1, &opts.perm2, opts.rank)
     };
-    print!(
-        "{}",
-        LinearCombinationFormatter {
-            data: &lc,
-            maple: opts.maple
-        }
-    )
+    print!("{}", LinearCombinationFormatter(&lc))
 }

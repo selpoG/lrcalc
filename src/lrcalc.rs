@@ -29,31 +29,17 @@ impl<'a> Display for VecFormatter<'a> {
     }
 }
 
-struct LinearCombinationFormatter<'a> {
-    data: &'a [(Vec<i32>, i32)],
-    maple: bool,
-}
+struct LinearCombinationFormatter<'a>(&'a [(Vec<i32>, i32)]);
 
 impl<'a> Display for LinearCombinationFormatter<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if self.maple {
-            write!(f, "0")?;
-            for (sh, n) in self.data {
-                if *n == 0 {
-                    continue;
-                }
-                write!(f, "{:+}*s[{}]", n, VecFormatter(sh))?;
+        for (sh, n) in self.0 {
+            if *n == 0 {
+                continue;
             }
-            writeln!(f)
-        } else {
-            for (sh, n) in self.data {
-                if *n == 0 {
-                    continue;
-                }
-                writeln!(f, "{}  ({})", n, VecFormatter(sh))?;
-            }
-            Ok(())
+            writeln!(f, "{}  ({})", n, VecFormatter(sh))?;
         }
+        Ok(())
     }
 }
 
@@ -92,9 +78,6 @@ struct MultOpts {
     fusion: bool,
     #[clap(long = "--quantum", short = 'q')]
     quantum: bool,
-    /// Print in maple format
-    #[clap(long = "--maple", short = 'm')]
-    maple: bool,
     #[clap(validator=check_non_negative, value_delimiter=",", required=true, index=1, multiple=false)]
     part1: Vec<i32>,
     #[clap(validator=check_non_negative, value_delimiter=",", required=true, index=2, multiple=false)]
@@ -107,9 +90,6 @@ struct SkewOpts {
     /// Limit maximum rows allowed
     #[clap(long = "--rows", short = 'r')]
     rows: Option<i32>,
-    /// Print in maple format
-    #[clap(long = "--maple", short = 'm')]
-    maple: bool,
     #[clap(validator=check_non_negative, value_delimiter=",", required=true, index=1, multiple=false)]
     outer: Vec<i32>,
     #[clap(validator=check_non_negative, value_delimiter=",", required=true, index=2, multiple=false)]
@@ -163,43 +143,35 @@ fn main() {
                     .cols
                     .expect("cols is required in quantum or fusion mode");
                 if opts.quantum {
-                    if opts.maple {
-                        print!("0");
-                        for ((deg, sh), n) in mult_quantum(&opts.part1, &opts.part2, rows, cols) {
-                            if n == 0 {
-                                continue;
-                            }
-                            print!("{:+}*q^{}*s[{}]", n, deg, VecFormatter(&sh));
-                        }
-                        println!()
-                    } else {
-                        print!(
-                            "{}",
-                            LinearCombinationFormatter {
-                                data: &mult_quantum(&opts.part1, &opts.part2, rows, cols)
-                                    .into_iter()
-                                    .map(|((_, sh), n)| (sh, n))
-                                    .collect::<Vec<_>>(),
-                                maple: opts.maple
-                            }
+                    print!(
+                        "{}",
+                        LinearCombinationFormatter(
+                            &mult_quantum(&opts.part1, &opts.part2, rows, cols)
+                                .into_iter()
+                                .map(|((_, sh), n)| (sh, n))
+                                .collect::<Vec<_>>()
                         )
-                    }
+                    )
                 } else {
                     print!(
                         "{}",
-                        LinearCombinationFormatter {
-                            data: &mult_fusion(&opts.part1, &opts.part2, rows, cols),
-                            maple: opts.maple
-                        }
+                        LinearCombinationFormatter(&mult_fusion(
+                            &opts.part1,
+                            &opts.part2,
+                            rows,
+                            cols
+                        ))
                     )
                 }
             } else {
                 print!(
                     "{}",
-                    LinearCombinationFormatter {
-                        data: &mult(&opts.part1, &opts.part2, opts.rows, opts.cols),
-                        maple: opts.maple
-                    }
+                    LinearCombinationFormatter(&mult(
+                        &opts.part1,
+                        &opts.part2,
+                        opts.rows,
+                        opts.cols
+                    ))
                 )
             }
         }
@@ -208,10 +180,7 @@ fn main() {
             assert!(is_partition(&opts.inner), "inner is not a partition");
             print!(
                 "{}",
-                LinearCombinationFormatter {
-                    data: &skew(&opts.outer, &opts.inner, opts.rows),
-                    maple: opts.maple
-                }
+                LinearCombinationFormatter(&skew(&opts.outer, &opts.inner, opts.rows))
             )
         }
         SubCommand::coprod(opts) => {
