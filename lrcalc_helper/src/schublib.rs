@@ -65,6 +65,7 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
     ivlc_free(tmp);
 }
 
+#[allow(clippy::many_single_char_names)]
 fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombination) {
     let mut add = |u: Vec<i32>, c: i32| {
         let u = unsafe { &mut *IntVector::from_vec(u) };
@@ -107,7 +108,7 @@ fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombina
             add(u, -c);
         }
 
-        if i >= n + 1 {
+        if i > n {
             let mut u = vec![0; (i + 1) as usize];
             u[0..n as usize].copy_from_slice(&w[..n as usize]);
             for t in n..i {

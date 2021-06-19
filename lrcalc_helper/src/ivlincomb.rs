@@ -1,3 +1,4 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use super::ivector::{iv_cmp, iv_free, iv_free_ptr, iv_hash, IntVector};
 
 #[derive(Copy, Clone)]
@@ -118,17 +119,16 @@ pub fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
             free_elts: 0,
             elts_len: 1,
             table_sz: tabsz,
-            table: table,
+            table,
             elts_sz: 0,
-            elts: elts,
+            elts,
         }
     };
-    let ivlc = Box::into_raw(Box::new(ivlc));
-    ivlc
+    Box::into_raw(Box::new(ivlc))
 }
 
 pub fn ivlc_free(ht: *mut LinearCombination) {
-    if ht == std::ptr::null_mut() {
+    if ht.is_null() {
         return;
     }
     if unsafe { (*ht).table_sz } != 0 {
@@ -329,7 +329,7 @@ pub(crate) fn ivlc_add_element(
         return;
     }
     let kv = ivlc_lookup(ht, &key[..], hash);
-    if kv != std::ptr::null_mut() {
+    if !kv.is_null() {
         let kv = unsafe { &mut *kv };
         if (opt & LC_COPY_KEY) == 0 {
             iv_free_ptr(key);
@@ -400,6 +400,6 @@ fn ivlc_next(itr: &mut LinearCombinationIter) {
     itr.i = table[index] as u64;
 }
 
-fn ivlc_keyval(itr: &LinearCombinationIter) -> &mut LinearCombinationElement {
+fn ivlc_keyval(itr: &mut LinearCombinationIter) -> &mut LinearCombinationElement {
     unsafe { &mut *(*itr.ht).elts.offset(itr.i as isize) }
 }

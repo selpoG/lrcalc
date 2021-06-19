@@ -18,7 +18,7 @@ struct VecFormatter<'a>(&'a Vec<i32>);
 
 impl<'a> Display for VecFormatter<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if self.0.len() == 0 {
+        if self.0.is_empty() {
             return Ok(());
         }
         write!(f, "{}", self.0[0])?;
@@ -185,7 +185,7 @@ fn main() {
         }
         SubCommand::coprod(opts) => {
             assert!(is_partition(&opts.part), "part is not a partition");
-            for ((sh1, sh2), n) in coprod(&opts.part, Some(opts.all)) {
+            for (sh1, sh2, n) in coprod(&opts.part, Some(opts.all)) {
                 println!("{}  ({})  ({})", n, VecFormatter(&sh1), VecFormatter(&sh2))
             }
         }

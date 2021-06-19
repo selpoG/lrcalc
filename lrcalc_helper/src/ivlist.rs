@@ -1,3 +1,4 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use super::ivector::{iv_free_ptr, IntVector};
 
 pub struct IntVectorList {
@@ -26,7 +27,7 @@ fn _ivl_require(lst: &mut IntVectorList, size: usize) {
 }
 
 pub fn ivl_free_all(lst: *mut IntVectorList) {
-    if lst == std::ptr::null_mut() {
+    if lst.is_null() {
         return;
     }
     if unsafe { (*lst).allocated } != 0 {

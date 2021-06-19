@@ -18,7 +18,7 @@ struct VecFormatter<'a>(&'a Vec<i32>);
 
 impl<'a> Display for VecFormatter<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if self.0.len() == 0 {
+        if self.0.is_empty() {
             return Ok(());
         }
         write!(f, "{}", self.0[0])?;

@@ -1,3 +1,4 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use super::ivector::{iv_free_ptr, iv_hash, IntVector};
 use super::ivlincomb::{
     ivlc_add_element, ivlc_new, ivlc_new_default, ivlc_reset, LinearCombination,
@@ -15,7 +16,7 @@ pub fn schur_mult(
     cols: i32,
     partsz: i32,
 ) -> *mut LinearCombination {
-    let sh2 = if sh2 == std::ptr::null() {
+    let sh2 = if sh2.is_null() {
         None
     } else {
         Some(unsafe { &*sh2 })
@@ -101,7 +102,7 @@ pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
     }
     ivlc_reset(lc);
 
-    if parts.0.len() == 0 {
+    if parts.0.is_empty() {
         return;
     }
     let mut tmp = {
@@ -110,7 +111,7 @@ pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
     };
 
     /* Reduce and reinsert terms. */
-    while parts.0.len() != 0 {
+    while !parts.0.is_empty() {
         let sh = unsafe { &mut *(parts.0.pop().unwrap()) };
         let c = coefs.pop().unwrap();
         let sign = fusion_reduce(sh, level, &mut tmp[..]);
@@ -221,7 +222,7 @@ pub fn schur_skew(
     rows: i32,
     partsz: i32,
 ) -> *mut LinearCombination {
-    let inner = if inner == std::ptr::null() {
+    let inner = if inner.is_null() {
         None
     } else {
         unsafe { Some(&*inner) }

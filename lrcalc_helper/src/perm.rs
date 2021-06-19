@@ -37,7 +37,7 @@ pub fn perm_group(w: &[i32]) -> i32 {
 }
 
 pub fn dimvec_valid(dv: &[i32]) -> bool {
-    if dv.len() == 0 || dv[0] < 0 {
+    if dv.is_empty() || dv[0] < 0 {
         return false;
     }
     for i in 1..dv.len() {
@@ -73,7 +73,7 @@ pub(crate) fn bruhat_zero(w1: &[i32], w2: &[i32], rank: i32) -> bool {
             }
         }
     }
-    return false;
+    false
 }
 
 pub fn all_strings(dimvec: &[i32]) -> *mut IntVectorList {
@@ -90,8 +90,8 @@ pub fn all_strings(dimvec: &[i32]) -> *mut IntVectorList {
     let mut str = vec![0; n as usize];
     {
         let mut j = 0;
-        for i in 0..ld {
-            while j < dimvec[i] {
+        for (i, &x) in dimvec.iter().enumerate().take(ld) {
+            while j < x {
                 str[j as usize] = i as i32;
                 j += 1;
             }
@@ -133,12 +133,12 @@ pub fn all_strings(dimvec: &[i32]) -> *mut IntVectorList {
         str[(j - 1) as usize] = a;
         cntvec[a as usize] -= 1;
 
-        for i in 0..ld {
-            for _ in 0..cntvec[i] {
+        for (i, x) in cntvec.iter_mut().enumerate().take(ld) {
+            for _ in 0..*x {
                 str[j as usize] = i as i32;
                 j += 1;
             }
-            cntvec[i] = 0;
+            *x = 0;
         }
     }
 
@@ -188,7 +188,7 @@ pub fn str_iscompat(s1: &[i32], s2: &[i32]) -> bool {
     if s1.len() != s2.len() {
         return false;
     }
-    if s1.len() == 0 {
+    if s1.is_empty() {
         return true;
     }
     let n = *s1.iter().max().unwrap();
@@ -233,15 +233,15 @@ pub(crate) fn str2dimvec(str: &IntVector) -> Option<IntVector> {
 }
 
 pub(crate) fn perm2string(perm: &[i32], dimvec: &[i32]) -> *mut IntVector {
-    let n = if dimvec.len() > 0 {
+    let n = if !dimvec.is_empty() {
         dimvec[dimvec.len() - 1]
     } else {
         0
     };
     let mut res = vec![0; n as usize];
     let mut j: usize = 0;
-    for i in 0..dimvec.len() {
-        while (j as i32) < dimvec[i] {
+    for (i, &x) in dimvec.iter().enumerate() {
+        while (j as i32) < x {
             let wj = if j < perm.len() {
                 perm[j] as usize
             } else {

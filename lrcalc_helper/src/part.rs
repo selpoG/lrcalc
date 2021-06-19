@@ -10,6 +10,19 @@ pub struct PartitionIterator {
     opt: i32,
 }
 
+impl PartitionIterator {
+    fn default() -> PartitionIterator {
+        PartitionIterator {
+            part: std::ptr::null_mut(),
+            outer: std::ptr::null(),
+            inner: std::ptr::null(),
+            length: 0,
+            rows: -1,
+            opt: 0,
+        }
+    }
+}
+
 pub const PITR_USE_OUTER: i32 = 1;
 pub const PITR_USE_INNER: i32 = 2;
 pub const PITR_USE_SIZE: i32 = 4;
@@ -67,6 +80,7 @@ pub fn part_leq(p1: &IntVector, p2: &IntVector) -> bool {
 
 // Translate fusion algebra partitions to quantum cohomology notation.
 
+#[allow(clippy::many_single_char_names)]
 pub fn part_qdegree(p: &[i32], level: i32) -> i32 {
     let n = (p.len() as i32) + level;
     let mut d = 0;
@@ -88,6 +102,7 @@ pub fn pitr_good(itr: &PartitionIterator) -> bool {
     itr.rows >= 0
 }
 
+#[allow(clippy::too_many_arguments)]
 fn _pitr_first(
     itr: &mut PartitionIterator,
     p: &mut IntVector,
@@ -210,7 +225,7 @@ pub fn pitr_first(
 ) -> PartitionIterator {
     let outer = outer.map(|p| unsafe { &*p });
     let inner = inner.map(|p| unsafe { &*p });
-    let mut pitr: PartitionIterator = unsafe { std::mem::MaybeUninit::uninit().assume_init() };
+    let mut pitr = PartitionIterator::default();
     match _pitr_first(&mut pitr, p, rows, cols, outer, inner, size, opt) {
         Ok(_) => {}
         Err(_) => pitr.rows = -1,
@@ -228,12 +243,12 @@ pub fn pitr_box_sz_first(p: &mut IntVector, rows: i32, cols: i32, size: i32) -> 
 
 pub fn pitr_next(itr: &mut PartitionIterator) {
     let p = unsafe { &mut (*itr.part)[..] };
-    let outer = if itr.outer == std::ptr::null() {
+    let outer = if itr.outer.is_null() {
         None
     } else {
         unsafe { Some(&(*itr.outer)[..]) }
     };
-    let inner = if itr.inner == std::ptr::null() {
+    let inner = if itr.inner.is_null() {
         None
     } else {
         unsafe { Some(&(*itr.inner)[..]) }

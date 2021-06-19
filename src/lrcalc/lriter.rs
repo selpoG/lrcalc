@@ -17,7 +17,7 @@ impl LRTableauIterator {
     ) -> LRTableauIterator {
         let outer = unsafe { &*outer };
         let it = lrit_new(outer, inner, std::ptr::null(), maxrows, maxcols, partsz);
-        LRTableauIterator { it: it }
+        LRTableauIterator { it }
     }
 }
 

@@ -1,3 +1,4 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use super::ivector::{iv_free_ptr, iv_hash, IntVector};
 use super::ivlincomb::{ivlc_add_element, ivlc_new_default, LinearCombination, LC_COPY_KEY};
 use super::part::{part_decr, part_length, part_leq, part_valid};
@@ -24,14 +25,14 @@ pub fn lrit_new(
     maxcols: i32,
     mut partsz: i32,
 ) -> *mut LRTableauIterator {
-    let inner = if inner == std::ptr::null() {
+    let inner = if inner.is_null() {
         None
     } else {
         unsafe { Some(&*inner) }
     };
     debug_assert!(part_valid(&outer[..]));
     debug_assert!(inner.is_none() || part_valid(&inner.unwrap()[..]));
-    debug_assert!(content == std::ptr::null() || part_decr(unsafe { &(*content)[..] }));
+    debug_assert!(content.is_null() || part_decr(unsafe { &(*content)[..] }));
 
     /* Empty result if inner not contained in outer. */
     if inner.is_some() && !part_leq(inner.unwrap(), outer) {
@@ -51,7 +52,7 @@ pub fn lrit_new(
     if ilen > len {
         ilen = len;
     }
-    let (content, clen) = if content == std::ptr::null() {
+    let (content, clen) = if content.is_null() {
         (None, 0)
     } else {
         let content = unsafe { &*content };
@@ -102,7 +103,7 @@ pub fn lrit_new(
     let mut lrit = LRTableauIterator {
         cont: std::ptr::null_mut(),
         size: -1,
-        array_len: array_len,
+        array_len,
         array: std::ptr::null_mut(),
     };
     // lrit.array should be arr
@@ -225,7 +226,7 @@ pub fn lrit_new(
 }
 
 pub fn lrit_free(lrit: *mut LRTableauIterator) {
-    if lrit == std::ptr::null_mut() {
+    if lrit.is_null() {
         return;
     }
     {

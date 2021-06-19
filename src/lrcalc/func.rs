@@ -79,7 +79,7 @@ pub(crate) fn _mult_schubert(
 
 pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearCombination {
     let ans = unsafe { mult_schubert_str(&*ww1.data, &*ww2.data) };
-    if ans == std::ptr::null_mut() {
+    if ans.is_null() {
         panic!("Memory Error")
     }
     ans.into()
@@ -91,7 +91,7 @@ pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::ra
 
 /// check that sh represents a partition, i.e., is weakly-decreasing and nonnegative
 pub fn is_partition(sh: &[i32]) -> bool {
-    if sh.len() == 0 {
+    if sh.is_empty() {
         return true;
     }
     if sh[sh.len() - 1] < 0 {
@@ -188,11 +188,14 @@ pub fn skew_tab(outer: &[i32], inner: &[i32], rows: Option<i32>) -> Vec<Vec<i32>
 }
 
 /// sh must be a partition
-pub fn coprod(sh: &[i32], all: Option<bool>) -> Vec<((Vec<i32>, Vec<i32>), i32)> {
+pub fn coprod(sh: &[i32], all: Option<bool>) -> Vec<(Vec<i32>, Vec<i32>, i32)> {
     let sh = IntVector::new(sh);
     debug_assert!(sh.is_partition());
     _schur_coprod(&sh, all.unwrap_or(false))
-        .map(|(k, v)| (k.to_pair(sh.cols()), v))
+        .map(|(k, v)| {
+            let (a, b) = k.to_pair(sh.cols());
+            (a, b, v)
+        })
         .collect()
 }
 
@@ -237,7 +240,7 @@ pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
 
 pub fn all_perms(n: i32) -> Vec<Vec<i32>> {
     let ans = _all_perms(n);
-    if ans == std::ptr::null_mut() {
+    if ans.is_null() {
         panic!("Memory Error")
     }
     let ans = VectorList { data: ans };
@@ -248,7 +251,7 @@ pub fn all_strings(dimvec: &[i32]) -> Vec<Vec<i32>> {
     let dimvec = IntVector::new(dimvec);
     debug_assert!(dimvec.is_dimvec());
     let ans = _all_strings(&dimvec[..]);
-    if ans == std::ptr::null_mut() {
+    if ans.is_null() {
         panic!("Memory Error")
     }
     let ans = VectorList { data: ans };

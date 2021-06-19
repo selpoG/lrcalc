@@ -1,3 +1,5 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 #[derive(Clone)]
 pub struct IntVector {
     pub length: u32,
@@ -23,20 +25,34 @@ impl IntVector {
         let buf = vec.into_boxed_slice();
         Box::into_raw(Box::new(IntVector::from_box(buf)))
     }
-    pub fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+}
+
+impl std::cmp::Ord for IntVector {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         iv_cmp(&self[..], &other[..])
     }
 }
+impl std::cmp::PartialOrd for IntVector {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl std::cmp::PartialEq for IntVector {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == std::cmp::Ordering::Equal
+    }
+}
+impl Eq for IntVector {}
 
 pub fn iv_cmp(v: &[i32], w: &[i32]) -> std::cmp::Ordering {
     match v.len().cmp(&w.len()) {
         std::cmp::Ordering::Equal => {}
-        c @ _ => return c,
+        c => return c,
     }
     for i in 0..v.len() {
         match v[i].cmp(&w[i]) {
             std::cmp::Ordering::Equal => {}
-            c @ _ => return c,
+            c => return c,
         }
     }
     std::cmp::Ordering::Equal
@@ -83,7 +99,7 @@ pub fn iv_free(v: &mut IntVector) {
 }
 
 pub fn iv_free_ptr(v: *mut IntVector) {
-    if v == std::ptr::null_mut() {
+    if v.is_null() {
         return;
     }
     iv_free(unsafe { &mut *v });

@@ -86,13 +86,13 @@ impl LinearCombination {
     #[allow(dead_code)]
     pub fn new<T: IntoIterator<Item = (Vec<i32>, i32)>>(it: T) -> LinearCombination {
         let ptr = ivlc_new_default();
-        if ptr == std::ptr::null_mut() {
+        if ptr.is_null() {
             panic!("Memory Error")
         }
         let mut lc: LinearCombination = ptr.into();
         let lc_data = lc.deref_mut();
         for (key, val) in it {
-            if ivlc_insert(lc_data, &key[..], val) == std::ptr::null_mut() {
+            if ivlc_insert(lc_data, &key[..], val).is_null() {
                 panic!("Memory Error")
             }
         }
@@ -114,7 +114,7 @@ impl LinearCombination {
     #[allow(dead_code)]
     pub fn find(&self, key: &[i32]) -> Option<LinearCombinationElement> {
         let kv = ivlc_lookup(self.deref(), key, iv_hash(key) as u32);
-        if kv == std::ptr::null_mut() {
+        if kv.is_null() {
             None
         } else {
             unsafe { Some(*kv) }
@@ -147,7 +147,7 @@ impl LinearCombination {
     ) -> DiffResult {
         match self.diff_helper(other, &filter) {
             DiffResult::Equals => other.diff_helper(self, &filter).flip(),
-            x @ _ => x,
+            x => x,
         }
     }
 }
@@ -169,7 +169,7 @@ impl Iterator for LinearCombination {
 
 impl Drop for LinearCombination {
     fn drop(&mut self) {
-        if self.owned && self.it.ht != std::ptr::null_mut() {
+        if self.owned && !self.it.ht.is_null() {
             ivlc_free_all(self.it.ht as *mut _)
         }
     }

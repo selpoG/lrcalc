@@ -7,7 +7,7 @@ use super::super::{
     ivector::IntVector,
 };
 
-pub fn test_mult_schubert(w1: &Vec<i32>, w2: &Vec<i32>) -> Result<()> {
+pub fn test_mult_schubert(w1: &[i32], w2: &[i32]) -> Result<()> {
     let w1 = IntVector::new(w1);
     let w2 = IntVector::new(w2);
     let poly = _trans(&w1, 0);

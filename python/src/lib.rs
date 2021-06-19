@@ -38,7 +38,7 @@ impl SafeIntVector {
 
 impl Drop for SafeIntVector {
     fn drop(&mut self) {
-        if self.owned && self.data != std::ptr::null_mut() {
+        if self.owned && !self.data.is_null() {
             iv_free_ptr(self.data)
         }
     }
@@ -56,7 +56,7 @@ impl SafeLinearCombination {
             owned: true,
         }
     }
-    pub fn to_dict_of_vecs(self) -> Vec<(Vec<i32>, i32)> {
+    pub fn into_dict_of_vecs(self) -> Vec<(Vec<i32>, i32)> {
         let mut ans = Vec::new();
         for kv in self.deref().iter() {
             let key = unsafe { &*kv.key };
@@ -85,7 +85,7 @@ fn part_len(v: &[i32]) -> usize {
 }
 
 fn as_part(v: &[i32]) -> &[i32] {
-    &v[..part_len(&v[..])]
+    &v[..part_len(v)]
 }
 
 fn to_py_dict_of_part(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {
@@ -98,13 +98,10 @@ fn to_py_dict_of_part(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {
 fn as_quantum(v: &[i32], level: i32) -> (Vec<i32>, i32) {
     let d = part_qdegree(v, level);
     let mut n = v.len() as i32;
-    while n > 0 && part_qentry(&v[..], n - 1, d, level) == 0 {
+    while n > 0 && part_qentry(v, n - 1, d, level) == 0 {
         n -= 1
     }
-    (
-        (0..n).map(|i| part_qentry(&v[..], i, d, level)).collect(),
-        d,
-    )
+    ((0..n).map(|i| part_qentry(v, i, d, level)).collect(), d)
 }
 
 fn to_py_dict_of_quantum(
@@ -131,18 +128,18 @@ fn to_py_dict_of_quantum(
 
 fn as_pair(v: &[i32], rows: i32, cols: i32) -> (Vec<i32>, Vec<i32>) {
     let mut a = Vec::with_capacity(rows as usize);
-    for i in 0..(rows as usize) {
-        if v[i] == cols {
+    for &x in v.iter().take(rows as usize) {
+        if x == cols {
             break;
         }
-        a.push(v[i] - cols)
+        a.push(x - cols)
     }
     let mut b = Vec::with_capacity(rows as usize);
-    for i in (rows as usize)..v.len() {
-        if v[i] == 0 {
+    for &x in v.iter().skip(rows as usize) {
+        if x == 0 {
             break;
         }
-        b.push(v[i])
+        b.push(x)
     }
     (a, b)
 }
@@ -162,7 +159,7 @@ fn to_py_dict_of_pair(py: Python, vals: Vec<(Vec<i32>, i32)>, rows: i32, cols: i
 
 impl Drop for SafeLinearCombination {
     fn drop(&mut self) {
-        if self.owned && self.data != std::ptr::null_mut() {
+        if self.owned && !self.data.is_null() {
             ivlc_free_all(self.data)
         }
     }
@@ -190,7 +187,7 @@ impl SafeLRTableauIterator {
 
 impl Drop for SafeLRTableauIterator {
     fn drop(&mut self) {
-        if self.owned && self.data != std::ptr::null_mut() {
+        if self.owned && !self.data.is_null() {
             lrit_free(self.data)
         }
     }
@@ -224,7 +221,7 @@ fn mult(
     let dict = to_py_dict_of_part(
         py,
         SafeLinearCombination::new(schur_mult(sh1.deref(), sh2.deref(), rows, cols, -1))
-            .to_dict_of_vecs(),
+            .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
 }
@@ -244,7 +241,7 @@ fn mult_fusion(
     let dict = to_py_dict_of_part(
         py,
         SafeLinearCombination::new(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, level))
-            .to_dict_of_vecs(),
+            .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
 }
@@ -265,7 +262,7 @@ fn mult_quantum(
     let dict = to_py_dict_of_quantum(
         py,
         SafeLinearCombination::new(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, cols))
-            .to_dict_of_vecs(),
+            .into_dict_of_vecs(),
         cols,
         degrees,
     );
@@ -282,7 +279,7 @@ fn skew(py: Python, outer: Vec<i32>, inner: Vec<i32>, rows: Option<i32>) -> PyRe
     let dict = to_py_dict_of_part(
         py,
         SafeLinearCombination::new(schur_skew(outer.deref(), inner.deref(), rows, -1))
-            .to_dict_of_vecs(),
+            .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
 }
@@ -300,7 +297,7 @@ fn coprod(py: Python, sh: Vec<i32>, all: bool) -> PyResult<Py<PyDict>> {
     let dict = to_py_dict_of_pair(
         py,
         SafeLinearCombination::new(schur_coprod(sh.deref(), row as i32, col, -1, all))
-            .to_dict_of_vecs(),
+            .into_dict_of_vecs(),
         row as i32,
         col,
     );
@@ -314,7 +311,7 @@ fn schubert_poly(py: Python, w: Vec<i32>) -> PyResult<Py<PyDict>> {
     let w = SafeIntVector::from(w);
     let dict = to_py_dict_of_tuple(
         py,
-        SafeLinearCombination::new(trans(&w.deref()[..], 0)).to_dict_of_vecs(),
+        SafeLinearCombination::new(trans(&w.deref()[..], 0)).into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
 }
@@ -328,7 +325,7 @@ fn schubmult(py: Python, w1: Vec<i32>, w2: Vec<i32>, rank: i32) -> PyResult<Py<P
     let dict = to_py_dict_of_tuple(
         py,
         SafeLinearCombination::new(mult_schubert(w1.deref_mut(), w2.deref_mut(), rank))
-            .to_dict_of_vecs(),
+            .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
 }
@@ -342,7 +339,7 @@ fn schubmult_str(py: Python, str1: Vec<i32>, str2: Vec<i32>) -> PyResult<Py<PyDi
     let dict = to_py_dict_of_tuple(
         py,
         SafeLinearCombination::new(mult_schubert_str(str1.deref_mut(), str2.deref_mut()))
-            .to_dict_of_vecs(),
+            .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
 }

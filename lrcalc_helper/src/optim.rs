@@ -176,15 +176,13 @@ pub(crate) fn optim_mult(
     };
     /* sh2 should be largest partition. */
     if sz1 > sz2 {
-        let o = o1;
-        o1 = o2;
-        o2 = o;
+        std::mem::swap(&mut o1, &mut o2);
     }
 
     /* Remove full rows and columns from sh1. */
     let mut out = vec![0; (o1.len - o1.fr) as usize];
-    for r in 0..out.len() {
-        out[r] = o1.v[(o1.fr as usize + r) as usize] - o1.fc
+    for (r, x) in out.iter_mut().enumerate() {
+        *x = o1.v[(o1.fr as usize + r) as usize] - o1.fc
     }
 
     /* Add full rows and columns to sh2. */
@@ -290,14 +288,15 @@ struct PartialShape {
 impl PartialShape {
     fn new(inn: Vec<i32>, out: Vec<i32>, rows: i32) -> PartialShape {
         PartialShape {
-            inn: inn,
-            out: out,
-            rows: rows,
+            inn,
+            out,
+            rows,
             top: 0,
             bot: 0,
             col: 0,
         }
     }
+    #[allow(clippy::too_many_arguments)]
     fn add_comp(
         &mut self,
         out0: &[i32],
