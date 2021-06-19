@@ -1,6 +1,6 @@
 [package]
 name = "lrcalc_helper"
-version = "0.1.0"
+version = "2.1.0"
 authors = ["selpo <planet_selpo@yahoo.co.jp>"]
 edition = "2018"
 

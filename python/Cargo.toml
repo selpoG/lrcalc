@@ -1,6 +1,6 @@
 [package]
 name = "lrcalc-python"
-version = "0.1.0"
+version = "2.0.0"
 authors = ["selpo <planet_selpo@yahoo.co.jp>"]
 edition = "2018"
 
