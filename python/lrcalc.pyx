@@ -8,8 +8,6 @@ cdef ivector *iv_newpy(pv):
     cdef ivector *v
     cdef int i
     v = iv_new(len(pv))
-    if v is NULL:
-        raise MemoryError()
     for i in range(len(pv)):
         v.array[i] = pv[i]
     return v
@@ -124,8 +122,6 @@ def mult(sh1, sh2, int rows=-1, int cols=-1):
         csh1 = iv_newpy(sh1)
         csh2 = iv_newpy(sh2)
         cprd = schur_mult(deref(csh1), csh2, rows, cols, -1)
-        if cprd is NULL:
-            raise MemoryError()
         return ivlc_dict_part(cprd)
     finally:
         if cprd is not NULL:
@@ -146,8 +142,6 @@ def mult_fusion(sh1, sh2, int rows, int level):
         csh1 = iv_newpy(sh1)
         csh2 = iv_newpy(sh2)
         cprd = schur_mult_fusion(deref(csh1), deref(csh2), rows, level)
-        if cprd is NULL:
-            raise MemoryError()
         return ivlc_dict_part(cprd)
     finally:
         if cprd is not NULL:
@@ -168,8 +162,6 @@ def mult_quantum(sh1, sh2, int rows, int cols, bint degrees=False):
         csh1 = iv_newpy(sh1)
         csh2 = iv_newpy(sh2)
         cprd = schur_mult_fusion(deref(csh1), deref(csh2), rows, cols)
-        if cprd is NULL:
-            raise MemoryError()
         return ivlc_dict_quantum(cprd, cols, degrees)
     finally:
         if cprd is not NULL:
@@ -190,8 +182,6 @@ def skew(outer, inner, int rows=-1):
         cout = iv_newpy(outer)
         cinn = iv_newpy(inner)
         cres = schur_skew(deref(cout), cinn, rows, -1)
-        if cres is NULL:
-            raise MemoryError()
         return ivlc_dict_part(cres)
     finally:
         if cres is not NULL:
@@ -215,8 +205,6 @@ def coprod(sh, bint all=False):
             rows -= 1
         cols = 0 if rows == 0 else csh.array[0]
         cres = schur_coprod(deref(csh), rows, cols, -1, all)
-        if cres is NULL:
-            raise MemoryError()
         return ivlc_dict_pair(cres, rows, cols)
     finally:
         if cres is not NULL:
@@ -233,8 +221,6 @@ def schubert_poly(w):
     try:
         cw = iv_newpy(w)
         cres = trans(deref(cw), 0)
-        if cres is NULL:
-            raise MemoryError()
         return ivlc_dict_tuple(cres)
     finally:
         if cres is not NULL:
@@ -253,8 +239,6 @@ def schubmult(w1, w2, int rank=0):
         cw1 = iv_newpy(w1)
         cw2 = iv_newpy(w2)
         cres = mult_schubert(deref(cw1), deref(cw2), rank)
-        if cres is NULL:
-            raise MemoryError()
         return ivlc_dict_tuple(cres)
     finally:
         if cres is not NULL:
@@ -275,8 +259,6 @@ def schubmult_str(str1, str2):
         cs1 = iv_newpy(str1)
         cs2 = iv_newpy(str2)
         cres = mult_schubert_str(deref(cs1), deref(cs2))
-        if cres is NULL:
-            raise MemoryError()
         return ivlc_dict_tuple(cres)
     finally:
         if cres is not NULL:
@@ -290,6 +272,7 @@ def schubmult_str(str1, str2):
 cdef class lr_iterator:
     """Iterate through column words of LR tableaux of given skew shape."""
 
+
     cdef lrtab_iter *_itr
 
     def __cinit__(self, outer, inner, int rows=-1):
@@ -299,8 +282,6 @@ cdef class lr_iterator:
             out = iv_newpy(outer)
             inn = iv_newpy(inner)
             self._itr = lrit_new(deref(out), inn, NULL, rows, -1, -1)
-            if self._itr is NULL:
-                raise MemoryError()
         finally:
             if inn is not NULL:
                 iv_free(inn)
