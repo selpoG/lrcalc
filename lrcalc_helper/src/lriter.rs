@@ -2,7 +2,6 @@ use super::ivector::{iv_free, iv_hash, IntVector};
 use super::ivlincomb::{ivlc_add_element, ivlc_new_default, LinearCombination, LC_COPY_KEY};
 use super::part::{part_decr, part_length, part_leq, part_valid};
 
-#[repr(C)]
 pub struct LRIteratorBox {
 	pub value: i32,
 	max: i32,
@@ -10,7 +9,6 @@ pub struct LRIteratorBox {
 	right: i32,
 }
 
-#[repr(C)]
 pub struct LRTableauIterator {
 	pub cont: *mut IntVector,
 	pub size: i32,
@@ -18,8 +16,7 @@ pub struct LRTableauIterator {
 	pub array: *mut LRIteratorBox,
 }
 
-#[no_mangle]
-pub extern "C" fn lrit_new(
+pub fn lrit_new(
 	outer: &IntVector,
 	inner: *const IntVector,
 	content: *const IntVector,
@@ -227,8 +224,7 @@ pub extern "C" fn lrit_new(
 	to_raw(lrit, arr, cont)
 }
 
-#[no_mangle]
-pub extern "C" fn lrit_free(lrit: *mut LRTableauIterator) {
+pub fn lrit_free(lrit: *mut LRTableauIterator) {
 	if lrit == std::ptr::null_mut() {
 		return;
 	}
@@ -243,12 +239,7 @@ pub extern "C" fn lrit_free(lrit: *mut LRTableauIterator) {
 	unsafe { drop(Box::from_raw(lrit)) }
 }
 
-#[no_mangle]
-pub extern "C" fn lrit_print_skewtab(
-	lrit: &LRTableauIterator,
-	outer: &IntVector,
-	inner: *const IntVector,
-) {
+pub fn lrit_print_skewtab(lrit: &LRTableauIterator, outer: &IntVector, inner: *const IntVector) {
 	let array = lrit.array;
 	let mut size = lrit.size;
 	let array = unsafe { std::slice::from_raw_parts(array, size as usize) };
@@ -299,13 +290,11 @@ pub extern "C" fn lrit_print_skewtab(
 	println!();
 }
 
-#[no_mangle]
-pub extern "C" fn lrit_good(lrit: &LRTableauIterator) -> bool {
+pub fn lrit_good(lrit: &LRTableauIterator) -> bool {
 	lrit.size >= 0
 }
 
-#[no_mangle]
-pub extern "C" fn lrit_next(lrit: &mut LRTableauIterator) {
+pub fn lrit_next(lrit: &mut LRTableauIterator) {
 	let cont = unsafe { &mut (*lrit.cont)[..] };
 	let array = unsafe { std::slice::from_raw_parts_mut(lrit.array, lrit.array_len as usize) };
 	let size = lrit.size;

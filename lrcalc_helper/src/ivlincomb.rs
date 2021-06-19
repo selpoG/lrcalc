@@ -1,6 +1,5 @@
 use super::ivector::{iv_cmp_rs, iv_free, iv_free_rs, iv_hash_rs, iv_print, IntVector};
 
-#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct LinearCombinationElement {
 	pub key: *mut IntVector,
@@ -9,7 +8,6 @@ pub struct LinearCombinationElement {
 	pub next: u32,
 }
 
-#[repr(C)]
 pub struct LinearCombination {
 	pub table: *mut u32,
 	pub elts: *mut LinearCombinationElement,
@@ -37,7 +35,6 @@ impl LinearCombination {
 	}
 }
 
-#[repr(C)]
 pub struct LinearCombinationIter {
 	pub ht: *const LinearCombination,
 	pub index: u64,
@@ -321,8 +318,7 @@ fn _ivlc_remove(ht: &mut LinearCombination, key: &IntVector, hash: u32) -> bool 
 	true
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_free_all(ht: *mut LinearCombination) {
+pub fn ivlc_free_all(ht: *mut LinearCombination) {
 	for kv in LinearCombinationIter::from(ht as *const _) {
 		iv_free_rs(unsafe { &mut *kv.key });
 	}
@@ -422,8 +418,7 @@ pub fn ivlc_keyval_rs(itr: &LinearCombinationIter) -> LinearCombinationElement {
 	unsafe { *ivlc_keyval(itr) }
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_print(ht: &LinearCombination) {
+pub fn ivlc_print(ht: &LinearCombination) {
 	for kv in ht.iter() {
 		if kv.value == 0 {
 			continue;
@@ -434,8 +429,7 @@ pub extern "C" fn ivlc_print(ht: &LinearCombination) {
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn ivlc_print_coprod(ht: &LinearCombination, rows: u32, cols: i32) {
+pub fn ivlc_print_coprod(ht: &LinearCombination, rows: u32, cols: i32) {
 	for kv in ht.iter() {
 		if kv.value == 0 {
 			continue;

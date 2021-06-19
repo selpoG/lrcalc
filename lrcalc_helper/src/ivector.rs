@@ -1,7 +1,6 @@
 use super::ivlincomb::{LinearCombination, LinearCombinationIter};
 use super::part::{part_qdegree, part_qentry};
 
-#[repr(C)]
 #[derive(Clone)]
 pub struct IntVector {
 	pub length: u32,
@@ -62,13 +61,11 @@ impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for IntVector {
 }
 
 /// never returns null
-#[no_mangle]
-pub extern "C" fn iv_new(length: u32) -> *mut IntVector {
+pub fn iv_new(length: u32) -> *mut IntVector {
 	IntVector::from_vec(vec![0; length as usize])
 }
 
-#[no_mangle]
-pub extern "C" fn into_iv(p: *const i32, length: u32) -> *mut IntVector {
+pub fn into_iv(p: *const i32, length: u32) -> *mut IntVector {
 	let p = unsafe { std::slice::from_raw_parts(p, length as usize) };
 	IntVector::from_vec(p.to_vec())
 }
@@ -89,8 +86,7 @@ pub fn iv_sum(v: &IntVector) -> i32 {
 	(&v[..]).iter().sum()
 }
 
-#[no_mangle]
-pub extern "C" fn iv_print(v: &IntVector) {
+pub fn iv_print(v: &IntVector) {
 	let v = &v[..];
 	if v.len() == 0 {
 		return print!("()");
@@ -102,8 +98,7 @@ pub extern "C" fn iv_print(v: &IntVector) {
 	print!(")")
 }
 
-#[no_mangle]
-pub extern "C" fn iv_printnl(v: &IntVector) {
+pub fn iv_printnl(v: &IntVector) {
 	iv_print(v);
 	println!()
 }
@@ -116,8 +111,7 @@ pub fn iv_free_rs(v: &mut IntVector) {
 	unsafe { drop(Box::from_raw(s)) }
 }
 
-#[no_mangle]
-pub extern "C" fn iv_free(v: *mut IntVector) {
+pub fn iv_free(v: *mut IntVector) {
 	if v == std::ptr::null_mut() {
 		return;
 	}
@@ -140,12 +134,7 @@ fn _maple_print_term(c: i32, v: &IntVector, letter: &str, nz: bool) {
 	print!("]")
 }
 
-#[no_mangle]
-pub extern "C" fn maple_print_lincomb(
-	ht: &LinearCombination,
-	letter: *const std::os::raw::c_char,
-	nz: bool,
-) {
+pub fn maple_print_lincomb(ht: &LinearCombination, letter: *const std::os::raw::c_char, nz: bool) {
 	let slice = unsafe { std::ffi::CStr::from_ptr(letter) };
 	let letter = slice.to_str().unwrap();
 	print!("0");
@@ -175,8 +164,7 @@ fn _maple_qprint_term(c: i32, v: &IntVector, level: i32, letter: &str) {
 	print!("]")
 }
 
-#[no_mangle]
-pub extern "C" fn maple_qprint_lincomb(
+pub fn maple_qprint_lincomb(
 	ht: &LinearCombination,
 	level: i32,
 	letter: *const std::os::raw::c_char,

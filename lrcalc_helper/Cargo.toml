@@ -7,6 +7,5 @@ edition = "2018"
 [lib]
 name = "lrcalc_helper"
 path = "src/lib.rs"
-crate-type = ["rlib", "staticlib"]
 
 [dependencies]

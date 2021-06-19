@@ -16,8 +16,7 @@ pub fn perm_valid_rs(w: &[i32]) -> bool {
 	true
 }
 
-#[no_mangle]
-pub extern "C" fn perm_valid(w: &IntVector) -> bool {
+pub fn perm_valid(w: &IntVector) -> bool {
 	perm_valid_rs(&w[..])
 }
 
@@ -45,8 +44,7 @@ pub fn perm_group(w: &IntVector) -> i32 {
 	perm_group_rs(&w[..])
 }
 
-#[no_mangle]
-pub extern "C" fn dimvec_valid(dv: &IntVector) -> bool {
+pub fn dimvec_valid(dv: &IntVector) -> bool {
 	dimvec_valid_rs(&dv[..])
 }
 
@@ -90,8 +88,7 @@ pub fn bruhat_zero(w1: &[i32], w2: &[i32], rank: i32) -> bool {
 	return false;
 }
 
-#[no_mangle]
-pub extern "C" fn all_strings(dimvec: &IntVector) -> *mut IntVectorList {
+pub fn all_strings(dimvec: &IntVector) -> *mut IntVectorList {
 	all_strings_rs(&dimvec[..])
 }
 
@@ -173,8 +170,7 @@ pub fn all_strings_rs(dimvec: &[i32]) -> *mut IntVectorList {
 	Box::into_raw(Box::new(ivl))
 }
 
-#[no_mangle]
-pub extern "C" fn all_perms(n: i32) -> *mut IntVectorList {
+pub fn all_perms(n: i32) -> *mut IntVectorList {
 	debug_assert!(n >= 0);
 	let dimvec: Vec<_> = (0..=n).collect();
 	all_strings_rs(&dimvec[..])
@@ -204,8 +200,7 @@ pub fn string2perm(str: &IntVector) -> IntVector {
 	IntVector::from_box(perm.into_boxed_slice())
 }
 
-#[no_mangle]
-pub extern "C" fn str_iscompat(str1: &IntVector, str2: &IntVector) -> bool {
+pub fn str_iscompat(str1: &IntVector, str2: &IntVector) -> bool {
 	str_iscompat_rs(&str1[..], &str2[..])
 }
 

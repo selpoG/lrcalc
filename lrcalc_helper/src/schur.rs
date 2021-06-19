@@ -8,8 +8,7 @@ use super::lriter::{lrit_expand, lrit_free, lrit_good, lrit_new, lrit_next, LRTa
 use super::optim::{optim_coef, optim_fusion, optim_mult, optim_skew};
 use super::part::{part_entry_rs, part_valid};
 
-#[no_mangle]
-pub extern "C" fn schur_mult(
+pub fn schur_mult(
 	sh1: &IntVector,
 	sh2: *const IntVector,
 	rows: i32,
@@ -119,8 +118,7 @@ pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn schur_mult_fusion(
+pub fn schur_mult_fusion(
 	mut sh1: &IntVector,
 	mut sh2: &IntVector,
 	rows: i32,
@@ -211,8 +209,7 @@ pub extern "C" fn schur_mult_fusion(
 	lc
 }
 
-#[no_mangle]
-pub extern "C" fn schur_skew(
+pub fn schur_skew(
 	outer: &IntVector,
 	inner: *const IntVector,
 	rows: i32,
@@ -283,8 +280,7 @@ fn _schur_coprod_expand(
 	lc
 }
 
-#[no_mangle]
-pub extern "C" fn schur_coprod(
+pub fn schur_coprod(
 	sh: &IntVector,
 	rows: i32,
 	cols: i32,
@@ -302,8 +298,7 @@ pub extern "C" fn schur_coprod(
 	_schur_coprod_expand(unsafe { &*ss.outer }, ss.cont, rows, cols, partsz)
 }
 
-#[no_mangle]
-pub extern "C" fn schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
+pub fn schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
 	let ss = optim_coef(outer, inner1, inner2);
 	if ss.sign <= 1 {
 		ss.sign as i64

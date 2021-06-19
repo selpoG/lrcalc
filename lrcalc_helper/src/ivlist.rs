@@ -1,6 +1,5 @@
 use super::ivector::{iv_free, IntVector};
 
-#[repr(C)]
 pub struct IntVectorList {
 	pub array: *mut *mut IntVector,
 	pub allocated: u64,
@@ -26,8 +25,7 @@ fn _ivl_require(lst: &mut IntVectorList, size: usize) {
 	std::mem::forget(buf);
 }
 
-#[no_mangle]
-pub extern "C" fn ivl_free_all(lst: *mut IntVectorList) {
+pub fn ivl_free_all(lst: *mut IntVectorList) {
 	if lst == std::ptr::null_mut() {
 		return;
 	}

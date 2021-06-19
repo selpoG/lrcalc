@@ -239,8 +239,7 @@ fn _mult_ps(
 	ivlc_free_all(res1);
 }
 
-#[no_mangle]
-pub extern "C" fn mult_schubert(
+pub fn mult_schubert(
 	w1: &mut IntVector,
 	w2: &mut IntVector,
 	mut rank: i32,
@@ -283,8 +282,7 @@ impl Drop for IntVectorDisposed {
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn mult_schubert_str(str1: &IntVector, str2: &IntVector) -> *mut LinearCombination {
+pub fn mult_schubert_str(str1: &IntVector, str2: &IntVector) -> *mut LinearCombination {
 	debug_assert!(str_iscompat(str1, str2));
 
 	// drop dv, w1, w2

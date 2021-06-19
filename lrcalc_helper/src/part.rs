@@ -2,7 +2,6 @@ use super::ivector::IntVector;
 use super::ivlincomb::{LinearCombination, LinearCombinationIter};
 
 /// General partition iterator that the compiler will optimize when opt is known at compile time.
-#[repr(C)]
 pub struct PartitionIterator {
 	part: *mut IntVector,
 	outer: *const IntVector,
@@ -28,8 +27,7 @@ pub fn part_valid_rs(p: &[i32]) -> bool {
 	true
 }
 
-#[no_mangle]
-pub extern "C" fn part_valid(p: &IntVector) -> bool {
+pub fn part_valid(p: &IntVector) -> bool {
 	part_valid_rs(&p[..])
 }
 
@@ -50,8 +48,7 @@ pub fn part_length_rs(v: &[i32]) -> u32 {
 	n as u32
 }
 
-#[no_mangle]
-pub extern "C" fn part_length(v: &IntVector) -> u32 {
+pub fn part_length(v: &IntVector) -> u32 {
 	part_length_rs(&v[..])
 }
 
@@ -64,8 +61,7 @@ pub fn part_entry_rs(p: &[i32], i: i32) -> i32 {
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn part_entry(p: &IntVector, i: i32) -> i32 {
+pub fn part_entry(p: &IntVector, i: i32) -> i32 {
 	part_entry_rs(&p[..], i)
 }
 
@@ -101,8 +97,7 @@ fn part_printnl(p: &IntVector) {
 	println!()
 }
 
-#[no_mangle]
-pub extern "C" fn part_print_lincomb(lc: &LinearCombination) {
+pub fn part_print_lincomb(lc: &LinearCombination) {
 	for kv in LinearCombinationIter::from(lc as *const _) {
 		if kv.value == 0 {
 			continue;
@@ -152,8 +147,7 @@ fn part_qprintnl(p: &IntVector, level: i32) {
 	println!()
 }
 
-#[no_mangle]
-pub extern "C" fn part_qprint_lincomb(lc: &LinearCombination, level: i32) {
+pub fn part_qprint_lincomb(lc: &LinearCombination, level: i32) {
 	for kv in LinearCombinationIter::from(lc as *const _) {
 		if kv.value == 0 {
 			continue;
@@ -163,8 +157,7 @@ pub extern "C" fn part_qprint_lincomb(lc: &LinearCombination, level: i32) {
 	}
 }
 
-#[no_mangle]
-pub extern "C" fn pitr_good(itr: &PartitionIterator) -> bool {
+pub fn pitr_good(itr: &PartitionIterator) -> bool {
 	itr.rows >= 0
 }
 
@@ -279,8 +272,7 @@ fn _pitr_first(
 	Ok(())
 }
 
-#[no_mangle]
-pub extern "C" fn pitr_first(
+pub fn pitr_first(
 	itr: &mut PartitionIterator,
 	p: &mut IntVector,
 	rows: i32,
@@ -336,8 +328,7 @@ pub fn pitr_box_sz_first(p: &mut IntVector, rows: i32, cols: i32, size: i32) -> 
 	pitr_first_rs(p, rows, cols, None, None, size, PITR_USE_SIZE)
 }
 
-#[no_mangle]
-pub extern "C" fn pitr_next(itr: &mut PartitionIterator) {
+pub fn pitr_next(itr: &mut PartitionIterator) {
 	let p = unsafe { &mut (*itr.part)[..] };
 	let outer = if itr.outer == std::ptr::null() {
 		None
