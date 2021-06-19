@@ -52,16 +52,12 @@ struct Opts {
 
 #[derive(Clap)]
 enum SubCommand {
-    #[allow(non_camel_case_types)]
-    mult(MultOpts),
-    #[allow(non_camel_case_types)]
-    skew(SkewOpts),
-    #[allow(non_camel_case_types)]
-    coprod(CoprodOpts),
-    #[allow(non_camel_case_types)]
-    lrcoef(LRCoefOpts),
-    #[allow(non_camel_case_types)]
-    tab(TabOpts),
+    Mult(MultOpts),
+    Skew(SkewOpts),
+    Coprod(CoprodOpts),
+    #[clap(name = "lrcoef")]
+    LRCoef(LRCoefOpts),
+    Tab(TabOpts),
 }
 
 #[derive(Clap, Debug)]
@@ -132,7 +128,7 @@ struct TabOpts {
 fn main() {
     let opts = Opts::parse();
     match opts.subcmd {
-        SubCommand::mult(opts) => {
+        SubCommand::Mult(opts) => {
             assert!(is_partition(&opts.part1), "part1 is not a partition");
             assert!(is_partition(&opts.part2), "part2 is not a partition");
             if opts.quantum || opts.fusion {
@@ -175,7 +171,7 @@ fn main() {
                 )
             }
         }
-        SubCommand::skew(opts) => {
+        SubCommand::Skew(opts) => {
             assert!(is_partition(&opts.outer), "outer is not a partition");
             assert!(is_partition(&opts.inner), "inner is not a partition");
             print!(
@@ -183,19 +179,19 @@ fn main() {
                 LinearCombinationFormatter(&skew(&opts.outer, &opts.inner, opts.rows))
             )
         }
-        SubCommand::coprod(opts) => {
+        SubCommand::Coprod(opts) => {
             assert!(is_partition(&opts.part), "part is not a partition");
             for (sh1, sh2, n) in coprod(&opts.part, Some(opts.all)) {
                 println!("{}  ({})  ({})", n, VecFormatter(&sh1), VecFormatter(&sh2))
             }
         }
-        SubCommand::lrcoef(opts) => {
+        SubCommand::LRCoef(opts) => {
             assert!(is_partition(&opts.outer), "outer is not a partition");
             assert!(is_partition(&opts.inner1), "inner1 is not a partition");
             assert!(is_partition(&opts.inner2), "inner2 is not a partition");
             println!("{}", lrcoef(&opts.outer, &opts.inner1, &opts.inner2));
         }
-        SubCommand::tab(opts) => {
+        SubCommand::Tab(opts) => {
             let outer = opts.outer;
             let inner = opts.inner;
             assert!(is_partition(&outer), "outer is not a partition");
