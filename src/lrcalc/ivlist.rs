@@ -12,7 +12,7 @@ impl VectorList {
     }
     pub fn at(&self, i: usize) -> IntVector {
         IntVector {
-            data: unsafe { *(*self.data).array.offset(i as isize) },
+            data: unsafe { *(*self.data).array.add(i) },
             owned: false,
         }
     }
@@ -20,7 +20,7 @@ impl VectorList {
 
 impl Drop for VectorList {
     fn drop(&mut self) {
-        if self.data != std::ptr::null_mut() {
+        if !self.data.is_null() {
             ivl_free_all(self.data)
         }
     }

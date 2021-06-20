@@ -58,7 +58,7 @@ impl IntVector {
         let mut ans = None;
         match r1.cmp(&other.rows()) {
             std::cmp::Ordering::Equal => {}
-            c @ _ => ans = Some(c),
+            c => ans = Some(c),
         }
         let v1 = &self[..];
         let v2 = &other[..];
@@ -66,7 +66,7 @@ impl IntVector {
         for i in (0..r).rev() {
             match v1[i].cmp(&v2[i]) {
                 std::cmp::Ordering::Equal => {}
-                c @ _ => {
+                c => {
                     if ans != None && ans != Some(c) {
                         return None;
                     }
@@ -78,17 +78,17 @@ impl IntVector {
     }
     #[allow(dead_code)]
     pub fn leq_as_part(&self, other: &Self) -> bool {
-        match self.cmp_as_part(&other) {
-            Some(std::cmp::Ordering::Less) | Some(std::cmp::Ordering::Equal) => true,
-            _ => false,
-        }
+        matches!(
+            self.cmp_as_part(&other),
+            Some(std::cmp::Ordering::Less) | Some(std::cmp::Ordering::Equal)
+        )
     }
     #[allow(dead_code)]
     pub fn perm_group(&self) -> i32 {
         perm_group(&self[..])
     }
     pub fn to_vec(&self) -> Vec<i32> {
-        self[..].iter().cloned().collect()
+        self[..].to_vec()
     }
     pub fn is_partition(&self) -> bool {
         part_valid(&self[..])
@@ -108,7 +108,7 @@ impl IntVector {
         while n > 0 && arr[n - 1] == 0 {
             n -= 1;
         }
-        arr[0..n].iter().cloned().collect()
+        arr[0..n].to_vec()
     }
     pub fn to_pair(&self, cols: usize) -> (Vec<i32>, Vec<i32>) {
         let arr = &self[..];
@@ -142,7 +142,7 @@ impl IntVector {
 
 impl Drop for IntVector {
     fn drop(&mut self) {
-        if self.owned && self.data != std::ptr::null_mut() {
+        if self.owned && !self.data.is_null() {
             iv_free_ptr(self.data)
         }
     }

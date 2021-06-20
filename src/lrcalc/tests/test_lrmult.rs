@@ -21,8 +21,8 @@ fn string_to_part(s: &IntVector, rows: i32) -> Vec<i32> {
     let mut p = vec![0; rows as usize];
     let mut i = 0;
     let v = &s[..];
-    for j in 0..v.len() {
-        if v[j] == 0 {
+    for (j, &x) in v.iter().enumerate() {
+        if x == 0 {
             p[(rows - 1 - i) as usize] = j as i32 - i;
             i += 1
         }
