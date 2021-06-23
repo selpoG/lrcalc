@@ -1,0 +1,28 @@
+# create virtualenv by poetry but build wheels by maturin
+# do not use "poetry build"
+[tool.poetry]
+authors = []
+description = "Python bindings for the Littlewood-Richardson Calculator"
+name = "lrcalc-python"
+version = "2.1.0"
+
+[tool.poetry.dependencies]
+python = ">=3.6.2,<4.0"
+
+[tool.poetry.dev-dependencies]
+black = "^21.6b0"
+isort = "^5.8.0"
+maturin = "0.11.0.b4"
+
+[build-system]
+requires = ["maturin==0.11.0.b4"]
+build-backend = "maturin"
+
+[project]
+name = "lrcalc-python"
+classifiers = [
+    "Programming Language :: Rust",
+	"Topic :: Scientific/Engineering :: Mathematics"
+]
+urls = {repository="https://github.com/selpoG/lrcalc"}
+license = {file = "LICENSE"}

@@ -3,6 +3,10 @@ name = "lrcalc-python"
 version = "2.0.0"
 authors = ["selpo <planet_selpo@yahoo.co.jp>"]
 edition = "2018"
+description = "Python bindings for the Littlewood-Richardson Calculator"
+repository = "https://github.com/selpoG/lrcalc"
+readme = "README.md"
+license-file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,7 +16,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-lrcalc_helper = { path="../lrcalc_helper" }
+lrcalc_helper = { path="../lrcalc_helper", version="2.1.0" }
 
 [dependencies.pyo3]
 version = "0.13.2"
