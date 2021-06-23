@@ -3,7 +3,7 @@
 ## Install by wheel (Python >= 3.6)
 
 ```sh
-python -m pip install maturin
+python -m pip install maturin==0.11.0.b4
 maturin build -i python
 pip install target/wheels/<built .whl>
 ```
