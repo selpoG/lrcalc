@@ -13,8 +13,7 @@ pub struct LRIteratorBox {
 pub struct LRTableauIterator {
     pub cont: *mut IntVector,
     pub size: i32,
-    array_len: i32,
-    pub array: *mut LRIteratorBox,
+    pub array: Vec<LRIteratorBox>,
 }
 
 pub fn lrit_new(
@@ -39,8 +38,7 @@ pub fn lrit_new(
         return LRTableauIterator {
             cont: IntVector::from_vec(vec![0]),
             size: -1,
-            array_len: 0,
-            array: std::ptr::null_mut(),
+            array: Vec::new(),
         };
     }
 
@@ -102,8 +100,7 @@ pub fn lrit_new(
     let mut lrit = LRTableauIterator {
         cont: std::ptr::null_mut(),
         size: -1,
-        array_len,
-        array: std::ptr::null_mut(),
+        array: Vec::new(),
     };
     // lrit.array should be arr
 
@@ -114,24 +111,18 @@ pub fn lrit_new(
     let partsz_u = partsz as u32;
     let mut cont = vec![0; partsz_u as usize];
 
-    fn to_raw(
+    fn ret(
         mut lrit: LRTableauIterator,
         arr: Vec<LRIteratorBox>,
         cont: Vec<i32>,
     ) -> LRTableauIterator {
         lrit.cont = IntVector::from_vec(cont);
-        let mut buf = arr.into_boxed_slice();
-        if buf.len() == 0 {
-            lrit.array = std::ptr::NonNull::dangling().as_ptr();
-        } else {
-            lrit.array = buf.as_mut_ptr();
-            std::mem::forget(buf);
-        }
+        lrit.array = arr;
         lrit
     }
 
     if maxrows < clen as i32 {
-        return to_raw(lrit, arr, cont);
+        return ret(lrit, arr, cont);
     } /* empty result. */
     for r in 0..clen {
         cont[r as usize] = content.unwrap()[r as usize];
@@ -139,10 +130,10 @@ pub fn lrit_new(
 
     /* Check for empty result. */
     if maxcols >= 0 && clen > 0 && cont[0] > maxcols {
-        return to_raw(lrit, arr, cont);
+        return ret(lrit, arr, cont);
     } /* empty result. */
     if maxcols >= 0 && out0 > maxcols {
-        return to_raw(lrit, arr, cont);
+        return ret(lrit, arr, cont);
     } /* empty result. */
 
     /* Initialize box structure. */
@@ -214,22 +205,18 @@ pub fn lrit_new(
         let x = arr[b.above as usize].value + 1;
         let b = &mut arr[s as usize];
         if x > b.max {
-            return to_raw(lrit, arr, cont);
+            return ret(lrit, arr, cont);
         } /* empty result. */
         b.value = x;
         cont[x as usize] += 1;
     }
 
     lrit.size = size;
-    to_raw(lrit, arr, cont)
+    ret(lrit, arr, cont)
 }
 
 pub fn lrit_free(lrit: &mut LRTableauIterator) {
     iv_free_ptr(lrit.cont);
-    if lrit.array_len > 0 {
-        let s = unsafe { std::slice::from_raw_parts_mut(lrit.array, lrit.array_len as usize) };
-        unsafe { drop(Box::from_raw(s)) }
-    }
 }
 
 pub fn lrit_good(lrit: &LRTableauIterator) -> bool {
@@ -238,7 +225,7 @@ pub fn lrit_good(lrit: &LRTableauIterator) -> bool {
 
 pub fn lrit_next(lrit: &mut LRTableauIterator) {
     let cont = unsafe { &mut (*lrit.cont)[..] };
-    let array = unsafe { std::slice::from_raw_parts_mut(lrit.array, lrit.array_len as usize) };
+    let array = &mut lrit.array[..];
     let size = lrit.size;
     let mut b_ind = 0;
     while b_ind != size {

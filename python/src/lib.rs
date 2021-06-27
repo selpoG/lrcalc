@@ -346,7 +346,7 @@ fn lr_iterator(
     ));
     let mut ans: Vec<Vec<i32>> = Vec::new();
     while lrit_good(&it.0) {
-        let array = unsafe { std::slice::from_raw_parts(it.0.array, it.0.size as usize) };
+        let array = &it.0.array[0..it.0.size as usize];
         ans.push(array.iter().map(|b| b.value).collect());
         lrit_next(&mut it.0);
     }

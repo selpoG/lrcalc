@@ -25,7 +25,7 @@ impl Iterator for LRTableauIterator {
         let it = &mut self.0;
         if lrit_good(it) {
             let len = it.size;
-            let arr = unsafe { std::slice::from_raw_parts(it.array, len as usize) };
+            let arr = &it.array[..len as usize];
             let val = arr.iter().map(|x| x.value).collect();
             lrit_next(it);
             Some(val)
