@@ -252,21 +252,13 @@ pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
 }
 
 pub fn all_perms(n: i32) -> Vec<Vec<i32>> {
-    let ans = _all_perms(n);
-    if ans.is_null() {
-        panic!("Memory Error")
-    }
-    let ans = VectorList { data: ans };
-    (0..ans.len()).map(|i| ans.at(i).to_partition()).collect()
+    let ans = _all_perms(n).unwrap();
+    VectorList(ans).iter().map(|v| v.to_partition()).collect()
 }
 
 pub fn all_strings(dimvec: &[i32]) -> Vec<Vec<i32>> {
     let dimvec = IntVector::new(dimvec);
     debug_assert!(dimvec.is_dimvec());
-    let ans = _all_strings(&dimvec[..]);
-    if ans.is_null() {
-        panic!("Memory Error")
-    }
-    let ans = VectorList { data: ans };
-    (0..ans.len()).map(|i| ans.at(i).to_vec()).collect()
+    let ans = _all_strings(&dimvec[..]).unwrap();
+    VectorList(ans).iter().map(|v| v.to_vec()).collect()
 }
