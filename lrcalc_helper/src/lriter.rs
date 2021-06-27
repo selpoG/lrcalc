@@ -24,7 +24,7 @@ pub fn lrit_new(
     mut maxrows: i32,
     maxcols: i32,
     mut partsz: i32,
-) -> *mut LRTableauIterator {
+) -> LRTableauIterator {
     let inner = if inner.is_null() {
         None
     } else {
@@ -36,13 +36,12 @@ pub fn lrit_new(
 
     /* Empty result if inner not contained in outer. */
     if inner.is_some() && !part_leq(inner.unwrap(), outer) {
-        let lrit = LRTableauIterator {
+        return LRTableauIterator {
             cont: IntVector::from_vec(vec![0]),
             size: -1,
             array_len: 0,
             array: std::ptr::null_mut(),
         };
-        return Box::into_raw(Box::new(lrit));
     }
 
     let len = part_length(&outer[..]);
@@ -119,7 +118,7 @@ pub fn lrit_new(
         mut lrit: LRTableauIterator,
         arr: Vec<LRIteratorBox>,
         cont: Vec<i32>,
-    ) -> *mut LRTableauIterator {
+    ) -> LRTableauIterator {
         lrit.cont = IntVector::from_vec(cont);
         let mut buf = arr.into_boxed_slice();
         if buf.len() == 0 {
@@ -128,7 +127,7 @@ pub fn lrit_new(
             lrit.array = buf.as_mut_ptr();
             std::mem::forget(buf);
         }
-        Box::into_raw(Box::new(lrit))
+        lrit
     }
 
     if maxrows < clen as i32 {
@@ -225,19 +224,12 @@ pub fn lrit_new(
     to_raw(lrit, arr, cont)
 }
 
-pub fn lrit_free(lrit: *mut LRTableauIterator) {
-    if lrit.is_null() {
-        return;
+pub fn lrit_free(lrit: &mut LRTableauIterator) {
+    iv_free_ptr(lrit.cont);
+    if lrit.array_len > 0 {
+        let s = unsafe { std::slice::from_raw_parts_mut(lrit.array, lrit.array_len as usize) };
+        unsafe { drop(Box::from_raw(s)) }
     }
-    {
-        let lrit = unsafe { &*lrit };
-        iv_free_ptr(lrit.cont);
-        if lrit.array_len > 0 {
-            let s = unsafe { std::slice::from_raw_parts_mut(lrit.array, lrit.array_len as usize) };
-            unsafe { drop(Box::from_raw(s)) }
-        }
-    }
-    unsafe { drop(Box::from_raw(lrit)) }
 }
 
 pub fn lrit_good(lrit: &LRTableauIterator) -> bool {
@@ -291,13 +283,13 @@ pub(crate) fn lrit_expand(
     maxcols: i32,
     partsz: i32,
 ) -> *mut LinearCombination {
-    let lrit_raw = unsafe { &mut *lrit_new(outer, inner, content, maxrows, maxcols, partsz) };
+    let mut lrit_raw = lrit_new(outer, inner, content, maxrows, maxcols, partsz);
     let cont = unsafe { &mut *lrit_raw.cont };
     let lc = unsafe { &mut *ivlc_new_default() };
-    while lrit_good(lrit_raw) {
+    while lrit_good(&lrit_raw) {
         ivlc_add_element(lc, 1, cont, iv_hash(&cont[..]), LC_COPY_KEY);
-        lrit_next(lrit_raw);
+        lrit_next(&mut lrit_raw);
     }
-    lrit_free(lrit_raw);
+    lrit_free(&mut lrit_raw);
     lc
 }

@@ -165,31 +165,11 @@ impl Drop for SafeLinearCombination {
     }
 }
 
-struct SafeLRTableauIterator {
-    data: *mut LRTableauIterator,
-    owned: bool,
-}
-
-impl SafeLRTableauIterator {
-    pub fn new(p: *mut LRTableauIterator) -> SafeLRTableauIterator {
-        SafeLRTableauIterator {
-            data: p,
-            owned: true,
-        }
-    }
-    pub fn deref(&self) -> &LRTableauIterator {
-        unsafe { &*self.data }
-    }
-    pub fn deref_mut(&mut self) -> &mut LRTableauIterator {
-        unsafe { &mut *self.data }
-    }
-}
+struct SafeLRTableauIterator(LRTableauIterator);
 
 impl Drop for SafeLRTableauIterator {
     fn drop(&mut self) {
-        if self.owned && !self.data.is_null() {
-            lrit_free(self.data)
-        }
+        lrit_free(&mut self.0)
     }
 }
 
@@ -356,7 +336,7 @@ fn lr_iterator(
     let outer = SafeIntVector::from(outer);
     let inner = SafeIntVector::from(inner);
     let rows = rows.unwrap_or(-1);
-    let mut it = SafeLRTableauIterator::new(lrit_new(
+    let mut it = SafeLRTableauIterator(lrit_new(
         outer.deref(),
         inner.deref(),
         std::ptr::null(),
@@ -365,11 +345,10 @@ fn lr_iterator(
         -1,
     ));
     let mut ans: Vec<Vec<i32>> = Vec::new();
-    while lrit_good(it.deref()) {
-        let array =
-            unsafe { std::slice::from_raw_parts(it.deref().array, it.deref().size as usize) };
+    while lrit_good(&it.0) {
+        let array = unsafe { std::slice::from_raw_parts(it.0.array, it.0.size as usize) };
         ans.push(array.iter().map(|b| b.value).collect());
-        lrit_next(it.deref_mut());
+        lrit_next(&mut it.0);
     }
     Ok(Py::from(PyList::new(
         py,

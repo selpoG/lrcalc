@@ -270,9 +270,9 @@ fn _schur_coprod_expand(
     cols: i32,
     partsz: i32,
 ) -> *mut LinearCombination {
-    let lrit = lrit_new(outer, std::ptr::null(), content, -1, -1, partsz);
-    let lc = _schur_coprod_count(unsafe { &mut *lrit }, rows, cols);
-    lrit_free(lrit);
+    let mut lrit = lrit_new(outer, std::ptr::null(), content, -1, -1, partsz);
+    let lc = _schur_coprod_count(&mut lrit , rows, cols);
+    lrit_free(&mut lrit);
     lc
 }
 

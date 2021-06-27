@@ -3,9 +3,7 @@ use lrcalc_helper::{
     lriter::{lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator as _LRTableauIterator},
 };
 
-pub struct LRTableauIterator {
-    it: *mut _LRTableauIterator,
-}
+pub struct LRTableauIterator(_LRTableauIterator);
 
 impl LRTableauIterator {
     pub fn new(
@@ -17,14 +15,14 @@ impl LRTableauIterator {
     ) -> LRTableauIterator {
         let outer = unsafe { &*outer };
         let it = lrit_new(outer, inner, std::ptr::null(), maxrows, maxcols, partsz);
-        LRTableauIterator { it }
+        LRTableauIterator(it)
     }
 }
 
 impl Iterator for LRTableauIterator {
     type Item = Vec<i32>;
     fn next(&mut self) -> Option<Self::Item> {
-        let it = unsafe { &mut *self.it };
+        let it = &mut self.0;
         if lrit_good(it) {
             let len = it.size;
             let arr = unsafe { std::slice::from_raw_parts(it.array, len as usize) };
@@ -39,6 +37,6 @@ impl Iterator for LRTableauIterator {
 
 impl Drop for LRTableauIterator {
     fn drop(&mut self) {
-        lrit_free(self.it)
+        lrit_free(&mut self.0)
     }
 }
