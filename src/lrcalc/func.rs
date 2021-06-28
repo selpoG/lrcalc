@@ -21,7 +21,7 @@ pub(crate) fn _mult_poly_schubert(
     perm: &IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    let ans = unsafe { mult_poly_schubert(&mut *(poly.it.ht as *mut _), &mut *perm.data, rank) };
+    let ans = unsafe { mult_poly_schubert(&mut *(poly.lc as *mut _), &mut *perm.data, rank) };
     poly.owned = false;
     ans.into()
 }
@@ -99,7 +99,7 @@ pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearComb
 }
 
 pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::raw::c_int) {
-    fusion_reduce_lc(unsafe { &mut *(lc.it.ht as *mut _) }, level);
+    fusion_reduce_lc(unsafe { &mut *(lc.lc as *mut _) }, level);
 }
 
 /// check that sh represents a partition, i.e., is weakly-decreasing and nonnegative
@@ -154,6 +154,7 @@ pub fn mult(
     debug_assert!(sh1.is_partition());
     debug_assert!(sh2.is_partition());
     _schur_mult(&sh1, &sh2, rows.unwrap_or(-1), cols.unwrap_or(-1), -1)
+        .iter()
         .map(|(k, v)| (k.to_partition(), v))
         .collect()
 }
@@ -165,6 +166,7 @@ pub fn mult_fusion(sh1: &[i32], sh2: &[i32], rows: i32, level: i32) -> Vec<(Vec<
     debug_assert!(sh1.is_partition());
     debug_assert!(sh2.is_partition());
     _schur_mult_fusion(&sh1, &sh2, rows, level)
+        .iter()
         .map(|(k, v)| (k.to_partition(), v))
         .collect()
 }
@@ -176,6 +178,7 @@ pub fn mult_quantum(sh1: &[i32], sh2: &[i32], rows: i32, cols: i32) -> Vec<((i32
     debug_assert!(sh1.is_partition());
     debug_assert!(sh2.is_partition());
     _schur_mult_fusion(&sh1, &sh2, rows, cols)
+        .iter()
         .map(|(k, v)| (k.to_quantum(cols), v))
         .collect()
 }
@@ -187,6 +190,7 @@ pub fn skew(outer: &[i32], inner: &[i32], rows: Option<i32>) -> Vec<(Vec<i32>, i
     debug_assert!(outer.is_partition());
     debug_assert!(inner.is_partition());
     _schur_skew(&outer, &inner, rows.unwrap_or(-1), -1)
+        .iter()
         .map(|(k, v)| (k.to_partition(), v))
         .collect()
 }
@@ -205,6 +209,7 @@ pub fn coprod(sh: &[i32], all: Option<bool>) -> Vec<(Vec<i32>, Vec<i32>, i32)> {
     let sh = IntVector::new(sh);
     debug_assert!(sh.is_partition());
     _schur_coprod(&sh, all.unwrap_or(false))
+        .iter()
         .map(|(k, v)| {
             let (a, b) = k.to_pair(sh.cols());
             (a, b, v)
@@ -214,6 +219,7 @@ pub fn coprod(sh: &[i32], all: Option<bool>) -> Vec<(Vec<i32>, Vec<i32>, i32)> {
 
 pub fn schubert_poly(perm: &[i32]) -> Vec<(Vec<i32>, i32)> {
     _trans(&IntVector::new(perm), 0)
+        .iter()
         .map(|(k, v)| (k.to_vec(), v))
         .collect()
 }
@@ -226,6 +232,7 @@ pub fn schubmult(w1: &[i32], w2: &[i32], rank: Option<i32>) -> Vec<(Vec<i32>, i3
     debug_assert!(w1.is_permutation());
     debug_assert!(rank.unwrap_or(0) >= 0);
     _mult_schubert(&w1, &w2, rank.unwrap_or(0))
+        .iter()
         .map(|(k, v)| (k.to_vec(), v))
         .collect()
 }
@@ -236,6 +243,7 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
     let w2 = IntVector::new(w2);
     debug_assert!(w1.is_compatible_str(&w2));
     _mult_schubert_str(&w1, &w2)
+        .iter()
         .map(|(k, v)| (k.to_vec(), v))
         .collect()
 }

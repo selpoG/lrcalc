@@ -40,7 +40,7 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
     w[(r - 1) as usize] = ws;
 
     let tmp = unsafe { &mut *trans(w, vars) };
-    for kv in LinearCombinationIter::from(tmp as *const _) {
+    for kv in LinearCombinationIter::from(tmp as &_) {
         let xx = unsafe { &mut *kv.key };
         xx[(r - 1) as usize] += 1;
         _ivlc_insert(res, xx, iv_hash(&xx[..]), kv.value);
@@ -71,7 +71,7 @@ fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombina
         let u = unsafe { &mut *IntVector::from_vec(u) };
         ivlc_add_element(res, c, u, iv_hash(&u[..]), LC_FREE_ZERO)
     };
-    for kv in LinearCombinationIter::from(slc as *const _) {
+    for kv in LinearCombinationIter::from(slc) {
         let w = unsafe { &(*kv.key)[..] };
         let c = kv.value;
         let n = w.len() as u32;
@@ -161,7 +161,7 @@ pub fn mult_poly_schubert(
 
     let mut p = Vec::with_capacity(n as usize);
     let mut maxvar = 0;
-    for kv in LinearCombinationIter::from(poly as *const _) {
+    for kv in LinearCombinationIter::from(poly as &_) {
         let xx = unsafe { &mut *kv.key };
         let mut j = xx.length;
         while j > 0 && xx[(j - 1) as usize] == 0 {
@@ -309,7 +309,7 @@ pub fn mult_schubert_str(str1: &IntVector, str2: &IntVector) -> *mut LinearCombi
     drop(w2);
 
     let res = unsafe { &mut *ivlc_new_default() };
-    for kv in LinearCombinationIter::from(lc as *const _) {
+    for kv in LinearCombinationIter::from(unsafe { &*lc }) {
         let str = unsafe { &mut *perm2string(&(*kv.key)[..], &dv.p[..]) };
         _ivlc_insert(res, str, iv_hash(&str[..]), kv.value);
     }

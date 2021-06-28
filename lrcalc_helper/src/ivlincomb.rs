@@ -32,19 +32,19 @@ const IVLC_ARRAY_SZ: u32 = 100;
 
 impl LinearCombination {
     pub fn iter(&self) -> LinearCombinationIter {
-        LinearCombinationIter::from(self as *const _)
+        LinearCombinationIter::from(self)
     }
 }
 
-pub struct LinearCombinationIter {
-    pub ht: *const LinearCombination,
+pub struct LinearCombinationIter<'a> {
+    pub ht: &'a LinearCombination,
     pub index: u64,
     pub i: u64,
     pub initialized: bool,
 }
 
-impl From<*const LinearCombination> for LinearCombinationIter {
-    fn from(v: *const LinearCombination) -> Self {
+impl<'a> From<&'a LinearCombination> for LinearCombinationIter<'a> {
+    fn from(v: &'a LinearCombination) -> Self {
         LinearCombinationIter {
             ht: v,
             index: 0,
@@ -54,13 +54,13 @@ impl From<*const LinearCombination> for LinearCombinationIter {
     }
 }
 
-impl LinearCombinationIter {
+impl<'a> LinearCombinationIter<'a> {
     pub fn visit<F>(mut self, mut f: F)
     where
         F: FnMut(&mut LinearCombinationElement),
     {
         if !self.initialized {
-            ivlc_first(unsafe { &*self.ht }, &mut self);
+            ivlc_first(self.ht, &mut self);
             self.initialized = true
         }
         while ivlc_good(&self) {
@@ -70,11 +70,11 @@ impl LinearCombinationIter {
     }
 }
 
-impl Iterator for LinearCombinationIter {
+impl<'a> Iterator for LinearCombinationIter<'a> {
     type Item = LinearCombinationElement;
     fn next(&mut self) -> Option<Self::Item> {
         if !self.initialized {
-            ivlc_first(unsafe { &*self.ht }, self);
+            ivlc_first(self.ht, self);
             self.initialized = true
         } else {
             ivlc_next(self)
@@ -319,7 +319,7 @@ fn _ivlc_remove(ht: &mut LinearCombination, key: &IntVector, hash: u32) -> bool 
 }
 
 pub fn ivlc_free_all(ht: *mut LinearCombination) {
-    for kv in LinearCombinationIter::from(ht as *const _) {
+    for kv in LinearCombinationIter::from(unsafe { &*ht }) {
         iv_free(unsafe { &mut *kv.key });
     }
     ivlc_free(ht);
@@ -364,7 +364,7 @@ pub(crate) fn ivlc_add_multiple(
     src: &mut LinearCombination,
     opt: i32,
 ) {
-    for kv in LinearCombinationIter::from(src as *const _) {
+    for kv in LinearCombinationIter::from(src as &_) {
         ivlc_add_element(dst, c * kv.value, unsafe { &mut *kv.key }, kv.hash, opt);
     }
 }
@@ -373,7 +373,7 @@ fn ivlc_good(itr: &LinearCombinationIter) -> bool {
     itr.i != 0
 }
 
-fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombinationIter) {
+fn ivlc_first<'a>(ht: &'a LinearCombination, itr: &mut LinearCombinationIter<'a>) {
     debug_assert!(!itr.initialized);
     itr.ht = ht;
     let mut index = 0;
@@ -391,7 +391,7 @@ fn ivlc_first(ht: &LinearCombination, itr: &mut LinearCombinationIter) {
 }
 
 fn ivlc_next(itr: &mut LinearCombinationIter) {
-    let ht = unsafe { &(*itr.ht) };
+    let ht = itr.ht as &LinearCombination;
     let elts = unsafe { std::slice::from_raw_parts(ht.elts, ht.elts_sz as usize) };
     if elts[itr.i as usize].next != 0 {
         itr.i = elts[itr.i as usize].next as u64;
@@ -410,6 +410,6 @@ fn ivlc_next(itr: &mut LinearCombinationIter) {
     itr.i = table[index] as u64;
 }
 
-fn ivlc_keyval(itr: &mut LinearCombinationIter) -> &mut LinearCombinationElement {
+fn ivlc_keyval<'a>(itr: &'a mut LinearCombinationIter) -> &'a mut LinearCombinationElement {
     unsafe { &mut *(*itr.ht).elts.offset(itr.i as isize) }
 }

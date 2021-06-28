@@ -90,7 +90,7 @@ pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
     let mut parts = T(Vec::with_capacity(card));
     let mut coefs = Vec::with_capacity(card);
 
-    for kv in LinearCombinationIter::from(lc as *const _) {
+    for kv in LinearCombinationIter::from(lc as &_) {
         parts.0.push(kv.key);
         coefs.push(kv.value);
     }
@@ -202,7 +202,7 @@ pub fn schur_mult_fusion(
     fusion_reduce_lc(unsafe { &mut *lc }, level);
 
     if sign < 0 {
-        LinearCombinationIter::from(lc as *const _).visit(|kv| {
+        LinearCombinationIter::from(unsafe { &*lc }).visit(|kv| {
             kv.value = -kv.value;
         });
     }

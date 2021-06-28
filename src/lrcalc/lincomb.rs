@@ -4,16 +4,19 @@ use lrcalc_helper::{
     ivector::iv_hash,
     ivlincomb::{
         ivlc_free_all, ivlc_insert, ivlc_lookup, ivlc_new_default,
-        LinearCombination as _LinearCombination, LinearCombinationElement, LinearCombinationIter,
+        LinearCombination as _LinearCombination, LinearCombinationElement,
+        LinearCombinationIter as _LinearCombinationIter,
     },
 };
 
 use super::ivector::IntVector;
 
 pub struct LinearCombination {
-    pub it: LinearCombinationIter,
+    pub lc: *mut _LinearCombination,
     pub(crate) owned: bool,
 }
+
+pub struct LinearCombinationIter<'a>(_LinearCombinationIter<'a>);
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -73,16 +76,16 @@ impl std::fmt::Display for DiffResult {
     }
 }
 
-impl From<*mut _LinearCombination> for LinearCombination {
+impl<'a> From<*mut _LinearCombination> for LinearCombination {
     fn from(from: *mut _LinearCombination) -> LinearCombination {
         LinearCombination {
-            it: LinearCombinationIter::from(from as *const _),
+            lc: from,
             owned: true,
         }
     }
 }
 
-impl LinearCombination {
+impl<'a> LinearCombination {
     #[allow(dead_code)]
     pub fn new<T: IntoIterator<Item = (Vec<i32>, i32)>>(it: T) -> LinearCombination {
         let ptr = ivlc_new_default();
@@ -99,17 +102,14 @@ impl LinearCombination {
         lc
     }
     fn deref(&self) -> &_LinearCombination {
-        unsafe { &*self.it.ht }
+        unsafe { &*self.lc }
     }
     fn deref_mut(&mut self) -> &mut _LinearCombination {
-        unsafe { &mut *(self.it.ht as *mut _) }
+        unsafe { &mut *(self.lc as *mut _) }
     }
     #[allow(dead_code)]
-    pub fn iter(&self) -> LinearCombination {
-        LinearCombination {
-            it: LinearCombinationIter::from(self.it.ht),
-            owned: false,
-        }
+    pub fn iter(&'a self) -> LinearCombinationIter<'a> {
+        LinearCombinationIter(_LinearCombinationIter::from(unsafe { &*self.lc }))
     }
     #[allow(dead_code)]
     pub fn find(&self, key: &[i32]) -> Option<LinearCombinationElement> {
@@ -152,10 +152,10 @@ impl LinearCombination {
     }
 }
 
-impl Iterator for LinearCombination {
+impl<'a> Iterator for LinearCombinationIter<'a> {
     type Item = (IntVector, i32);
     fn next(&mut self) -> Option<Self::Item> {
-        self.it.next().map(|kv| {
+        self.0.next().map(|kv| {
             (
                 IntVector {
                     data: kv.key,
@@ -167,10 +167,10 @@ impl Iterator for LinearCombination {
     }
 }
 
-impl Drop for LinearCombination {
+impl<'a> Drop for LinearCombination {
     fn drop(&mut self) {
-        if self.owned && !self.it.ht.is_null() {
-            ivlc_free_all(self.it.ht as *mut _)
+        if self.owned && !self.lc.is_null() {
+            ivlc_free_all(self.lc as *mut _)
         }
     }
 }

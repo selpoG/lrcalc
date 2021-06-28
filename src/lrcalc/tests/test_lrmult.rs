@@ -38,6 +38,7 @@ pub fn test_schur_mult(p1: &IntVector, p2: &IntVector) -> Result<()> {
             &part_to_string(p1, rows, cols),
             &part_to_string(p2, rows, cols),
         )
+        .iter()
         .map(|(k, v)| (string_to_part(&k, rows), v)),
     );
     _schur_mult(&p1, &p2, -1, -1, -1)
