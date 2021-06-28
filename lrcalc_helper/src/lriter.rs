@@ -3,6 +3,7 @@ use super::ivector::{iv_free_ptr, iv_hash, IntVector};
 use super::ivlincomb::{ivlc_add_element, ivlc_new_default, LinearCombination, LC_COPY_KEY};
 use super::part::{part_decr, part_length, part_leq, part_valid};
 
+#[derive(Clone)]
 pub struct LRIteratorBox {
     pub value: i32,
     max: i32,
@@ -95,8 +96,15 @@ pub fn lrit_new(
     }
 
     /* Allocate array. */
-    let mut arr: Vec<LRIteratorBox> = Vec::with_capacity(array_len as usize);
-    unsafe { arr.set_len(arr.capacity()) };
+    let mut arr = vec![
+        LRIteratorBox {
+            value: 0,
+            max: 0,
+            above: 0,
+            right: 0
+        };
+        array_len as usize
+    ];
     let mut lrit = LRTableauIterator {
         cont: std::ptr::null_mut(),
         size: -1,

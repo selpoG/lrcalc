@@ -1,6 +1,7 @@
 use super::ivector::{iv_sum, IntVector};
 use super::part::{part_entry, part_length, part_leq, part_valid};
 
+#[derive(Clone)]
 struct LRCoefBox {
     /// integer in box of skew tableau
     value: i32,
@@ -20,6 +21,7 @@ struct LRCoefBox {
     _padding: i32,
 }
 
+#[derive(Clone)]
 struct LRCoefContent {
     /// number of boxes containing a given integer
     cont: i32,
@@ -33,10 +35,7 @@ fn lrcoef_new_content(mu: &IntVector) -> Vec<LRCoefContent> {
 
     let n = part_length(&mu[..]) as usize;
     let mu = &mu[..];
-    let mut res = Vec::with_capacity(n + 1);
-    unsafe {
-        res.set_len(res.capacity());
-    }
+    let mut res = vec![LRCoefContent { cont: 0, supply: 0 }; n + 1];
     res[0] = LRCoefContent {
         cont: mu[0],
         supply: mu[0],
@@ -59,10 +58,19 @@ fn lrcoef_new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRC
     let n = (iv_sum(nu) - iv_sum(la)) as usize;
     let nu = &nu[..];
     let la = &la[..];
-    let mut array: Vec<LRCoefBox> = Vec::with_capacity(n + 2);
-    unsafe {
-        array.set_len(array.capacity());
-    }
+    let mut array = vec![
+        LRCoefBox {
+            value: 0,
+            north: 0,
+            max: 0,
+            east: 0,
+            se_supply: 0,
+            se_sz: 0,
+            west_sz: 0,
+            _padding: 0
+        };
+        n + 2
+    ];
 
     let mut pos = n as i32;
     for r in (0..nu.len()).rev() {

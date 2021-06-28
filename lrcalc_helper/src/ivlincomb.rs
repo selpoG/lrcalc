@@ -105,10 +105,15 @@ pub fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
         let elts = if eltsz == 0 {
             std::ptr::NonNull::dangling().as_ptr()
         } else {
-            let mut vec = Vec::with_capacity(eltsz as usize);
-            unsafe {
-                vec.set_len(eltsz as usize);
-            }
+            let vec = vec![
+                LinearCombinationElement {
+                    hash: 0,
+                    next: 0,
+                    key: std::ptr::null_mut(),
+                    value: 0
+                };
+                eltsz as usize
+            ];
             let mut buf = vec.into_boxed_slice();
             let p = buf.as_mut_ptr();
             std::mem::forget(buf);
@@ -192,10 +197,15 @@ fn _ivlc_require_table(ht: &mut LinearCombination, sz: usize) {
 
 fn _ivlc_require_elts(ht: &mut LinearCombination, sz: usize) {
     let newsz = 2 * sz;
-    let mut elts = Vec::with_capacity(newsz);
-    unsafe {
-        elts.set_len(newsz);
-    }
+    let mut elts = vec![
+        LinearCombinationElement {
+            hash: 0,
+            next: 0,
+            key: std::ptr::null_mut(),
+            value: 0
+        };
+        newsz
+    ];
     let oldelts = unsafe { std::slice::from_raw_parts_mut(ht.elts, ht.elts_sz as usize) };
     elts[..oldelts.len()].copy_from_slice(oldelts);
     unsafe { drop(Box::from_raw(oldelts)) }
