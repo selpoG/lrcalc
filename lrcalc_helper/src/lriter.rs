@@ -277,12 +277,12 @@ pub(crate) fn lrit_expand(
     maxrows: i32,
     maxcols: i32,
     partsz: i32,
-) -> *mut LinearCombination {
+) -> LinearCombination {
     let mut lrit_raw = lrit_new(outer, inner, content, maxrows, maxcols, partsz);
     let cont = unsafe { &mut *lrit_raw.cont };
-    let lc = unsafe { &mut *ivlc_new_default() };
+    let mut lc = ivlc_new_default();
     while lrit_good(&lrit_raw) {
-        ivlc_add_element(lc, 1, cont, iv_hash(&cont[..]), LC_COPY_KEY);
+        ivlc_add_element(&mut lc, 1, cont, iv_hash(&cont[..]), LC_COPY_KEY);
         lrit_next(&mut lrit_raw);
     }
     lrit_free(&mut lrit_raw);

@@ -14,7 +14,7 @@ pub fn schur_mult(
     rows: i32,
     cols: i32,
     partsz: i32,
-) -> *mut LinearCombination {
+) -> LinearCombination {
     let ss = optim_mult(sh1, Some(sh2), rows, cols);
     if ss.sign != 0 {
         lrit_expand(
@@ -124,7 +124,7 @@ pub fn schur_mult_fusion(
     mut sh2: &IntVector,
     rows: i32,
     level: i32,
-) -> *mut LinearCombination {
+) -> LinearCombination {
     debug_assert!(part_valid(&sh1[..]) && part_valid(&sh2[..]));
     if part_entry(&sh1[..], rows) != 0 || part_entry(&sh2[..], rows) != 0 {
         return ivlc_new(5, 2);
@@ -186,7 +186,7 @@ pub fn schur_mult_fusion(
     }
 
     let ss = optim_fusion(sh1, sh2, rows, level);
-    let lc = if ss.sign != 0 {
+    let mut lc = if ss.sign != 0 {
         lrit_expand(
             unsafe { &*ss.outer },
             std::ptr::null(),
@@ -199,10 +199,10 @@ pub fn schur_mult_fusion(
         ivlc_new(5, 2)
     };
 
-    fusion_reduce_lc(unsafe { &mut *lc }, level);
+    fusion_reduce_lc(&mut lc, level);
 
     if sign < 0 {
-        LinearCombinationIter::from(unsafe { &*lc }).visit(|kv| {
+        LinearCombinationIter::from(&lc).visit(|kv| {
             kv.value = -kv.value;
         });
     }
@@ -215,7 +215,7 @@ pub fn schur_skew(
     inner: &IntVector,
     rows: i32,
     partsz: i32,
-) -> *mut LinearCombination {
+) -> LinearCombination {
     let ss = optim_skew(outer, Some(inner), None, rows);
     if ss.sign != 0 {
         lrit_expand(unsafe { &*ss.outer }, ss.inner, ss.cont, rows, -1, partsz)
@@ -245,19 +245,15 @@ fn _schur_coprod_isredundant(cont: &IntVector, rows: i32, cols: i32) -> bool {
     false
 }
 
-fn _schur_coprod_count(
-    lrit: &mut LRTableauIterator,
-    rows: i32,
-    cols: i32,
-) -> *mut LinearCombination {
+fn _schur_coprod_count(lrit: &mut LRTableauIterator, rows: i32, cols: i32) -> LinearCombination {
     let cont = unsafe { &mut *lrit.cont };
-    let lc = unsafe { &mut *ivlc_new_default() };
+    let mut lc = ivlc_new_default();
     while lrit_good(lrit) {
         if _schur_coprod_isredundant(cont, rows, cols) {
             lrit_next(lrit);
             continue;
         }
-        ivlc_add_element(lc, 1, cont, iv_hash(&cont[..]), LC_COPY_KEY);
+        ivlc_add_element(&mut lc, 1, cont, iv_hash(&cont[..]), LC_COPY_KEY);
         lrit_next(lrit);
     }
     lc
@@ -269,7 +265,7 @@ fn _schur_coprod_expand(
     rows: i32,
     cols: i32,
     partsz: i32,
-) -> *mut LinearCombination {
+) -> LinearCombination {
     let mut lrit = lrit_new(outer, std::ptr::null(), content, -1, -1, partsz);
     let lc = _schur_coprod_count(&mut lrit, rows, cols);
     lrit_free(&mut lrit);
@@ -282,7 +278,7 @@ pub fn schur_coprod(
     cols: i32,
     partsz: i32,
     all: bool,
-) -> *mut LinearCombination {
+) -> LinearCombination {
     let b = unsafe { &*IntVector::from_vec(vec![cols; rows as usize]) };
 
     if all {

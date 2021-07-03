@@ -21,9 +21,8 @@ pub(crate) fn _mult_poly_schubert(
     perm: &IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    let ans = unsafe { mult_poly_schubert(&mut *(poly.lc as *mut _), &mut *perm.data, rank) };
-    poly.owned = false;
-    ans.into()
+    unsafe { mult_poly_schubert(&mut poly.0, &mut *perm.data, rank) };
+    poly
 }
 
 pub(crate) fn _schur_mult(
@@ -92,14 +91,11 @@ pub(crate) fn _mult_schubert(
 
 pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearCombination {
     let ans = unsafe { mult_schubert_str(&*ww1.data, &*ww2.data) };
-    if ans.is_null() {
-        panic!("Memory Error")
-    }
-    ans.into()
+    ans.unwrap().into()
 }
 
 pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::raw::c_int) {
-    fusion_reduce_lc(unsafe { &mut *(lc.lc as *mut _) }, level);
+    fusion_reduce_lc(&mut lc.0, level);
 }
 
 /// check that sh represents a partition, i.e., is weakly-decreasing and nonnegative

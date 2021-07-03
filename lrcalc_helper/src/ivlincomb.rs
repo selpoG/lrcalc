@@ -1,4 +1,3 @@
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use super::ivector::{iv_cmp, iv_free, iv_free_ptr, iv_hash, IntVector};
 
 #[derive(Copy, Clone)]
@@ -87,69 +86,59 @@ impl<'a> Iterator for LinearCombinationIter<'a> {
     }
 }
 
-pub fn ivlc_new_default() -> *mut LinearCombination {
+pub fn ivlc_new_default() -> LinearCombination {
     ivlc_new(IVLC_HASHTABLE_SZ, IVLC_ARRAY_SZ)
 }
 
-pub fn ivlc_new(tabsz: u32, eltsz: u32) -> *mut LinearCombination {
-    let ivlc = {
-        let table = if tabsz == 0 {
-            std::ptr::NonNull::dangling().as_ptr()
-        } else {
-            let vec = vec![0u32; tabsz as usize];
-            let mut buf = vec.into_boxed_slice();
-            let p = buf.as_mut_ptr();
-            std::mem::forget(buf);
-            p
-        };
-        let elts = if eltsz == 0 {
-            std::ptr::NonNull::dangling().as_ptr()
-        } else {
-            let vec = vec![
-                LinearCombinationElement {
-                    hash: 0,
-                    next: 0,
-                    key: std::ptr::null_mut(),
-                    value: 0
-                };
-                eltsz as usize
-            ];
-            let mut buf = vec.into_boxed_slice();
-            let p = buf.as_mut_ptr();
-            std::mem::forget(buf);
-            p
-        };
-        LinearCombination {
-            card: 0,
-            free_elts: 0,
-            elts_len: 1,
-            table_sz: tabsz,
-            table,
-            elts_sz: 0,
-            elts,
-        }
+pub fn ivlc_new(tabsz: u32, eltsz: u32) -> LinearCombination {
+    let table = if tabsz == 0 {
+        std::ptr::NonNull::dangling().as_ptr()
+    } else {
+        let vec = vec![0u32; tabsz as usize];
+        let mut buf = vec.into_boxed_slice();
+        let p = buf.as_mut_ptr();
+        std::mem::forget(buf);
+        p
     };
-    Box::into_raw(Box::new(ivlc))
+    let elts = if eltsz == 0 {
+        std::ptr::NonNull::dangling().as_ptr()
+    } else {
+        let vec = vec![
+            LinearCombinationElement {
+                hash: 0,
+                next: 0,
+                key: std::ptr::null_mut(),
+                value: 0
+            };
+            eltsz as usize
+        ];
+        let mut buf = vec.into_boxed_slice();
+        let p = buf.as_mut_ptr();
+        std::mem::forget(buf);
+        p
+    };
+    LinearCombination {
+        card: 0,
+        free_elts: 0,
+        elts_len: 1,
+        table_sz: tabsz,
+        table,
+        elts_sz: 0,
+        elts,
+    }
 }
 
-pub fn ivlc_free(ht: *mut LinearCombination) {
-    if ht.is_null() {
-        return;
-    }
-    if unsafe { (*ht).table_sz } != 0 {
-        let ht = unsafe { &*ht };
-
+pub fn ivlc_free(ht: &mut LinearCombination) {
+    if ht.table_sz != 0 {
         let s = unsafe { std::slice::from_raw_parts_mut(ht.table, ht.table_sz as usize) };
         let s = s.as_mut_ptr();
         unsafe { drop(Box::from_raw(s)) }
     }
-    if unsafe { (*ht).elts_sz } != 0 {
-        let ht = unsafe { &*ht };
+    if ht.elts_sz != 0 {
         let s = unsafe { std::slice::from_raw_parts_mut(ht.elts, ht.elts_sz as usize) };
         let s = s.as_mut_ptr();
         unsafe { drop(Box::from_raw(s)) }
     }
-    unsafe { drop(Box::from_raw(ht)) }
 }
 
 pub(crate) fn ivlc_reset(ht: &mut LinearCombination) {
@@ -318,8 +307,8 @@ fn _ivlc_remove(ht: &mut LinearCombination, key: &IntVector, hash: u32) -> bool 
     true
 }
 
-pub fn ivlc_free_all(ht: *mut LinearCombination) {
-    for kv in LinearCombinationIter::from(unsafe { &*ht }) {
+pub fn ivlc_free_all(ht: &mut LinearCombination) {
+    for kv in LinearCombinationIter::from(ht as &_) {
         iv_free(unsafe { &mut *kv.key });
     }
     ivlc_free(ht);

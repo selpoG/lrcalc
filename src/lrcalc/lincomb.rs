@@ -11,10 +11,7 @@ use lrcalc_helper::{
 
 use super::ivector::IntVector;
 
-pub struct LinearCombination {
-    pub lc: *mut _LinearCombination,
-    pub(crate) owned: bool,
-}
+pub struct LinearCombination(pub _LinearCombination);
 
 pub struct LinearCombinationIter<'a>(_LinearCombinationIter<'a>);
 
@@ -76,12 +73,9 @@ impl std::fmt::Display for DiffResult {
     }
 }
 
-impl<'a> From<*mut _LinearCombination> for LinearCombination {
-    fn from(from: *mut _LinearCombination) -> LinearCombination {
-        LinearCombination {
-            lc: from,
-            owned: true,
-        }
+impl<'a> From<_LinearCombination> for LinearCombination {
+    fn from(from: _LinearCombination) -> LinearCombination {
+        LinearCombination(from)
     }
 }
 
@@ -89,31 +83,21 @@ impl<'a> LinearCombination {
     #[allow(dead_code)]
     pub fn new<T: IntoIterator<Item = (Vec<i32>, i32)>>(it: T) -> LinearCombination {
         let ptr = ivlc_new_default();
-        if ptr.is_null() {
-            panic!("Memory Error")
-        }
         let mut lc: LinearCombination = ptr.into();
-        let lc_data = lc.deref_mut();
         for (key, val) in it {
-            if ivlc_insert(lc_data, &key[..], val).is_null() {
+            if ivlc_insert(&mut lc.0, &key[..], val).is_null() {
                 panic!("Memory Error")
             }
         }
         lc
     }
-    fn deref(&self) -> &_LinearCombination {
-        unsafe { &*self.lc }
-    }
-    fn deref_mut(&mut self) -> &mut _LinearCombination {
-        unsafe { &mut *(self.lc as *mut _) }
-    }
     #[allow(dead_code)]
     pub fn iter(&'a self) -> LinearCombinationIter<'a> {
-        LinearCombinationIter(_LinearCombinationIter::from(unsafe { &*self.lc }))
+        LinearCombinationIter(_LinearCombinationIter::from(&self.0))
     }
     #[allow(dead_code)]
     pub fn find(&self, key: &[i32]) -> Option<LinearCombinationElement> {
-        let kv = ivlc_lookup(self.deref(), key, iv_hash(key) as u32);
+        let kv = ivlc_lookup(&self.0, key, iv_hash(key) as u32);
         if kv.is_null() {
             None
         } else {
@@ -169,8 +153,6 @@ impl<'a> Iterator for LinearCombinationIter<'a> {
 
 impl<'a> Drop for LinearCombination {
     fn drop(&mut self) {
-        if self.owned && !self.lc.is_null() {
-            ivlc_free_all(self.lc as *mut _)
-        }
+        ivlc_free_all(&mut self.0)
     }
 }

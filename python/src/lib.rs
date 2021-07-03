@@ -15,14 +15,12 @@ use lrcalc_helper::{
 
 struct SafeIntVector {
     data: *mut IntVector,
-    owned: bool,
 }
 
 impl From<Vec<i32>> for SafeIntVector {
     fn from(v: Vec<i32>) -> Self {
         SafeIntVector {
             data: IntVector::from_vec(v),
-            owned: true,
         }
     }
 }
@@ -38,34 +36,22 @@ impl SafeIntVector {
 
 impl Drop for SafeIntVector {
     fn drop(&mut self) {
-        if self.owned && !self.data.is_null() {
+        if !self.data.is_null() {
             iv_free_ptr(self.data)
         }
     }
 }
 
-struct SafeLinearCombination {
-    data: *mut LinearCombination,
-    owned: bool,
-}
+struct SafeLinearCombination(LinearCombination);
 
 impl SafeLinearCombination {
-    pub fn new(p: *mut LinearCombination) -> SafeLinearCombination {
-        SafeLinearCombination {
-            data: p,
-            owned: true,
-        }
-    }
     pub fn into_dict_of_vecs(self) -> Vec<(Vec<i32>, i32)> {
         let mut ans = Vec::new();
-        for kv in self.deref().iter() {
+        for kv in self.0.iter() {
             let key = unsafe { &*kv.key };
             ans.push(((&key[..]).to_vec(), kv.value))
         }
         ans
-    }
-    pub fn deref(&self) -> &LinearCombination {
-        unsafe { &*self.data }
     }
 }
 
@@ -159,9 +145,7 @@ fn to_py_dict_of_pair(py: Python, vals: Vec<(Vec<i32>, i32)>, rows: i32, cols: i
 
 impl Drop for SafeLinearCombination {
     fn drop(&mut self) {
-        if self.owned && !self.data.is_null() {
-            ivlc_free_all(self.data)
-        }
+        ivlc_free_all(&mut self.0)
     }
 }
 
@@ -200,7 +184,7 @@ fn mult(
     let cols = cols.unwrap_or(-1);
     let dict = to_py_dict_of_part(
         py,
-        SafeLinearCombination::new(schur_mult(sh1.deref(), sh2.deref(), rows, cols, -1))
+        SafeLinearCombination(schur_mult(sh1.deref(), sh2.deref(), rows, cols, -1))
             .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
@@ -220,7 +204,7 @@ fn mult_fusion(
     let sh2 = SafeIntVector::from(sh2);
     let dict = to_py_dict_of_part(
         py,
-        SafeLinearCombination::new(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, level))
+        SafeLinearCombination(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, level))
             .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
@@ -241,7 +225,7 @@ fn mult_quantum(
     let sh2 = SafeIntVector::from(sh2);
     let dict = to_py_dict_of_quantum(
         py,
-        SafeLinearCombination::new(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, cols))
+        SafeLinearCombination(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, cols))
             .into_dict_of_vecs(),
         cols,
         degrees,
@@ -258,7 +242,7 @@ fn skew(py: Python, outer: Vec<i32>, inner: Vec<i32>, rows: Option<i32>) -> PyRe
     let rows = rows.unwrap_or(-1);
     let dict = to_py_dict_of_part(
         py,
-        SafeLinearCombination::new(schur_skew(outer.deref(), inner.deref(), rows, -1))
+        SafeLinearCombination(schur_skew(outer.deref(), inner.deref(), rows, -1))
             .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
@@ -276,7 +260,7 @@ fn coprod(py: Python, sh: Vec<i32>, all: bool) -> PyResult<Py<PyDict>> {
     let col = if row == 0 { 0 } else { sh.deref()[0] };
     let dict = to_py_dict_of_pair(
         py,
-        SafeLinearCombination::new(schur_coprod(sh.deref(), row as i32, col, -1, all))
+        SafeLinearCombination(schur_coprod(sh.deref(), row as i32, col, -1, all))
             .into_dict_of_vecs(),
         row as i32,
         col,
@@ -291,7 +275,7 @@ fn schubert_poly(py: Python, w: Vec<i32>) -> PyResult<Py<PyDict>> {
     let w = SafeIntVector::from(w);
     let dict = to_py_dict_of_tuple(
         py,
-        SafeLinearCombination::new(trans(&w.deref()[..], 0)).into_dict_of_vecs(),
+        SafeLinearCombination(trans(&w.deref()[..], 0)).into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
 }
@@ -304,7 +288,7 @@ fn schubmult(py: Python, w1: Vec<i32>, w2: Vec<i32>, rank: i32) -> PyResult<Py<P
     let mut w2 = SafeIntVector::from(w2);
     let dict = to_py_dict_of_tuple(
         py,
-        SafeLinearCombination::new(mult_schubert(w1.deref_mut(), w2.deref_mut(), rank))
+        SafeLinearCombination(mult_schubert(w1.deref_mut(), w2.deref_mut(), rank))
             .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
@@ -318,7 +302,7 @@ fn schubmult_str(py: Python, str1: Vec<i32>, str2: Vec<i32>) -> PyResult<Py<PyDi
     let mut str2 = SafeIntVector::from(str2);
     let dict = to_py_dict_of_tuple(
         py,
-        SafeLinearCombination::new(mult_schubert_str(str1.deref_mut(), str2.deref_mut()))
+        SafeLinearCombination(mult_schubert_str(str1.deref_mut(), str2.deref_mut()).unwrap())
             .into_dict_of_vecs(),
     );
     Ok(Py::from(dict))
