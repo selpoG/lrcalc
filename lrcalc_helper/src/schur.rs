@@ -1,7 +1,7 @@
 use super::ivector::{iv_free_ptr, iv_hash, IntVector};
 use super::ivlincomb::{
-    ivlc_add_element, ivlc_new, ivlc_new_default, ivlc_reset, LinearCombination,
-    LinearCombinationIter, LC_COPY_KEY, LC_FREE_KEY, LC_FREE_ZERO,
+    ivlc_add_element, ivlc_new, ivlc_new_default, ivlc_reset, LinearCombination, LC_COPY_KEY,
+    LC_FREE_KEY, LC_FREE_ZERO,
 };
 use super::lrcoef::lrcoef_count;
 use super::lriter::{lrit_expand, lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator};
@@ -26,7 +26,7 @@ pub fn schur_mult(
             partsz,
         )
     } else {
-        ivlc_new(5, 2)
+        ivlc_new(2)
     }
 }
 
@@ -86,13 +86,13 @@ pub fn fusion_reduce_lc(lc: &mut LinearCombination, level: i32) {
             }
         }
     }
-    let card = lc.card as usize;
+    let card = lc.map.len();
     let mut parts = T(Vec::with_capacity(card));
     let mut coefs = Vec::with_capacity(card);
 
-    for kv in LinearCombinationIter::from(lc as &_) {
-        parts.0.push(kv.key);
-        coefs.push(kv.value);
+    for kv in lc.map.iter() {
+        parts.0.push(kv.0.ptr);
+        coefs.push(*kv.1);
     }
     ivlc_reset(lc);
 
@@ -127,7 +127,7 @@ pub fn schur_mult_fusion(
 ) -> LinearCombination {
     debug_assert!(part_valid(&sh1[..]) && part_valid(&sh2[..]));
     if part_entry(&sh1[..], rows) != 0 || part_entry(&sh2[..], rows) != 0 {
-        return ivlc_new(5, 2);
+        return ivlc_new(2);
     }
     struct T {
         tmp: Option<*mut IntVector>,
@@ -166,7 +166,7 @@ pub fn schur_mult_fusion(
         sh1 = unsafe { &*t.nsh1.unwrap() };
     }
     if sign == 0 {
-        return ivlc_new(5, 2);
+        return ivlc_new(2);
     }
     if part_entry(&sh2[..], 0) - part_entry(&sh2[..], rows - 1) > level {
         if t.tmp.is_none() {
@@ -182,7 +182,7 @@ pub fn schur_mult_fusion(
         sh2 = unsafe { &*t.nsh2.unwrap() };
     }
     if sign == 0 {
-        return ivlc_new(5, 2);
+        return ivlc_new(2);
     }
 
     let ss = optim_fusion(sh1, sh2, rows, level);
@@ -196,15 +196,15 @@ pub fn schur_mult_fusion(
             rows,
         )
     } else {
-        ivlc_new(5, 2)
+        ivlc_new(2)
     };
 
     fusion_reduce_lc(&mut lc, level);
 
     if sign < 0 {
-        LinearCombinationIter::from(&lc).visit(|kv| {
-            kv.value = -kv.value;
-        });
+        for kv in lc.map.iter_mut() {
+            *kv.1 = -*kv.1;
+        }
     }
 
     lc
@@ -220,7 +220,7 @@ pub fn schur_skew(
     if ss.sign != 0 {
         lrit_expand(unsafe { &*ss.outer }, ss.inner, ss.cont, rows, -1, partsz)
     } else {
-        ivlc_new(5, 2)
+        ivlc_new(2)
     }
 }
 

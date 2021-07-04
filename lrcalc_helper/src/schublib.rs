@@ -1,7 +1,7 @@
 use super::ivector::{iv_free, iv_hash, iv_new, IntVector};
 use super::ivlincomb::{
-    _ivlc_insert, ivlc_add_element, ivlc_add_multiple, ivlc_free, ivlc_free_all, ivlc_new_default,
-    ivlc_reset, LinearCombination, LinearCombinationIter, LC_FREE_ZERO,
+    _ivlc_insert, ivlc_add_element, ivlc_add_multiple, ivlc_free_all, ivlc_new_default, ivlc_reset,
+    LinearCombination, LC_FREE_ZERO,
 };
 use super::perm::{
     bruhat_zero, perm2string, perm_group, perm_length, str2dimvec, str_iscompat, string2perm,
@@ -40,10 +40,10 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
     w[(r - 1) as usize] = ws;
 
     let mut tmp = trans(w, vars);
-    for kv in LinearCombinationIter::from(&tmp) {
-        let xx = unsafe { &mut *kv.key };
+    for kv in tmp.map.iter() {
+        let xx = unsafe { &mut *kv.0.ptr };
         xx[(r - 1) as usize] += 1;
-        _ivlc_insert(res, xx, iv_hash(&xx[..]), kv.value);
+        _ivlc_insert(res, xx, iv_hash(&xx[..]), *kv.1);
     }
 
     let mut last = 0;
@@ -62,7 +62,6 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 
     w[(s - 1) as usize] = ws;
     w[(r - 1) as usize] = wr;
-    ivlc_free(&mut tmp);
 }
 
 #[allow(clippy::many_single_char_names)]
@@ -71,9 +70,9 @@ fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombina
         let u = unsafe { &mut *IntVector::from_vec(u) };
         ivlc_add_element(res, c, u, iv_hash(&u[..]), LC_FREE_ZERO)
     };
-    for kv in LinearCombinationIter::from(slc) {
-        let w = unsafe { &(*kv.key)[..] };
-        let c = kv.value;
+    for kv in slc.map.iter() {
+        let w = unsafe { &(*kv.0.ptr)[..] };
+        let c = *kv.1;
         let n = w.len() as u32;
         let wi = if i <= n {
             w[(i - 1) as usize]
@@ -145,7 +144,7 @@ struct Poly {
 }
 
 pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mut rank: i32) {
-    let n = poly.card;
+    let n = poly.map.len();
     if n == 0 {
         ivlc_free_all(poly);
         return;
@@ -157,8 +156,8 @@ pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mu
 
     let mut p = Vec::with_capacity(n as usize);
     let mut maxvar = 0;
-    for kv in LinearCombinationIter::from(poly as &_) {
-        let xx = unsafe { &mut *kv.key };
+    for kv in poly.map.iter() {
+        let xx = unsafe { &mut *kv.0.ptr };
         let mut j = xx.length;
         while j > 0 && xx[(j - 1) as usize] == 0 {
             j -= 1;
@@ -168,8 +167,8 @@ pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mu
             maxvar = j;
         }
         p.push(Poly {
-            key: kv.key,
-            val: kv.value,
+            key: kv.0.ptr,
+            val: *kv.1,
         });
     }
     debug_assert!(p.len() == n as usize);
@@ -177,7 +176,7 @@ pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mu
 
     let svlen = perm.length;
     perm.length = perm_group(&perm[..]) as u32;
-    _mult_ps(&mut p[..], n, maxvar, perm, rank, poly);
+    _mult_ps(&mut p[..], n as u32, maxvar, perm, rank, poly);
     perm.length = svlen;
 }
 
@@ -300,9 +299,9 @@ pub fn mult_schubert_str(str1: &IntVector, str2: &IntVector) -> Option<LinearCom
     drop(w2);
 
     let mut res = ivlc_new_default();
-    for kv in LinearCombinationIter::from(&lc) {
-        let str = unsafe { &mut *perm2string(&(*kv.key)[..], &dv.p[..]) };
-        _ivlc_insert(&mut res, str, iv_hash(&str[..]), kv.value);
+    for kv in lc.map.iter() {
+        let str = unsafe { &mut *perm2string(&(*kv.0.ptr)[..], &dv.p[..]) };
+        _ivlc_insert(&mut res, str, iv_hash(&str[..]), *kv.1);
     }
 
     ivlc_free_all(&mut lc);

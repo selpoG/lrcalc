@@ -16,7 +16,7 @@ pub fn test_schur_lrskew(outer: &IntVector, inner: &IntVector, rows: i32, cols: 
         let coef = _schur_lrcoef(outer, inner, &sh);
         ensure!(coef >= 0, "memory error: sh={:?}", sh.to_vec());
         let expected = if let Some(d) = lc.find(&sh[..]) {
-            d.value as i64
+            d as i64
         } else {
             0
         };

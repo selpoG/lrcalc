@@ -10,40 +10,48 @@ mod test_schubmult;
 use super::func::*;
 use anyhow::{Context, Result};
 
+fn cmp_unordered<T: Eq + Ord + std::fmt::Debug + Clone>(a: &[T], b: &[T]) {
+    let mut a = a.to_vec();
+    let mut b = b.to_vec();
+    a.sort();
+    b.sort();
+    assert_eq!(a, b);
+}
+
 #[test]
 fn test_lrcalc() {
     assert_eq!(lrcoef(&[3, 2, 1], &[2, 1], &[2, 1]), 2);
-    assert_eq!(
-        skew(&[3, 2, 1], &[2, 1], None),
-        vec![(vec![2, 1], 2), (vec![1, 1, 1], 1), (vec![3], 1)]
+    cmp_unordered(
+        &skew(&[3, 2, 1], &[2, 1], None),
+        &[(vec![2, 1], 2), (vec![1, 1, 1], 1), (vec![3], 1)],
     );
-    assert_eq!(
-        skew(&[3, 2, 1], &[2, 1], Some(2)),
-        vec![(vec![2, 1], 2), (vec![3], 1)]
+    cmp_unordered(
+        &skew(&[3, 2, 1], &[2, 1], Some(2)),
+        &[(vec![2, 1], 2), (vec![3], 1)],
     );
-    assert_eq!(
-        mult(&[2, 1], &[2, 1], None, None),
-        vec![
+    cmp_unordered(
+        &mult(&[2, 1], &[2, 1], None, None),
+        &[
             (vec![3, 2, 1], 2),
             (vec![4, 2], 1),
             (vec![3, 1, 1, 1], 1),
             (vec![3, 3], 1),
             (vec![2, 2, 1, 1], 1),
             (vec![2, 2, 2], 1),
-            (vec![4, 1, 1], 1)
-        ]
+            (vec![4, 1, 1], 1),
+        ],
     );
-    assert_eq!(
-        mult_fusion(&[3, 2, 1], &[3, 2, 1], 3, 2),
-        vec![(vec![4, 4, 4], 1), (vec![5, 4, 3], 1)]
+    cmp_unordered(
+        &mult_fusion(&[3, 2, 1], &[3, 2, 1], 3, 2),
+        &[(vec![4, 4, 4], 1), (vec![5, 4, 3], 1)],
     );
-    assert_eq!(
-        mult_quantum(&[3, 2, 1], &[3, 2, 1], 3, 2),
-        vec![((2, vec![2]), 1), ((2, vec![1, 1]), 1)]
+    cmp_unordered(
+        &mult_quantum(&[3, 2, 1], &[3, 2, 1], 3, 2),
+        &[((2, vec![2]), 1), ((2, vec![1, 1]), 1)],
     );
-    assert_eq!(
-        coprod(&[3, 2, 1], None),
-        vec![
+    cmp_unordered(
+        &coprod(&[3, 2, 1], None),
+        &[
             (vec![2, 1, 1], vec![1, 1], 1),
             (vec![3, 2, 1], vec![], 1),
             (vec![3, 1, 1], vec![1], 1),
@@ -57,45 +65,45 @@ fn test_lrcalc() {
             (vec![2, 2], vec![2], 1),
             (vec![2, 1], vec![3], 1),
             (vec![3, 1], vec![1, 1], 1),
-        ]
+        ],
     );
 }
 
 #[test]
 fn test_schubmult() {
-    assert_eq!(
-        schubmult(&[1, 3, 2], &[1, 3, 2], None),
-        vec![(vec![2, 3, 1], 1), (vec![1, 4, 2, 3], 1)]
+    cmp_unordered(
+        &schubmult(&[1, 3, 2], &[1, 3, 2], None),
+        &[(vec![2, 3, 1], 1), (vec![1, 4, 2, 3], 1)],
     );
-    assert_eq!(
-        schubmult(&[1, 3, 4, 2], &[2, 1, 4, 5, 3], None),
-        vec![
+    cmp_unordered(
+        &schubmult(&[1, 3, 4, 2], &[2, 1, 4, 5, 3], None),
+        &[
             (vec![2, 3, 5, 4, 1], 1),
             (vec![4, 1, 5, 2, 3], 1),
             (vec![2, 4, 5, 1, 3], 1),
             (vec![3, 2, 4, 5, 1], 1),
-            (vec![3, 1, 5, 4, 2], 1)
-        ]
+            (vec![3, 1, 5, 4, 2], 1),
+        ],
     );
-    assert_eq!(
-        schubmult_str(&[0, 1, 2, 0, 1, 2], &[0, 1, 2, 0, 1, 2]),
-        vec![
+    cmp_unordered(
+        &schubmult_str(&[0, 1, 2, 0, 1, 2], &[0, 1, 2, 0, 1, 2]),
+        &[
             (vec![2, 1, 0, 0, 1, 2], 1),
             (vec![1, 0, 2, 2, 0, 1], 1),
             (vec![0, 2, 1, 1, 2, 0], 1),
             (vec![2, 0, 1, 1, 0, 2], 1),
             (vec![1, 2, 0, 0, 2, 1], 1),
             (vec![0, 1, 2, 2, 1, 0], 1),
-        ]
+        ],
     );
-    assert_eq!(
-        schubmult_str(&[0, 2, 0, 2, 1, 2], &[0, 1, 2, 0, 2, 2]),
-        vec![
+    cmp_unordered(
+        &schubmult_str(&[0, 2, 0, 2, 1, 2], &[0, 1, 2, 0, 2, 2]),
+        &[
             (vec![0, 2, 1, 2, 2, 0], 1),
             (vec![2, 0, 1, 2, 0, 2], 1),
             (vec![2, 0, 2, 0, 1, 2], 1),
             (vec![0, 2, 2, 1, 0, 2], 1),
-        ]
+        ],
     );
 }
 

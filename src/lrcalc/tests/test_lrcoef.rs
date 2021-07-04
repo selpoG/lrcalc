@@ -16,7 +16,7 @@ pub fn test_schur_lrcoef(p1: &IntVector, p2: &IntVector, rows: i32, cols: i32) -
         let coef = _schur_lrcoef(&outer, p1, p2);
         ensure!(coef >= 0, "memory error: outer={:?}", outer.to_vec());
         let expected = if let Some(d) = prd.find(&outer[..]) {
-            d.value as i64
+            d as i64
         } else {
             0
         };

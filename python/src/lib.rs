@@ -47,9 +47,9 @@ struct SafeLinearCombination(LinearCombination);
 impl SafeLinearCombination {
     pub fn into_dict_of_vecs(self) -> Vec<(Vec<i32>, i32)> {
         let mut ans = Vec::new();
-        for kv in self.0.iter() {
-            let key = unsafe { &*kv.key };
-            ans.push(((&key[..]).to_vec(), kv.value))
+        for (k, &v) in self.0.map.iter() {
+            let key = unsafe { &*k.ptr };
+            ans.push(((&key[..]).to_vec(), v))
         }
         ans
     }

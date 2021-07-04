@@ -1,11 +1,11 @@
 use anyhow::anyhow;
+use hashbrown::hash_map::Iter;
 
 use lrcalc_helper::{
     ivector::iv_hash,
     ivlincomb::{
-        ivlc_free_all, ivlc_insert, ivlc_lookup, ivlc_new_default,
-        LinearCombination as _LinearCombination, LinearCombinationElement,
-        LinearCombinationIter as _LinearCombinationIter,
+        ivlc_free_all, ivlc_insert, ivlc_lookup, ivlc_new_default, IntVectorPtr,
+        LinearCombination as _LinearCombination,
     },
 };
 
@@ -13,7 +13,10 @@ use super::ivector::IntVector;
 
 pub struct LinearCombination(pub _LinearCombination);
 
-pub struct LinearCombinationIter<'a>(_LinearCombinationIter<'a>);
+pub struct LinearCombinationIter<'a> {
+    pub ht: &'a _LinearCombination,
+    pub i: Iter<'a, IntVectorPtr, i32>,
+}
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -85,24 +88,21 @@ impl<'a> LinearCombination {
         let ptr = ivlc_new_default();
         let mut lc: LinearCombination = ptr.into();
         for (key, val) in it {
-            if ivlc_insert(&mut lc.0, &key[..], val).is_null() {
-                panic!("Memory Error")
-            }
+            ivlc_insert(&mut lc.0, &key[..], val)
         }
         lc
     }
     #[allow(dead_code)]
     pub fn iter(&'a self) -> LinearCombinationIter<'a> {
-        LinearCombinationIter(_LinearCombinationIter::from(&self.0))
+        LinearCombinationIter {
+            ht: &self.0,
+            i: self.0.map.iter(),
+        }
     }
     #[allow(dead_code)]
-    pub fn find(&self, key: &[i32]) -> Option<LinearCombinationElement> {
+    pub fn find(&self, key: &[i32]) -> Option<i32> {
         let kv = ivlc_lookup(&self.0, key, iv_hash(key) as u32);
-        if kv.is_null() {
-            None
-        } else {
-            unsafe { Some(*kv) }
-        }
+        kv.map(|v| *v.1)
     }
     #[allow(dead_code)]
     fn diff_helper<F: Fn(&IntVector, &i32) -> bool>(&self, other: &Self, filter: &F) -> DiffResult {
@@ -115,8 +115,8 @@ impl<'a> LinearCombination {
                     return DiffResult::KeyMismatch(sh, Which::Left);
                 }
                 Some(kv) => {
-                    if kv.value != n {
-                        return DiffResult::ValueMismatch(sh, n, kv.value);
+                    if kv != n {
+                        return DiffResult::ValueMismatch(sh, n, kv);
                     }
                 }
             }
@@ -139,13 +139,13 @@ impl<'a> LinearCombination {
 impl<'a> Iterator for LinearCombinationIter<'a> {
     type Item = (IntVector, i32);
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|kv| {
+        self.i.next().map(|(k, &v)| {
             (
                 IntVector {
-                    data: kv.key,
+                    data: k.ptr,
                     owned: false,
                 },
-                kv.value,
+                v,
             )
         })
     }
