@@ -1,22 +1,15 @@
 use anyhow::anyhow;
-use hashbrown::hash_map::Iter;
 
 use lrcalc_helper::{
-    ivector::iv_hash,
+    ivector::{iv_hash, IntVector as _IntVector},
     ivlincomb::{
-        ivlc_free_all, ivlc_insert, ivlc_lookup, ivlc_new_default, IntVectorPtr,
-        LinearCombination as _LinearCombination,
+        ivlc_insert, ivlc_lookup, ivlc_new_default, LinearCombination as _LinearCombination,
     },
 };
 
 use super::ivector::IntVector;
 
 pub struct LinearCombination(pub _LinearCombination);
-
-pub struct LinearCombinationIter<'a> {
-    pub ht: &'a _LinearCombination,
-    pub i: Iter<'a, IntVectorPtr, i32>,
-}
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -92,12 +85,13 @@ impl<'a> LinearCombination {
         }
         lc
     }
-    #[allow(dead_code)]
-    pub fn iter(&'a self) -> LinearCombinationIter<'a> {
-        LinearCombinationIter {
-            ht: &self.0,
-            i: self.0.map.iter(),
+    pub fn map<Output, F: Fn(IntVector, i32) -> Output>(mut self, f: &F) -> Vec<Output> {
+        let mut ans = Vec::with_capacity(self.0.map.len());
+        for (k, v) in self.0.map.drain() {
+            let iv = IntVector(k.ptr);
+            ans.push(f(iv, v));
         }
+        ans
     }
     #[allow(dead_code)]
     pub fn find(&self, key: &[i32]) -> Option<i32> {
@@ -105,18 +99,23 @@ impl<'a> LinearCombination {
         kv.map(|v| *v.1)
     }
     #[allow(dead_code)]
-    fn diff_helper<F: Fn(&IntVector, &i32) -> bool>(&self, other: &Self, filter: &F) -> DiffResult {
-        for (sh, n) in self.iter() {
+    fn diff_helper<F: Fn(&_IntVector, &i32) -> bool>(
+        &self,
+        other: &Self,
+        filter: &F,
+    ) -> DiffResult {
+        for (sh, &n) in self.0.map.iter() {
+            let sh = &sh.ptr;
             if !filter(&sh, &n) {
                 continue;
             }
             match other.find(&sh[..]) {
                 None => {
-                    return DiffResult::KeyMismatch(sh, Which::Left);
+                    return DiffResult::KeyMismatch(IntVector::new(&sh[..]), Which::Left);
                 }
                 Some(kv) => {
                     if kv != n {
-                        return DiffResult::ValueMismatch(sh, n, kv);
+                        return DiffResult::ValueMismatch(IntVector::new(&sh[..]), n, kv);
                     }
                 }
             }
@@ -124,7 +123,7 @@ impl<'a> LinearCombination {
         DiffResult::Equals
     }
     #[allow(dead_code)]
-    pub(crate) fn diff<F: Fn(&IntVector, &i32) -> bool>(
+    pub(crate) fn diff<F: Fn(&_IntVector, &i32) -> bool>(
         &self,
         other: &Self,
         filter: F,
@@ -133,26 +132,5 @@ impl<'a> LinearCombination {
             DiffResult::Equals => other.diff_helper(self, &filter).flip(),
             x => x,
         }
-    }
-}
-
-impl<'a> Iterator for LinearCombinationIter<'a> {
-    type Item = (IntVector, i32);
-    fn next(&mut self) -> Option<Self::Item> {
-        self.i.next().map(|(k, &v)| {
-            (
-                IntVector {
-                    data: k.ptr,
-                    owned: false,
-                },
-                v,
-            )
-        })
-    }
-}
-
-impl<'a> Drop for LinearCombination {
-    fn drop(&mut self) {
-        ivlc_free_all(&mut self.0)
     }
 }

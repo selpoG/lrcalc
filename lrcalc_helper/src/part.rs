@@ -2,7 +2,7 @@ use super::ivector::IntVector;
 
 /// General partition iterator that the compiler will optimize when opt is known at compile time.
 pub struct PartitionIterator {
-    part: *mut IntVector,
+    pub part: IntVector,
     outer: *const IntVector,
     inner: *const IntVector,
     length: i32,
@@ -11,9 +11,9 @@ pub struct PartitionIterator {
 }
 
 impl PartitionIterator {
-    fn default() -> PartitionIterator {
+    fn new(p: IntVector) -> PartitionIterator {
         PartitionIterator {
-            part: std::ptr::null_mut(),
+            part: p,
             outer: std::ptr::null(),
             inner: std::ptr::null(),
             length: 0,
@@ -105,7 +105,6 @@ pub fn pitr_good(itr: &PartitionIterator) -> bool {
 #[allow(clippy::too_many_arguments)]
 fn _pitr_first(
     itr: &mut PartitionIterator,
-    p: &mut IntVector,
     mut rows: i32,
     cols: i32,
     outer: Option<&IntVector>,
@@ -121,7 +120,6 @@ fn _pitr_first(
     debug_assert!(!use_inner || part_valid(&inner.unwrap()[..]));
     debug_assert!(!use_outer || !use_inner || part_leq(inner.unwrap(), outer.unwrap()));
 
-    itr.part = p;
     itr.outer = if use_outer {
         outer.unwrap()
     } else {
@@ -134,7 +132,7 @@ fn _pitr_first(
     };
     itr.opt = opt;
 
-    let p = &mut p[..];
+    let p = &mut itr.part[..];
     let outer = outer.map(|x| &x[..]);
     let inner = inner.map(|x| &x[..]);
 
@@ -215,34 +213,32 @@ fn _pitr_first(
 }
 
 pub fn pitr_first(
-    p: &mut IntVector,
+    p: IntVector,
     rows: i32,
     cols: i32,
-    outer: Option<*const IntVector>,
-    inner: Option<*const IntVector>,
+    outer: Option<&IntVector>,
+    inner: Option<&IntVector>,
     size: i32,
     opt: i32,
 ) -> PartitionIterator {
-    let outer = outer.map(|p| unsafe { &*p });
-    let inner = inner.map(|p| unsafe { &*p });
-    let mut pitr = PartitionIterator::default();
-    match _pitr_first(&mut pitr, p, rows, cols, outer, inner, size, opt) {
+    let mut pitr = PartitionIterator::new(p);
+    match _pitr_first(&mut pitr, rows, cols, outer, inner, size, opt) {
         Ok(_) => {}
         Err(_) => pitr.rows = -1,
     }
     pitr
 }
 
-pub fn pitr_box_first(p: &mut IntVector, rows: i32, cols: i32) -> PartitionIterator {
+pub fn pitr_box_first(p: IntVector, rows: i32, cols: i32) -> PartitionIterator {
     pitr_first(p, rows, cols, None, None, 0, 0)
 }
 
-pub fn pitr_box_sz_first(p: &mut IntVector, rows: i32, cols: i32, size: i32) -> PartitionIterator {
+pub fn pitr_box_sz_first(p: IntVector, rows: i32, cols: i32, size: i32) -> PartitionIterator {
     pitr_first(p, rows, cols, None, None, size, PITR_USE_SIZE)
 }
 
 pub fn pitr_next(itr: &mut PartitionIterator) {
-    let p = unsafe { &mut (*itr.part)[..] };
+    let p = &mut (itr.part)[..];
     let outer = if itr.outer.is_null() {
         None
     } else {

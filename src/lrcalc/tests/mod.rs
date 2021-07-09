@@ -125,26 +125,44 @@ fn test_allperms() {
 }
 
 #[test]
-fn run_tests() -> Result<()> {
-    for &(r, c) in [(0, 0), (0, 3), (2, 0), (1, 1), (4, 4)].iter() {
+fn test_partiter() -> Result<()> {
+    for &(r, c) in [(2, 0), (1, 1), (4, 4)].iter() {
         test_partiter::run_test_partiter(r, c)
             .with_context(|| format!("run_test_partiter({}, {})", r, c))?;
     }
+    Ok(())
+}
 
+#[test]
+fn test_schubmult2() -> Result<()> {
     for &n in [1, 2, 4].iter() {
         test_schubmult::run_test_schubmult(n)
             .with_context(|| format!("run_test_schubmult({})", n))?;
     }
+    Ok(())
+}
 
+#[test]
+fn test_lrmult() -> Result<()> {
     for &(r, c) in [(2, 4), (3, 3), (4, 2)].iter() {
         test_lrmult::run_test_lrmult(r, c)
             .with_context(|| format!("run_test_lrmult({}, {})", r, c))?;
     }
+    Ok(())
+}
 
-    test_lrcoef::run_test_lrcoef(4, 4).context("run_test_lrcoef(4, 4)")?;
+#[test]
+fn test_lrcoef() -> Result<()> {
+    test_lrcoef::run_test_lrcoef(4, 4).context("run_test_lrcoef(4, 4)")
+}
 
-    test_lrskew::run_test_lrskew(4, 4).context("run_test_lrskew(4, 4)")?;
+#[test]
+fn test_lrskew() -> Result<()> {
+    test_lrskew::run_test_lrskew(4, 4).context("run_test_lrskew(4, 4)")
+}
 
+#[test]
+fn test_mult_fusion() -> Result<()> {
     for &(r, c) in [(0, 5), (1, 5), (2, 5), (3, 5), (4, 5)].iter() {
         test_fusion::run_test_mult_fusion(r, c)
             .with_context(|| format!("run_test_mult_fusion({}, {})", r, c))?;

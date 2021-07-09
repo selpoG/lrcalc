@@ -1,27 +1,26 @@
 use hashbrown::{hash_map::RawEntryMut, HashMap};
 
-use super::ivector::{iv_cmp, iv_free, iv_free_ptr, iv_hash, IntVector};
+use super::ivector::{iv_cmp, iv_hash, IntVector};
 
-#[derive(Copy, Clone)]
-pub struct LinearCombinationElement {
-    pub key: *mut IntVector,
+pub struct LinearCombinationElement<'a> {
+    pub key: &'a mut IntVector,
     pub value: i32,
 }
 
 pub struct IntVectorPtr {
-    pub ptr: *mut IntVector,
+    pub ptr: IntVector,
     hash: u32,
 }
 
 impl std::fmt::Debug for IntVectorPtr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "IntVectorPtr({:?})", (unsafe { &(*self.ptr)[..] }))
+        write!(f, "IntVectorPtr({:?})", (&self.ptr[..]))
     }
 }
 
 impl PartialEq for IntVectorPtr {
     fn eq(&self, other: &Self) -> bool {
-        unsafe { iv_cmp(&(*self.ptr)[..], &(*other.ptr)[..]) == std::cmp::Ordering::Equal }
+        iv_cmp(&self.ptr[..], &other.ptr[..]) == std::cmp::Ordering::Equal
     }
 }
 impl Eq for IntVectorPtr {}
@@ -55,6 +54,12 @@ pub struct LinearCombination {
     pub map: HashMap<IntVectorPtr, i32, MyBuildHasher>,
 }
 
+impl LinearCombination {
+    pub fn clear(&mut self) {
+        self.map.clear()
+    }
+}
+
 pub const LC_COPY_KEY: i32 = 1;
 pub const LC_FREE_KEY: i32 = 0;
 
@@ -72,29 +77,25 @@ pub fn ivlc_new(eltsz: u32) -> LinearCombination {
     LinearCombination { map }
 }
 
-pub(crate) fn ivlc_reset(ht: &mut LinearCombination) {
-    ht.map.clear()
-}
-
 pub fn ivlc_lookup<'a>(
     ht: &'a LinearCombination,
     key: &[i32],
     hash: u32,
 ) -> Option<(&'a IntVectorPtr, &'a i32)> {
     ht.map.raw_entry().from_hash(hash as u64, |e| {
-        iv_cmp(key, unsafe { &(*e.ptr)[..] }) == std::cmp::Ordering::Equal
+        iv_cmp(key, &e.ptr[..]) == std::cmp::Ordering::Equal
     })
 }
 
 pub fn ivlc_insert(ht: &mut LinearCombination, key: &[i32], value: i32) {
     let hash = iv_hash(key);
-    let key = unsafe { &mut *IntVector::from_vec(key.to_vec()) };
+    let key = key.to_vec().into();
     _ivlc_insert(ht, key, hash, value)
 }
 
-pub(crate) fn _ivlc_insert(ht: &mut LinearCombination, key: &mut IntVector, hash: u32, value: i32) {
+pub(crate) fn _ivlc_insert(ht: &mut LinearCombination, key: IntVector, hash: u32, value: i32) {
     match ht.map.raw_entry_mut().from_hash(hash as u64, |e| {
-        iv_cmp(&key[..], unsafe { &(*e.ptr)[..] }) == std::cmp::Ordering::Equal
+        iv_cmp(&key[..], &e.ptr[..]) == std::cmp::Ordering::Equal
     }) {
         RawEntryMut::Occupied(_) => panic!("Call only if key is not in table."),
         RawEntryMut::Vacant(e) => {
@@ -103,41 +104,28 @@ pub(crate) fn _ivlc_insert(ht: &mut LinearCombination, key: &mut IntVector, hash
     }
 }
 
-pub fn ivlc_free_all(ht: &mut LinearCombination) {
-    for kv in ht.map.iter_mut() {
-        iv_free(unsafe { &mut *kv.0.ptr })
-    }
-}
-
 pub(crate) fn ivlc_add_element(
     ht: &mut LinearCombination,
     c: i32,
-    mut key: &mut IntVector,
+    mut key: IntVector,
     hash: u32,
     opt: i32,
 ) {
     if c == 0 {
-        if (opt & LC_COPY_KEY) == 0 {
-            iv_free_ptr(key);
-        }
         return;
     }
     match ht.map.raw_entry_mut().from_hash(hash as u64, |e| {
-        iv_cmp(&key[..], unsafe { &(*e.ptr)[..] }) == std::cmp::Ordering::Equal
+        iv_cmp(&key[..], &e.ptr[..]) == std::cmp::Ordering::Equal
     }) {
         RawEntryMut::Occupied(mut e) => {
-            if (opt & LC_COPY_KEY) == 0 {
-                iv_free_ptr(key);
-            }
             *e.get_mut() += c;
             if *e.get() == 0 && (opt & LC_FREE_ZERO) != 0 {
-                let (k, _) = e.remove_entry();
-                iv_free_ptr(k.ptr);
+                e.remove_entry();
             }
         }
         RawEntryMut::Vacant(e) => {
             if (opt & LC_COPY_KEY) != 0 {
-                key = unsafe { &mut *IntVector::from_vec((&key[..]).to_vec()) };
+                key = IntVector::from((&key[..]).to_vec());
             }
             e.insert_hashed_nocheck(hash as u64, IntVectorPtr { ptr: key, hash }, c);
         }
@@ -150,7 +138,7 @@ pub(crate) fn ivlc_add_multiple(
     src: &mut LinearCombination,
     opt: i32,
 ) {
-    for kv in src.map.iter_mut() {
-        ivlc_add_element(dst, c * *kv.1, unsafe { &mut *kv.0.ptr }, kv.0.hash, opt);
+    for kv in src.map.drain() {
+        ivlc_add_element(dst, c * kv.1, kv.0.ptr, kv.0.hash, opt);
     }
 }

@@ -7,7 +7,6 @@ use lrcalc_helper::part::{
 use super::ivector::IntVector;
 
 pub struct PartIter {
-    p: IntVector,
     it: PartitionIterator,
     initialized: bool,
 }
@@ -23,44 +22,41 @@ impl PartIter {
         opt: i32,
     ) -> PartIter {
         let it = pitr_first(
-            unsafe { &mut *p.data },
+            p.0,
             rows,
             cols,
-            outer.map(|x| x.data as *const _),
-            inner.map(|x| x.data as *const _),
+            outer.map(|x| &x.0),
+            inner.map(|x| &x.0),
             size,
             opt,
         );
         PartIter {
-            p,
             it,
             initialized: false,
         }
     }
     pub fn new_box(p: IntVector, rows: i32, cols: i32) -> PartIter {
-        let it = pitr_box_first(unsafe { &mut *p.data }, rows, cols);
+        let it = pitr_box_first(p.0, rows, cols);
         PartIter {
-            p,
             it,
             initialized: false,
         }
     }
     pub fn new_box_sz(p: IntVector, rows: i32, cols: i32, size: i32) -> PartIter {
-        let it = pitr_box_sz_first(unsafe { &mut *p.data }, rows, cols, size);
+        let it = pitr_box_sz_first(p.0, rows, cols, size);
         PartIter {
-            p,
             it,
             initialized: false,
         }
     }
-    pub fn next(&mut self) -> Option<&IntVector> {
+    pub fn next(&mut self) -> Option<IntVector> {
         if !self.initialized {
             self.initialized = true
         } else {
             pitr_next(&mut self.it)
         }
         if pitr_good(&self.it) {
-            Some(&self.p)
+            Some(IntVector(self.it.part.clone()))
         } else {
             None
         }

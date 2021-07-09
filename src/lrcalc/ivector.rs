@@ -1,36 +1,21 @@
 use lrcalc_helper::{
+    ivector::iv_new,
     ivector::IntVector as _IntVector,
-    ivector::{iv_free_ptr, iv_new},
     part::{part_qdegree, part_qentry, part_valid},
     perm::{dimvec_valid, perm_group, perm_valid, str_iscompat},
 };
 
-pub struct IntVector {
-    pub data: *mut _IntVector,
-    pub owned: bool,
-}
+pub struct IntVector(pub _IntVector);
 
 impl IntVector {
     pub fn default(len: u32) -> IntVector {
-        let x = iv_new(len);
-        IntVector {
-            data: x,
-            owned: true,
-        }
+        IntVector(iv_new(len))
     }
     pub fn new(v: &[i32]) -> IntVector {
-        let mut c_v = IntVector::default(v.len() as u32);
-        c_v[..].copy_from_slice(&v);
-        c_v
-    }
-    fn deref(&self) -> &_IntVector {
-        unsafe { &*self.data }
-    }
-    fn deref_mut(&mut self) -> &mut _IntVector {
-        unsafe { &mut *self.data }
+        IntVector(v.to_vec().into())
     }
     pub fn len(&self) -> usize {
-        self.deref().length as usize
+        self.0.len()
     }
     #[allow(dead_code)]
     pub fn size(&self) -> i32 {
@@ -125,7 +110,7 @@ impl IntVector {
         )
     }
     pub fn to_quantum(&self, level: i32) -> (i32, Vec<i32>) {
-        let p = self.deref();
+        let p = &self.0;
         let d = part_qdegree(&p[..], level);
         let mut n = self.len();
         while n > 0 && part_qentry(&p[..], (n - 1) as i32, d, level) == 0 {
@@ -140,23 +125,23 @@ impl IntVector {
     }
 }
 
-impl Drop for IntVector {
-    fn drop(&mut self) {
-        if self.owned && !self.data.is_null() {
-            iv_free_ptr(self.data)
-        }
-    }
-}
-
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::Index<I> for IntVector {
     type Output = I::Output;
     fn index(&self, index: I) -> &Self::Output {
-        &self.deref()[index]
+        &self.0[index]
     }
 }
 
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for IntVector {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        &mut self.deref_mut()[index]
+        &mut self.0[index]
     }
+}
+
+pub fn ivl_to_vec<Output, F: Fn(IntVector) -> Output>(v: Vec<_IntVector>, f: &F) -> Vec<Output> {
+    let mut ans = Vec::with_capacity(v.len());
+    for k in v {
+        ans.push(f(IntVector(k)));
+    }
+    ans
 }

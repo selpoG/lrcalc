@@ -1,19 +1,11 @@
-use super::ivector::{iv_free_ptr, IntVector};
+use super::ivector::IntVector;
 use super::part::{part_entry, part_length, part_leq, part_valid};
 
 pub struct SkewShape {
-    pub outer: *mut IntVector,
-    pub inner: *mut IntVector,
-    pub cont: *mut IntVector,
+    pub outer: Option<IntVector>,
+    pub inner: Option<IntVector>,
+    pub cont: Option<IntVector>,
     pub sign: i32,
-}
-
-impl Drop for SkewShape {
-    fn drop(&mut self) {
-        iv_free_ptr(self.outer);
-        iv_free_ptr(self.inner);
-        iv_free_ptr(self.cont);
-    }
 }
 
 pub(crate) fn _sksh_print(outer: &[i32], inner: Option<&[i32]>, cont: Option<&[i32]>) {
@@ -99,9 +91,9 @@ pub(crate) fn optim_mult(
 
     /* Indicate empty result. */
     let mut ss = SkewShape {
-        outer: std::ptr::null_mut(),
-        inner: std::ptr::null_mut(),
-        cont: std::ptr::null_mut(),
+        outer: None,
+        inner: None,
+        cont: None,
         sign: 0,
     };
 
@@ -202,8 +194,8 @@ pub(crate) fn optim_mult(
         cont[r as usize] = o1.fc
     }
 
-    ss.outer = IntVector::from_vec(out);
-    ss.cont = IntVector::from_vec(cont);
+    ss.outer = Some(out.into());
+    ss.cont = Some(cont.into());
     ss.sign = 1;
     ss
 }
@@ -218,9 +210,9 @@ pub(crate) fn optim_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i
 
     /* Empty result? */
     let mut ss = SkewShape {
-        outer: std::ptr::null_mut(),
-        inner: std::ptr::null_mut(),
-        cont: std::ptr::null_mut(),
+        outer: None,
+        inner: None,
+        cont: None,
         sign: 0,
     };
     if part_length(&sh1[..]) as i32 > rows || part_length(&sh2[..]) as i32 > rows {
@@ -267,8 +259,8 @@ pub(crate) fn optim_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i
         nsh2[(d + i) as usize] = part_entry(&sh2[..], i) + sh1d - level;
     }
 
-    ss.outer = IntVector::from_vec(nsh1);
-    ss.cont = IntVector::from_vec(nsh2);
+    ss.outer = Some(nsh1.into());
+    ss.cont = Some(nsh2.into());
     ss.sign = 1;
     ss
 }
@@ -377,9 +369,9 @@ pub(crate) fn optim_skew(
 
     /* Indicate empty result. */
     let mut ss = SkewShape {
-        outer: std::ptr::null_mut(),
-        inner: std::ptr::null_mut(),
-        cont: std::ptr::null_mut(),
+        outer: None,
+        inner: None,
+        cont: None,
         sign: 0,
     };
     if !part_leq(inner, outer) {
@@ -431,12 +423,12 @@ pub(crate) fn optim_skew(
 
     /* Empty shape outer/inner ? */
     if row_bound == 0 {
-        ss.outer = IntVector::from_vec(out);
-        ss.inner = IntVector::from_vec(inn);
-        ss.cont = IntVector::from_vec(cont);
-        unsafe { &mut *ss.outer }.length = 0;
-        unsafe { &mut *ss.inner }.length = 0;
-        unsafe { &mut *ss.cont }.length = clen as u32;
+        ss.outer = Some(out.into());
+        ss.inner = Some(inn.into());
+        ss.cont = Some(cont.into());
+        ss.outer.as_mut().unwrap().length = 0;
+        ss.inner.as_mut().unwrap().length = 0;
+        ss.cont.as_mut().unwrap().length = clen as u32;
         ss.sign = 1;
         return ss;
     }
@@ -580,9 +572,9 @@ pub(crate) fn optim_skew(
         ps.inn[r as usize] -= ps.col;
     }
 
-    ss.outer = IntVector::from_vec(ps.out);
-    ss.inner = IntVector::from_vec(ps.inn);
-    ss.cont = IntVector::from_vec(cont);
+    ss.outer = Some(ps.out.into());
+    ss.inner = Some(ps.inn.into());
+    ss.cont = Some(cont.into());
     ss.sign = 1;
     ss
 }
@@ -593,9 +585,9 @@ pub(crate) fn optim_coef(out: &IntVector, sh1: &IntVector, sh2: &IntVector) -> S
     debug_assert!(part_valid(&sh2[..]));
 
     let mut ss = SkewShape {
-        outer: std::ptr::null_mut(),
-        inner: std::ptr::null_mut(),
-        cont: std::ptr::null_mut(),
+        outer: None,
+        inner: None,
+        cont: None,
         sign: 0,
     };
     fn ret_coef_one(mut ss: SkewShape) -> SkewShape {
@@ -1011,9 +1003,9 @@ pub(crate) fn optim_coef(out: &IntVector, sh1: &IntVector, sh2: &IntVector) -> S
     }
     mu.truncate(n_mu as usize);
 
-    ss.outer = IntVector::from_vec(nu);
-    ss.inner = IntVector::from_vec(la);
-    ss.cont = IntVector::from_vec(mu);
+    ss.outer = Some(nu.into());
+    ss.inner = Some(la.into());
+    ss.cont = Some(mu.into());
     ss.sign = 2;
     ss
 }

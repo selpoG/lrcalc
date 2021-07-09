@@ -1,7 +1,7 @@
-use super::ivector::{iv_free, iv_hash, iv_new, IntVector};
+use super::ivector::{iv_hash, iv_new, IntVector};
 use super::ivlincomb::{
-    _ivlc_insert, ivlc_add_element, ivlc_add_multiple, ivlc_free_all, ivlc_new_default, ivlc_reset,
-    LinearCombination, LC_FREE_ZERO,
+    _ivlc_insert, ivlc_add_element, ivlc_add_multiple, ivlc_new_default, LinearCombination,
+    LC_FREE_ZERO,
 };
 use super::perm::{
     bruhat_zero, perm2string, perm_group, perm_length, str2dimvec, str_iscompat, string2perm,
@@ -14,7 +14,7 @@ pub fn trans(w: &[i32], vars: i32) -> LinearCombination {
 }
 
 fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
-    ivlc_reset(res);
+    res.clear();
 
     let n = perm_group(w);
 
@@ -23,8 +23,9 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
         r -= 1;
     }
     if r <= 0 {
-        let xx = unsafe { &mut *iv_new(std::cmp::max(vars as u32, 1)) };
-        _ivlc_insert(res, xx, iv_hash(&xx[..]), 1);
+        let xx = iv_new(std::cmp::max(vars as u32, 1));
+        let hash = iv_hash(&xx[..]);
+        _ivlc_insert(res, xx, hash, 1);
         return;
     }
     vars = std::cmp::max(vars, r);
@@ -40,10 +41,11 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
     w[(r - 1) as usize] = ws;
 
     let mut tmp = trans(w, vars);
-    for kv in tmp.map.iter() {
-        let xx = unsafe { &mut *kv.0.ptr };
-        xx[(r - 1) as usize] += 1;
-        _ivlc_insert(res, xx, iv_hash(&xx[..]), *kv.1);
+    for kv in tmp.map.drain() {
+        let mut vec = kv.0.ptr;
+        vec[(r - 1) as usize] += 1;
+        let hash = iv_hash(&vec[..]);
+        _ivlc_insert(res, vec, hash, kv.1);
     }
 
     let mut last = 0;
@@ -67,11 +69,12 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
 #[allow(clippy::many_single_char_names)]
 fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombination) {
     let mut add = |u: Vec<i32>, c: i32| {
-        let u = unsafe { &mut *IntVector::from_vec(u) };
-        ivlc_add_element(res, c, u, iv_hash(&u[..]), LC_FREE_ZERO)
+        let u: IntVector = u.into();
+        let hash = iv_hash(&u[..]);
+        ivlc_add_element(res, c, u, hash, LC_FREE_ZERO)
     };
     for kv in slc.map.iter() {
-        let w = unsafe { &(*kv.0.ptr)[..] };
+        let w = &(kv.0.ptr)[..];
         let c = *kv.1;
         let n = w.len() as u32;
         let wi = if i <= n {
@@ -139,14 +142,14 @@ fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombina
 }
 
 struct Poly {
-    key: *mut IntVector,
+    key: IntVector,
     val: i32,
 }
 
 pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mut rank: i32) {
     let n = poly.map.len();
     if n == 0 {
-        ivlc_free_all(poly);
+        poly.clear();
         return;
     }
 
@@ -156,8 +159,8 @@ pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mu
 
     let mut p = Vec::with_capacity(n as usize);
     let mut maxvar = 0;
-    for kv in poly.map.iter() {
-        let xx = unsafe { &mut *kv.0.ptr };
+    for kv in poly.map.drain() {
+        let mut xx = kv.0.ptr;
         let mut j = xx.length;
         while j > 0 && xx[(j - 1) as usize] == 0 {
             j -= 1;
@@ -166,13 +169,9 @@ pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mu
         if maxvar < j {
             maxvar = j;
         }
-        p.push(Poly {
-            key: kv.0.ptr,
-            val: *kv.1,
-        });
+        p.push(Poly { key: xx, val: kv.1 });
     }
     debug_assert!(p.len() == n as usize);
-    ivlc_reset(poly);
 
     let svlen = perm.length;
     perm.length = perm_group(&perm[..]) as u32;
@@ -189,8 +188,9 @@ fn _mult_ps(
     res: &mut LinearCombination,
 ) {
     if maxvar == 0 {
-        let w = unsafe { &mut *IntVector::from_vec((&perm[..]).to_vec()) };
-        ivlc_add_element(res, poly[0].val, w, iv_hash(&w[..]), LC_FREE_ZERO);
+        let w = perm.clone();
+        let hash = iv_hash(&w[..]);
+        ivlc_add_element(res, poly[0].val, w, hash, LC_FREE_ZERO);
         return;
     }
 
@@ -198,7 +198,7 @@ fn _mult_ps(
     let mut mv1 = 0;
     let mut j = 0;
     for i in 0..n {
-        let xx = unsafe { &mut *poly[i as usize].key };
+        let xx = &mut poly[i as usize].key;
         let mut lnxx = xx.length;
         if lnxx < maxvar {
             if mv0 < lnxx {
@@ -213,12 +213,7 @@ fn _mult_ps(
             if mv1 < lnxx {
                 mv1 = lnxx;
             }
-            let t = poly[i as usize].key;
-            poly[i as usize].key = poly[j as usize].key;
-            poly[j as usize].key = t;
-            let t = poly[i as usize].val;
-            poly[i as usize].val = poly[j as usize].val;
-            poly[j as usize].val = t;
+            poly.swap(i as usize, j as usize);
             j += 1;
         }
     }
@@ -230,7 +225,6 @@ fn _mult_ps(
     if j < n {
         _mult_ps(&mut poly[j as usize..], n - j, mv0, perm, rank, res);
     }
-    ivlc_free_all(&mut res1);
 }
 
 pub fn mult_schubert(w1: &mut IntVector, w2: &mut IntVector, mut rank: i32) -> LinearCombination {
@@ -263,47 +257,31 @@ pub fn mult_schubert(w1: &mut IntVector, w2: &mut IntVector, mut rank: i32) -> L
     lc
 }
 
-struct IntVectorDisposed {
-    p: IntVector,
-}
-
-impl Drop for IntVectorDisposed {
-    fn drop(&mut self) {
-        iv_free(&mut self.p)
-    }
-}
-
 pub fn mult_schubert_str(str1: &IntVector, str2: &IntVector) -> Option<LinearCombination> {
     debug_assert!(str_iscompat(&str1[..], &str2[..]));
 
     // drop dv, w1, w2
-    let dv = IntVectorDisposed {
-        p: match str2dimvec(str1) {
-            None => {
-                return None;
-            }
-            Some(v) => v,
-        },
+    let dv = match str2dimvec(str1) {
+        None => {
+            return None;
+        }
+        Some(v) => v,
     };
-    let mut w1 = IntVectorDisposed {
-        p: string2perm(str1),
-    };
-    let mut w2 = IntVectorDisposed {
-        p: string2perm(str2),
-    };
+    let mut w1 = string2perm(str1);
+    let mut w2 = string2perm(str2);
 
-    let len = w1.p.length as i32;
-    let mut lc = mult_schubert(&mut w1.p, &mut w2.p, len);
+    let len = w1.length as i32;
+    let lc = mult_schubert(&mut w1, &mut w2, len);
 
     drop(w1);
     drop(w2);
 
     let mut res = ivlc_new_default();
     for kv in lc.map.iter() {
-        let str = unsafe { &mut *perm2string(&(*kv.0.ptr)[..], &dv.p[..]) };
-        _ivlc_insert(&mut res, str, iv_hash(&str[..]), *kv.1);
+        let str = perm2string(&(kv.0.ptr)[..], &dv[..]);
+        let hash = iv_hash(&str[..]);
+        _ivlc_insert(&mut res, str, hash, *kv.1);
     }
 
-    ivlc_free_all(&mut lc);
     Some(res)
 }

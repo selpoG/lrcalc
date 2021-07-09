@@ -159,7 +159,7 @@ pub fn run_test_partiter(rows: i32, cols: i32) -> Result<()> {
     let mut pitr2 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
     while let Some(p2) = pitr2.next() {
         let test_sub = |r: i32, c: i32| -> Result<()> {
-            test_part_iter_between(r, c, Some(p2), None)
+            test_part_iter_between(r, c, Some(&p2), None)
                 .with_context(|| format!("rows={}, cols={}, outer={:?}", r, c, p2.to_vec()))
                 .context("partiter_sub")
         };
@@ -168,7 +168,7 @@ pub fn run_test_partiter(rows: i32, cols: i32) -> Result<()> {
         test_sub(rows, cols0)?;
         test_sub(rows, cols + 1)?;
         let test_super = |r: i32, c: i32| -> Result<()> {
-            test_part_iter_between(r, c, None, Some(p2))
+            test_part_iter_between(r, c, None, Some(&p2))
                 .with_context(|| format!("rows={}, cols={}, inner={:?}", r, c, p2.to_vec()))
                 .context("partiter_super")
         };
@@ -187,7 +187,7 @@ pub fn run_test_partiter(rows: i32, cols: i32) -> Result<()> {
         );
         while let Some(p1) = pitr1.next() {
             let test_between = |r: i32, c: i32| -> Result<()> {
-                test_part_iter_between(r, c, Some(p2), Some(p1))
+                test_part_iter_between(r, c, Some(&p2), Some(&p1))
                     .with_context(|| {
                         format!(
                             "rows={}, cols={}, outer={:?}, inner={:?}",

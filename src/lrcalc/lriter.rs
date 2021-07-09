@@ -1,19 +1,18 @@
 use lrcalc_helper::{
     ivector::IntVector,
-    lriter::{lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator as _LRTableauIterator},
+    lriter::{lrit_good, lrit_new, lrit_next, LRTableauIterator as _LRTableauIterator},
 };
 
 pub struct LRTableauIterator(_LRTableauIterator);
 
 impl LRTableauIterator {
     pub fn new(
-        outer: *const IntVector,
+        outer: &IntVector,
         inner: *const IntVector,
         maxrows: i32,
         maxcols: i32,
         partsz: i32,
     ) -> LRTableauIterator {
-        let outer = unsafe { &*outer };
         let it = lrit_new(outer, inner, std::ptr::null(), maxrows, maxcols, partsz);
         LRTableauIterator(it)
     }
@@ -32,11 +31,5 @@ impl Iterator for LRTableauIterator {
         } else {
             None
         }
-    }
-}
-
-impl Drop for LRTableauIterator {
-    fn drop(&mut self) {
-        lrit_free(&mut self.0)
     }
 }
