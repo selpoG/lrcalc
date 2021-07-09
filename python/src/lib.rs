@@ -242,7 +242,7 @@ fn lr_iterator(
     rows: Option<i32>,
 ) -> PyResult<Py<PyList>> {
     let rows = rows.unwrap_or(-1);
-    let mut it = lrit_new(&outer.into(), &inner.into(), std::ptr::null(), rows, -1, -1);
+    let mut it = lrit_new(&outer.into(), Some(&inner.into()), None, rows, -1, -1);
     let mut ans: Vec<Vec<i32>> = Vec::new();
     while lrit_good(&it) {
         let array = &it.array[0..it.size as usize];

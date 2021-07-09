@@ -1,4 +1,3 @@
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use super::ivector::{iv_hash, IntVector};
 use super::ivlincomb::{ivlc_add_element, ivlc_new_default, LinearCombination, LC_COPY_KEY};
 use super::part::{part_decr, part_length, part_leq, part_valid};
@@ -19,20 +18,15 @@ pub struct LRTableauIterator {
 
 pub fn lrit_new(
     outer: &IntVector,
-    inner: *const IntVector,
-    content: *const IntVector,
+    inner: Option<&IntVector>,
+    content: Option<&IntVector>,
     mut maxrows: i32,
     maxcols: i32,
     mut partsz: i32,
 ) -> LRTableauIterator {
-    let inner = if inner.is_null() {
-        None
-    } else {
-        unsafe { Some(&*inner) }
-    };
     debug_assert!(part_valid(&outer[..]));
     debug_assert!(inner.is_none() || part_valid(&inner.unwrap()[..]));
-    debug_assert!(content.is_null() || part_decr(unsafe { &(*content)[..] }));
+    debug_assert!(content.is_none() || part_decr(&content.unwrap()[..]));
 
     /* Empty result if inner not contained in outer. */
     if inner.is_some() && !part_leq(inner.unwrap(), outer) {
@@ -50,12 +44,7 @@ pub fn lrit_new(
     if ilen > len {
         ilen = len;
     }
-    let (content, clen) = if content.is_null() {
-        (None, 0)
-    } else {
-        let content = unsafe { &*content };
-        (Some(&content[..]), part_length(&content[..]))
-    };
+    let clen = content.map(|v| part_length(&v[..])).unwrap_or(0);
     let out0 = if len == 0 { 0 } else { outer[0] };
     debug_assert!(maxcols < 0 || ilen == 0 || inner.unwrap()[0] == 0);
 
@@ -259,8 +248,8 @@ pub fn lrit_next(lrit: &mut LRTableauIterator) {
 
 pub(crate) fn lrit_expand(
     outer: &IntVector,
-    inner: *const IntVector,
-    content: *const IntVector,
+    inner: Option<&IntVector>,
+    content: Option<&IntVector>,
     maxrows: i32,
     maxcols: i32,
     partsz: i32,

@@ -8,12 +8,12 @@ pub struct LRTableauIterator(_LRTableauIterator);
 impl LRTableauIterator {
     pub fn new(
         outer: &IntVector,
-        inner: *const IntVector,
+        inner: Option<&IntVector>,
         maxrows: i32,
         maxcols: i32,
         partsz: i32,
     ) -> LRTableauIterator {
-        let it = lrit_new(outer, inner, std::ptr::null(), maxrows, maxcols, partsz);
+        let it = lrit_new(outer, inner, None, maxrows, maxcols, partsz);
         LRTableauIterator(it)
     }
 }

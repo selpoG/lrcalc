@@ -165,7 +165,7 @@ pub fn skew_tab(outer: &[i32], inner: &[i32], rows: Option<i32>) -> Vec<Vec<i32>
     let inner = IntVector::new(inner);
     debug_assert!(outer.is_partition());
     debug_assert!(inner.is_partition());
-    LRTableauIterator::new(&outer.0, &inner.0, rows.unwrap_or(-1), -1, -1).collect()
+    LRTableauIterator::new(&outer.0, Some(&inner.0), rows.unwrap_or(-1), -1, -1).collect()
 }
 
 /// sh must be a partition

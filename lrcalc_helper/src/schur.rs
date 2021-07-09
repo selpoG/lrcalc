@@ -8,13 +8,6 @@ use super::lriter::{lrit_expand, lrit_good, lrit_new, lrit_next, LRTableauIterat
 use super::optim::{optim_coef, optim_fusion, optim_mult, optim_skew};
 use super::part::{part_entry, part_valid};
 
-fn as_ptr<T>(x: &Option<T>) -> *const T {
-    match x {
-        Some(v) => &*v,
-        None => std::ptr::null(),
-    }
-}
-
 pub fn schur_mult(
     sh1: &IntVector,
     sh2: &IntVector,
@@ -26,8 +19,8 @@ pub fn schur_mult(
     if ss.sign != 0 {
         lrit_expand(
             ss.outer.as_ref().unwrap(),
-            std::ptr::null(),
-            as_ptr(&ss.cont),
+            None,
+            ss.cont.as_ref(),
             rows,
             cols,
             partsz,
@@ -168,8 +161,8 @@ pub fn schur_mult_fusion(
     let mut lc = if ss.sign != 0 {
         lrit_expand(
             ss.outer.as_ref().unwrap(),
-            std::ptr::null(),
-            as_ptr(&ss.cont),
+            None,
+            ss.cont.as_ref(),
             rows,
             -1,
             rows,
@@ -199,8 +192,8 @@ pub fn schur_skew(
     if ss.sign != 0 {
         lrit_expand(
             ss.outer.as_ref().unwrap(),
-            as_ptr(&ss.inner),
-            as_ptr(&ss.cont),
+            ss.inner.as_ref(),
+            ss.cont.as_ref(),
             rows,
             -1,
             partsz,
@@ -252,12 +245,12 @@ fn _schur_coprod_count(lrit: &mut LRTableauIterator, rows: i32, cols: i32) -> Li
 
 fn _schur_coprod_expand(
     outer: &IntVector,
-    content: *const IntVector,
+    content: Option<&IntVector>,
     rows: i32,
     cols: i32,
     partsz: i32,
 ) -> LinearCombination {
-    let mut lrit = lrit_new(outer, std::ptr::null(), content, -1, -1, partsz);
+    let mut lrit = lrit_new(outer, None, content, -1, -1, partsz);
     _schur_coprod_count(&mut lrit, rows, cols)
 }
 
@@ -278,7 +271,7 @@ pub fn schur_coprod(
 
     _schur_coprod_expand(
         ss.outer.as_ref().unwrap(),
-        as_ptr(&ss.cont),
+        ss.cont.as_ref(),
         rows,
         cols,
         partsz,
