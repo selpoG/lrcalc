@@ -30,5 +30,5 @@ license = {file = "LICENSE"}
 [tool.isort]
 include_trailing_comma = true
 multi_line_output = 3
-skip = ["target"]
+skip = ["target", ".venv", "venv"]
 profile = "black"
