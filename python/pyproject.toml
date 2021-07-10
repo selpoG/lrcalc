@@ -26,3 +26,9 @@ classifiers = [
 ]
 urls = {repository="https://github.com/selpoG/lrcalc"}
 license = {file = "LICENSE"}
+
+[tool.isort]
+include_trailing_comma = true
+multi_line_output = 3
+skip = ["target", ".venv", "venv"]
+profile = "black"

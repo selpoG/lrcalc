@@ -64,7 +64,7 @@ impl IntVector {
     #[allow(dead_code)]
     pub fn leq_as_part(&self, other: &Self) -> bool {
         matches!(
-            self.cmp_as_part(&other),
+            self.cmp_as_part(other),
             Some(std::cmp::Ordering::Less) | Some(std::cmp::Ordering::Equal)
         )
     }

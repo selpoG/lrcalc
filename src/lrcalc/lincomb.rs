@@ -106,7 +106,7 @@ impl<'a> LinearCombination {
     ) -> DiffResult {
         for (sh, &n) in self.0.map.iter() {
             let sh = &sh.ptr;
-            if !filter(&sh, &n) {
+            if !filter(sh, &n) {
                 continue;
             }
             match other.find(&sh[..]) {
