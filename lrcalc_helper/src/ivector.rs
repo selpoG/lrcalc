@@ -9,7 +9,7 @@ pub struct IntVector {
 impl std::fmt::Debug for IntVector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "IntVector({:?})", self.array)
-    }
+     }
 }
 
 impl From<Vec<i32>> for IntVector {
