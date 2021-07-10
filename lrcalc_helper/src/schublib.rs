@@ -66,12 +66,11 @@ fn _trans(w: &mut [i32], mut vars: i32, res: &mut LinearCombination) {
     w[(r - 1) as usize] = wr;
 }
 
-#[allow(clippy::many_single_char_names)]
 fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombination) {
-    let mut add = |u: Vec<i32>, c: i32| {
-        let u: IntVector = u.into();
-        let hash = iv_hash(&u[..]);
-        ivlc_add_element(res, c, u, hash, LC_FREE_ZERO)
+    let mut add = |vec: Vec<i32>, c: i32| {
+        let vec: IntVector = vec.into();
+        let hash = iv_hash(&vec[..]);
+        ivlc_add_element(res, c, vec, hash, LC_FREE_ZERO)
     };
     for kv in slc.map.iter() {
         let w = &(kv.0.ptr)[..];
@@ -89,53 +88,53 @@ fn _monk_add(i: u32, slc: &LinearCombination, rank: i32, res: &mut LinearCombina
             for j in (1..i).rev() {
                 if last < w[(j - 1) as usize] && w[(j - 1) as usize] < wi {
                     last = w[(j - 1) as usize];
-                    let mut u = vec![0; ulen as usize];
-                    u[0..n as usize].copy_from_slice(&w[..n as usize]);
+                    let mut vec = vec![0; ulen as usize];
+                    vec[0..n as usize].copy_from_slice(&w[..n as usize]);
                     for t in n..ulen {
-                        u[t as usize] = (t + 1) as i32;
+                        vec[t as usize] = (t + 1) as i32;
                     }
-                    u[(j - 1) as usize] = wi;
-                    u[(i - 1) as usize] = last;
-                    add(u, -c);
+                    vec[(j - 1) as usize] = wi;
+                    vec[(i - 1) as usize] = last;
+                    add(vec, -c);
                 }
             }
         } else {
-            let mut u = vec![0; i as usize];
-            u[0..n as usize].copy_from_slice(&w[..n as usize]);
+            let mut vec = vec![0; i as usize];
+            vec[0..n as usize].copy_from_slice(&w[..n as usize]);
             for t in n..(i - 2) {
-                u[t as usize] = (t + 1) as i32;
+                vec[t as usize] = (t + 1) as i32;
             }
-            u[(i - 2) as usize] = i as i32;
-            u[(i - 1) as usize] = i as i32 - 1;
-            add(u, -c);
+            vec[(i - 2) as usize] = i as i32;
+            vec[(i - 1) as usize] = i as i32 - 1;
+            add(vec, -c);
         }
 
         if i > n {
-            let mut u = vec![0; (i + 1) as usize];
-            u[0..n as usize].copy_from_slice(&w[..n as usize]);
+            let mut vec = vec![0; (i + 1) as usize];
+            vec[0..n as usize].copy_from_slice(&w[..n as usize]);
             for t in n..i {
-                u[t as usize] = (t + 1) as i32;
+                vec[t as usize] = (t + 1) as i32;
             }
-            u[(i - 1) as usize] = i as i32 + 1;
-            u[i as usize] = i as i32;
-            add(u, c);
+            vec[(i - 1) as usize] = i as i32 + 1;
+            vec[i as usize] = i as i32;
+            add(vec, c);
         } else {
             let mut last = i32::MAX;
             for j in (i + 1)..=n {
                 if wi < w[(j - 1) as usize] && w[(j - 1) as usize] < last {
                     last = w[(j - 1) as usize];
-                    let mut u = w[..n as usize].to_vec();
-                    u[(i - 1) as usize] = last;
-                    u[(j - 1) as usize] = wi;
-                    add(u, c);
+                    let mut vec = w[..n as usize].to_vec();
+                    vec[(i - 1) as usize] = last;
+                    vec[(j - 1) as usize] = wi;
+                    add(vec, c);
                 }
             }
             if last > n as i32 && (n as i32) < rank {
-                let mut u = vec![0; (n + 1) as usize];
-                u[0..n as usize].copy_from_slice(&w[..n as usize]);
-                u[(i - 1) as usize] = n as i32 + 1;
-                u[n as usize] = wi;
-                add(u, c);
+                let mut vec = vec![0; (n + 1) as usize];
+                vec[0..n as usize].copy_from_slice(&w[..n as usize]);
+                vec[(i - 1) as usize] = n as i32 + 1;
+                vec[n as usize] = wi;
+                add(vec, c);
             }
         }
     }

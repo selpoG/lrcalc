@@ -277,6 +277,12 @@ struct PartialShape {
     col: i32,
 }
 
+struct AddInfo {
+    c: i32,
+    rt: i32,
+    rb: i32,
+}
+
 impl PartialShape {
     fn new(inn: Vec<i32>, out: Vec<i32>, rows: i32) -> PartialShape {
         PartialShape {
@@ -288,49 +294,38 @@ impl PartialShape {
             col: 0,
         }
     }
-    #[allow(clippy::too_many_arguments)]
-    fn add_comp(
-        &mut self,
-        out0: &[i32],
-        inn0: Option<&[i32]>,
-        c0: i32,
-        r0t: i32,
-        r0b: i32,
-        c1: i32,
-        r1t: i32,
-        r1b: i32,
-    ) {
-        let mut x = self.top + self.rows + r1t - r1b;
+    fn add_comp(&mut self, out0: &[i32], inn0: Option<&[i32]>, a0: AddInfo, a1: AddInfo) {
+        let mut x = self.top + self.rows + a1.rt - a1.rb;
         if x > self.bot {
             x = self.bot;
         }
-        let y1 = x + r1b - r1t;
-        let z = y1 + r0b - r1b;
+        let y1 = x + a1.rb - a1.rt;
+        let z = y1 + a0.rb - a1.rb;
 
         for r in self.bot..y1 {
             self.out[r as usize] = self.col;
         }
         for r in y1..z {
-            let c = out0[(r - x + r1t) as usize];
-            self.out[r as usize] = self.col + c - c1;
+            let c = out0[(r - x + a1.rt) as usize];
+            self.out[r as usize] = self.col + c - a1.c;
         }
 
         let len0 = inn0.map(|v| v.len() as i32).unwrap_or(0);
-        let y0 = x + r0t - r1t;
+        let y0 = x + a0.rt - a1.rt;
         for r in x..y0 {
-            let ra = r - x + r1t;
+            let ra = r - x + a1.rt;
             let c = if ra < len0 {
                 inn0.unwrap()[ra as usize]
             } else {
                 0
             };
-            self.inn[r as usize] = self.col + c - c1;
+            self.inn[r as usize] = self.col + c - a1.c;
         }
         for r in y0..z {
-            self.inn[r as usize] = self.col - c1 + c0;
+            self.inn[r as usize] = self.col - a1.c + a0.c;
         }
 
-        self.col -= c1 - c0;
+        self.col -= a1.c - a0.c;
         self.top = y0;
         self.bot = z;
     }
@@ -521,7 +516,16 @@ pub(crate) fn optim_skew(
             while r < clen && cont[r as usize] == c {
                 r += 1;
             }
-            ps.add_comp(&cont[..], None, 0, 0, clen, c, 0, r);
+            ps.add_comp(
+                &cont[..],
+                None,
+                AddInfo {
+                    c: 0,
+                    rt: 0,
+                    rb: clen,
+                },
+                AddInfo { c, rt: 0, rb: r },
+            );
         }
 
         if r1t == r2t && comp_size > cont_size {
@@ -545,7 +549,20 @@ pub(crate) fn optim_skew(
             }
             cont_size = comp_size;
         } else if comp_size > 0 {
-            ps.add_comp(outer, Some(inner), c1, r1t, r1b, c2, r2t, r2b);
+            ps.add_comp(
+                outer,
+                Some(inner),
+                AddInfo {
+                    c: c1,
+                    rt: r1t,
+                    rb: r1b,
+                },
+                AddInfo {
+                    c: c2,
+                    rt: r2t,
+                    rb: r2b,
+                },
+            );
         }
 
         c2 = c1;
