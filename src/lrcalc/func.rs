@@ -1,5 +1,5 @@
 use lrcalc_helper::{
-    part::{pitr_first, pitr_good, pitr_next},
+    part::PartitionIterator,
     perm::{all_perms as _all_perms, all_strings as _all_strings},
     schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},
     schur::{
@@ -203,10 +203,14 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
 pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
     let mut ans = Vec::new();
     let p = IntVector::default(rows as u32);
-    let mut pitr = pitr_first(p.0, rows, cols, None, None, 0, 0);
-    while pitr_good(&pitr) {
+    let pitr = PartitionIterator::new(p.0, rows, cols, None, None, 0, 0);
+    let mut pitr = match pitr {
+        None => return ans,
+        Some(x) => x,
+    };
+    while pitr.is_good() {
         ans.push(pitr.part[..].to_vec());
-        pitr_next(&mut pitr)
+        pitr.next();
     }
     ans
 }
