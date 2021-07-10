@@ -85,7 +85,7 @@ fn lrcoef_new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRC
         let nu_1 = part_entry(nu, r as i32 + 1);
         for c in la_r..nu_r {
             pos -= 1;
-            let mut b = unsafe { &mut *array.as_mut_ptr().offset(pos as isize) };
+            let mut b = array[pos as usize].clone();
             b.north = if la_0 <= c && c < nu_0 {
                 pos - nu_r + la_0
             } else {
@@ -101,6 +101,7 @@ fn lrcoef_new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRC
                 b.max = array[below as usize].max - 1;
                 b.se_sz = array[below as usize].se_sz + nu_1 - c;
             }
+            array[pos as usize] = b;
         }
     }
     array[n].value = 0;
@@ -122,9 +123,10 @@ pub(crate) fn lrcoef_count(outer: &IntVector, inner: &IntVector, content: &IntVe
 
     let n = iv_sum(content);
     let mut pos = 0;
-    let mut b = unsafe { &mut *T.as_mut_ptr() };
+    let mut b = 0;
+    let mut b_ref = &T[b];
     let mut coef = 0i64;
-    let mut above = T[b.north as usize].value;
+    let mut above = T[b_ref.north as usize].value;
     let mut x = 1;
     let mut se_supply = n - C[1].supply;
 
@@ -137,42 +139,45 @@ pub(crate) fn lrcoef_count(outer: &IntVector, inner: &IntVector, content: &IntVe
             x -= 1;
         }
 
-        if x == above || n - pos - se_supply <= b.west_sz {
+        if x == above || n - pos - se_supply <= b_ref.west_sz {
             pos -= 1;
             if pos < 0 {
                 break;
             }
-            b = unsafe { &mut *((b as *mut LRCoefBox).offset(-1)) };
-            se_supply = b.se_supply;
-            above = T[b.north as usize].value;
-            x = b.value;
+            b -= 1;
+            b_ref = &T[b];
+            se_supply = b_ref.se_supply;
+            above = T[b_ref.north as usize].value;
+            x = b_ref.value;
             C[x as usize].cont -= 1;
             se_supply += C[x as usize].supply - C[x as usize].cont;
             x -= 1;
         } else if pos + 1 < n {
-            b.se_supply = se_supply;
-            b.value = x;
+            T[b].se_supply = se_supply;
+            T[b].value = x;
             C[x as usize].cont += 1;
             pos += 1;
-            b = unsafe { &mut *((b as *mut LRCoefBox).offset(1)) };
-            se_supply = T[b.east as usize].se_supply;
-            x = T[b.east as usize].value;
-            above = T[b.north as usize].value;
-            while x > b.max {
+            b += 1;
+            b_ref = &T[b];
+            se_supply = T[b_ref.east as usize].se_supply;
+            x = T[b_ref.east as usize].value;
+            above = T[b_ref.north as usize].value;
+            while x > b_ref.max {
                 se_supply += C[x as usize].supply - C[x as usize].cont;
                 x -= 1;
             }
-            while x > above && se_supply < b.se_sz {
+            while x > above && se_supply < b_ref.se_sz {
                 se_supply += C[x as usize].supply - C[x as usize].cont;
                 x -= 1;
             }
         } else {
             coef += 1;
             pos -= 1;
-            b = unsafe { &mut *((b as *mut LRCoefBox).offset(-1)) };
-            se_supply = b.se_supply;
-            above = T[b.north as usize].value;
-            x = b.value;
+            b -= 1;
+            b_ref = &T[b];
+            se_supply = b_ref.se_supply;
+            above = T[b_ref.north as usize].value;
+            x = b_ref.value;
             C[x as usize].cont -= 1;
             se_supply += C[x as usize].supply - C[x as usize].cont;
             x -= 1;
