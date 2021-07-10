@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use lrcalc_helper::part::PartitionIterator;
+use super::helper::part::PartitionIterator;
 
 use super::ivector::IntVector;
 

@@ -1,4 +1,4 @@
-use lrcalc_helper::{
+use super::helper::{
     part::PartitionIterator,
     perm::{all_perms as _all_perms, all_strings as _all_strings},
     schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},

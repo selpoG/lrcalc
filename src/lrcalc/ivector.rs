@@ -1,4 +1,4 @@
-use lrcalc_helper::{
+use super::helper::{
     ivector::iv_new,
     ivector::IntVector as _IntVector,
     part::{part_qdegree, part_qentry, part_valid},

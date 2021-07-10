@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 
-use lrcalc_helper::{
+use super::helper::{
     ivector::{iv_hash, IntVector as _IntVector},
     ivlincomb::{
         ivlc_insert, ivlc_lookup, ivlc_new_default, LinearCombination as _LinearCombination,

@@ -4,7 +4,7 @@ use pyo3::{
     wrap_pyfunction,
 };
 
-use lrcalc_helper::{
+use lrcalc::helper::{
     ivlincomb::LinearCombination,
     lriter::{lrit_good, lrit_new, lrit_next},
     part::{part_qdegree, part_qentry},

@@ -1,4 +1,4 @@
-use lrcalc_helper::{
+use super::helper::{
     ivector::IntVector,
     lriter::{lrit_good, lrit_new, lrit_next, LRTableauIterator as _LRTableauIterator},
 };

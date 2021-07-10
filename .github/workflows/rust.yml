@@ -20,7 +20,7 @@ jobs:
             toolchain: nightly
             components: rustfmt, clippy
             override: true
-      - name: Check format (main + helper project)
+      - name: Check format (main project)
         uses: actions-rs/cargo@v1
         with:
           command: fmt
@@ -37,11 +37,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
-      - name: Run clippy (helper project)
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --manifest-path lrcalc_helper/Cargo.toml
       - name: Run clippy (python project)
         uses: actions-rs/clippy-check@v1
         with:
