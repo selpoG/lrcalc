@@ -19,7 +19,7 @@ pub fn test_schur_lrcoef(p1: &IntVector, p2: &IntVector, rows: i32, cols: i32) -
             d as i64
         } else {
             0
-        };
+        } + 1;
         ensure!(
             coef == expected,
             "coef mismatch: outer={:?}, coef={}, expected={}",

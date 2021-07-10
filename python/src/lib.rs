@@ -241,7 +241,6 @@ fn lr_iterator(
     inner: Vec<i32>,
     rows: Option<i32>,
 ) -> PyResult<Py<PyList>> {
-    assert!(false);
     let rows = rows.unwrap_or(-1);
     let mut it = lrit_new(&outer.into(), Some(&inner.into()), None, rows, -1, -1);
     let mut ans: Vec<Vec<i32>> = Vec::new();
