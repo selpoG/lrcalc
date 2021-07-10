@@ -38,7 +38,6 @@ impl IntVector {
     }
     #[allow(dead_code)]
     pub fn cmp_as_part(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        assert!(false);
         let r1 = self.rows();
         let r2 = other.rows();
         let mut ans = None;
