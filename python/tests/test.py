@@ -14,7 +14,7 @@ from lrcalc import (
 
 class LRCalcTestCase(unittest.TestCase):
     def test_lrcoef(self):
-        self.assertEqual(lrcoef([3, 2, 1], [2, 1], [2, 1]), 3)
+        self.assertEqual(lrcoef([3, 2, 1], [2, 1], [2, 1]), 2)
 
     def test_skew(self):
         self.assertDictEqual(
