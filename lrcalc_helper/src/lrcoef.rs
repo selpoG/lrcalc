@@ -115,27 +115,25 @@ pub(crate) fn lrcoef_count(outer: &IntVector, inner: &IntVector, content: &IntVe
     debug_assert!(iv_sum(outer) == iv_sum(inner) + iv_sum(content));
     debug_assert!(iv_sum(content) > 1);
 
-    #[allow(non_snake_case)]
-    let mut T =
+    let mut t =
         lrcoef_new_skewtab(outer, inner, part_length(&content[..]) as i32).into_boxed_slice();
-    #[allow(non_snake_case)]
-    let mut C = lrcoef_new_content(content).into_boxed_slice();
+    let mut cont = lrcoef_new_content(content).into_boxed_slice();
 
     let n = iv_sum(content);
     let mut pos = 0;
     let mut b = 0;
-    let mut b_ref = &T[b];
+    let mut b_ref = &t[b];
     let mut coef = 0i64;
-    let mut above = T[b_ref.north as usize].value;
+    let mut above = t[b_ref.north as usize].value;
     let mut x = 1;
-    let mut se_supply = n - C[1].supply;
+    let mut se_supply = n - cont[1].supply;
 
     loop {
         while x > above
-            && (C[x as usize].cont == C[x as usize].supply
-                || C[x as usize].cont == C[(x - 1) as usize].cont)
+            && (cont[x as usize].cont == cont[x as usize].supply
+                || cont[x as usize].cont == cont[(x - 1) as usize].cont)
         {
-            se_supply += C[x as usize].supply - C[x as usize].cont;
+            se_supply += cont[x as usize].supply - cont[x as usize].cont;
             x -= 1;
         }
 
@@ -145,41 +143,41 @@ pub(crate) fn lrcoef_count(outer: &IntVector, inner: &IntVector, content: &IntVe
                 break;
             }
             b -= 1;
-            b_ref = &T[b];
+            b_ref = &t[b];
             se_supply = b_ref.se_supply;
-            above = T[b_ref.north as usize].value;
+            above = t[b_ref.north as usize].value;
             x = b_ref.value;
-            C[x as usize].cont -= 1;
-            se_supply += C[x as usize].supply - C[x as usize].cont;
+            cont[x as usize].cont -= 1;
+            se_supply += cont[x as usize].supply - cont[x as usize].cont;
             x -= 1;
         } else if pos + 1 < n {
-            T[b].se_supply = se_supply;
-            T[b].value = x;
-            C[x as usize].cont += 1;
+            t[b].se_supply = se_supply;
+            t[b].value = x;
+            cont[x as usize].cont += 1;
             pos += 1;
             b += 1;
-            b_ref = &T[b];
-            se_supply = T[b_ref.east as usize].se_supply;
-            x = T[b_ref.east as usize].value;
-            above = T[b_ref.north as usize].value;
+            b_ref = &t[b];
+            se_supply = t[b_ref.east as usize].se_supply;
+            x = t[b_ref.east as usize].value;
+            above = t[b_ref.north as usize].value;
             while x > b_ref.max {
-                se_supply += C[x as usize].supply - C[x as usize].cont;
+                se_supply += cont[x as usize].supply - cont[x as usize].cont;
                 x -= 1;
             }
             while x > above && se_supply < b_ref.se_sz {
-                se_supply += C[x as usize].supply - C[x as usize].cont;
+                se_supply += cont[x as usize].supply - cont[x as usize].cont;
                 x -= 1;
             }
         } else {
             coef += 1;
             pos -= 1;
             b -= 1;
-            b_ref = &T[b];
+            b_ref = &t[b];
             se_supply = b_ref.se_supply;
-            above = T[b_ref.north as usize].value;
+            above = t[b_ref.north as usize].value;
             x = b_ref.value;
-            C[x as usize].cont -= 1;
-            se_supply += C[x as usize].supply - C[x as usize].cont;
+            cont[x as usize].cont -= 1;
+            se_supply += cont[x as usize].supply - cont[x as usize].cont;
             x -= 1;
         }
     }
