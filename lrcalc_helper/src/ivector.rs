@@ -94,6 +94,7 @@ impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for IntVector {
 
 /// never returns null
 pub fn iv_new(length: u32) -> IntVector {
+    for i in 0..100 {}
     vec![0; length as usize].into()
 }
 
