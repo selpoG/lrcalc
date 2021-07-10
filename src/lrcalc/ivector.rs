@@ -2,7 +2,7 @@ use lrcalc_helper::{
     ivector::iv_new,
     ivector::IntVector as _IntVector,
     part::{part_qdegree, part_qentry, part_valid},
-    perm::{dimvec_valid, perm_group, perm_valid, str_iscompat},
+    perm::{dimvec_valid, perm_valid, str_iscompat},
 };
 
 pub struct IntVector(pub _IntVector);
@@ -67,10 +67,6 @@ impl IntVector {
             self.cmp_as_part(&other),
             Some(std::cmp::Ordering::Less) | Some(std::cmp::Ordering::Equal)
         )
-    }
-    #[allow(dead_code)]
-    pub fn perm_group(&self) -> i32 {
-        perm_group(&self[..])
     }
     pub fn to_vec(&self) -> Vec<i32> {
         self[..].to_vec()
