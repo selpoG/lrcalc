@@ -1,5 +1,5 @@
 use lrcalc_helper::{
-    part::{pitr_first, pitr_good, pitr_next},
+    part::PartitionIterator,
     perm::{all_perms as _all_perms, all_strings as _all_strings},
     schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},
     schur::{
@@ -7,23 +7,21 @@ use lrcalc_helper::{
     },
 };
 
-use super::ivector::IntVector;
-use super::ivlist::VectorList;
+use super::ivector::{ivl_to_vec, IntVector};
 use super::lincomb::LinearCombination;
 use super::lriter::LRTableauIterator;
 
 pub(crate) fn _schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
-    unsafe { schur_lrcoef(&*outer.data, &*inner1.data, &*inner2.data) }
+    schur_lrcoef(&outer.0, &inner1.0, &inner2.0)
 }
 
 pub(crate) fn _mult_poly_schubert(
     mut poly: LinearCombination,
-    perm: &IntVector,
+    perm: &mut IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    let ans = unsafe { mult_poly_schubert(&mut *(poly.it.ht as *mut _), &mut *perm.data, rank) };
-    poly.owned = false;
-    ans.into()
+    mult_poly_schubert(&mut poly.0, &mut perm.0, rank);
+    poly
 }
 
 pub(crate) fn _schur_mult(
@@ -33,14 +31,7 @@ pub(crate) fn _schur_mult(
     cols: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult(
-        unsafe { &*sh1.data },
-        unsafe { &*sh2.data },
-        rows,
-        cols,
-        partsz,
-    )
-    .into()
+    schur_mult(&sh1.0, &sh2.0, rows, cols, partsz).into()
 }
 
 pub(crate) fn _schur_mult_fusion(
@@ -49,7 +40,7 @@ pub(crate) fn _schur_mult_fusion(
     rows: ::std::os::raw::c_int,
     level: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    unsafe { schur_mult_fusion(&*sh1.data, &*sh2.data, rows, level) }.into()
+    schur_mult_fusion(&sh1.0, &sh2.0, rows, level).into()
 }
 
 pub(crate) fn _schur_skew(
@@ -58,24 +49,11 @@ pub(crate) fn _schur_skew(
     rows: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_skew(
-        unsafe { &*outer.data },
-        unsafe { &*inner.data },
-        rows,
-        partsz,
-    )
-    .into()
+    schur_skew(&outer.0, &inner.0, rows, partsz).into()
 }
 
 pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
-    schur_coprod(
-        unsafe { &*sh.data },
-        sh.rows() as i32,
-        sh.cols() as i32,
-        -1,
-        all,
-    )
-    .into()
+    schur_coprod(&sh.0, sh.rows() as i32, sh.cols() as i32, -1, all).into()
 }
 
 pub(crate) fn _trans(w: &IntVector, vars: ::std::os::raw::c_int) -> LinearCombination {
@@ -83,23 +61,20 @@ pub(crate) fn _trans(w: &IntVector, vars: ::std::os::raw::c_int) -> LinearCombin
 }
 
 pub(crate) fn _mult_schubert(
-    ww1: &IntVector,
-    ww2: &IntVector,
+    ww1: &mut IntVector,
+    ww2: &mut IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    unsafe { mult_schubert(&mut *ww1.data, &mut *ww2.data, rank) }.into()
+    mult_schubert(&mut ww1.0, &mut ww2.0, rank).into()
 }
 
 pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearCombination {
-    let ans = unsafe { mult_schubert_str(&*ww1.data, &*ww2.data) };
-    if ans.is_null() {
-        panic!("Memory Error")
-    }
-    ans.into()
+    let ans = mult_schubert_str(&ww1.0, &ww2.0);
+    ans.unwrap().into()
 }
 
 pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::raw::c_int) {
-    fusion_reduce_lc(unsafe { &mut *(lc.it.ht as *mut _) }, level);
+    fusion_reduce_lc(&mut lc.0, level);
 }
 
 /// check that sh represents a partition, i.e., is weakly-decreasing and nonnegative
@@ -154,8 +129,7 @@ pub fn mult(
     debug_assert!(sh1.is_partition());
     debug_assert!(sh2.is_partition());
     _schur_mult(&sh1, &sh2, rows.unwrap_or(-1), cols.unwrap_or(-1), -1)
-        .map(|(k, v)| (k.to_partition(), v))
-        .collect()
+        .map(&|k, v| (k.to_partition(), v))
 }
 
 /// sh1, sh2 must be partitions
@@ -164,9 +138,7 @@ pub fn mult_fusion(sh1: &[i32], sh2: &[i32], rows: i32, level: i32) -> Vec<(Vec<
     let sh2 = IntVector::new(sh2);
     debug_assert!(sh1.is_partition());
     debug_assert!(sh2.is_partition());
-    _schur_mult_fusion(&sh1, &sh2, rows, level)
-        .map(|(k, v)| (k.to_partition(), v))
-        .collect()
+    _schur_mult_fusion(&sh1, &sh2, rows, level).map(&|k, v| (k.to_partition(), v))
 }
 
 /// sh1, sh2 must be partitions
@@ -175,9 +147,7 @@ pub fn mult_quantum(sh1: &[i32], sh2: &[i32], rows: i32, cols: i32) -> Vec<((i32
     let sh2 = IntVector::new(sh2);
     debug_assert!(sh1.is_partition());
     debug_assert!(sh2.is_partition());
-    _schur_mult_fusion(&sh1, &sh2, rows, cols)
-        .map(|(k, v)| (k.to_quantum(cols), v))
-        .collect()
+    _schur_mult_fusion(&sh1, &sh2, rows, cols).map(&|k, v| (k.to_quantum(cols), v))
 }
 
 /// outer, inner must be partitions
@@ -186,9 +156,7 @@ pub fn skew(outer: &[i32], inner: &[i32], rows: Option<i32>) -> Vec<(Vec<i32>, i
     let inner = IntVector::new(inner);
     debug_assert!(outer.is_partition());
     debug_assert!(inner.is_partition());
-    _schur_skew(&outer, &inner, rows.unwrap_or(-1), -1)
-        .map(|(k, v)| (k.to_partition(), v))
-        .collect()
+    _schur_skew(&outer, &inner, rows.unwrap_or(-1), -1).map(&|k, v| (k.to_partition(), v))
 }
 
 /// outer, inner must be partitions
@@ -197,37 +165,31 @@ pub fn skew_tab(outer: &[i32], inner: &[i32], rows: Option<i32>) -> Vec<Vec<i32>
     let inner = IntVector::new(inner);
     debug_assert!(outer.is_partition());
     debug_assert!(inner.is_partition());
-    LRTableauIterator::new(outer.data, inner.data, rows.unwrap_or(-1), -1, -1).collect()
+    LRTableauIterator::new(&outer.0, Some(&inner.0), rows.unwrap_or(-1), -1, -1).collect()
 }
 
 /// sh must be a partition
 pub fn coprod(sh: &[i32], all: Option<bool>) -> Vec<(Vec<i32>, Vec<i32>, i32)> {
     let sh = IntVector::new(sh);
     debug_assert!(sh.is_partition());
-    _schur_coprod(&sh, all.unwrap_or(false))
-        .map(|(k, v)| {
-            let (a, b) = k.to_pair(sh.cols());
-            (a, b, v)
-        })
-        .collect()
+    _schur_coprod(&sh, all.unwrap_or(false)).map(&|k, v| {
+        let (a, b) = k.to_pair(sh.cols());
+        (a, b, v)
+    })
 }
 
 pub fn schubert_poly(perm: &[i32]) -> Vec<(Vec<i32>, i32)> {
-    _trans(&IntVector::new(perm), 0)
-        .map(|(k, v)| (k.to_vec(), v))
-        .collect()
+    _trans(&IntVector::new(perm), 0).map(&|k, v| (k.to_vec(), v))
 }
 
 /// w1, w2 must be permutations and rank must be non-negative
 pub fn schubmult(w1: &[i32], w2: &[i32], rank: Option<i32>) -> Vec<(Vec<i32>, i32)> {
-    let w1 = IntVector::new(w1);
-    let w2 = IntVector::new(w2);
+    let mut w1 = IntVector::new(w1);
+    let mut w2 = IntVector::new(w2);
     debug_assert!(w1.is_permutation());
     debug_assert!(w1.is_permutation());
     debug_assert!(rank.unwrap_or(0) >= 0);
-    _mult_schubert(&w1, &w2, rank.unwrap_or(0))
-        .map(|(k, v)| (k.to_vec(), v))
-        .collect()
+    _mult_schubert(&mut w1, &mut w2, rank.unwrap_or(0)).map(&|k, v| (k.to_vec(), v))
 }
 
 /// w1 and w2 must be compatible strings
@@ -235,38 +197,32 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
     let w1 = IntVector::new(w1);
     let w2 = IntVector::new(w2);
     debug_assert!(w1.is_compatible_str(&w2));
-    _mult_schubert_str(&w1, &w2)
-        .map(|(k, v)| (k.to_vec(), v))
-        .collect()
+    _mult_schubert_str(&w1, &w2).map(&|k, v| (k.to_vec(), v))
 }
 
 pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
     let mut ans = Vec::new();
     let p = IntVector::default(rows as u32);
-    let mut pitr = pitr_first(unsafe { &mut *p.data }, rows, cols, None, None, 0, 0);
-    while pitr_good(&pitr) {
-        ans.push(p.to_vec());
-        pitr_next(&mut pitr)
+    let pitr = PartitionIterator::new(p.0, rows, cols, None, None, 0, 0);
+    let mut pitr = match pitr {
+        None => return ans,
+        Some(x) => x,
+    };
+    while pitr.is_good() {
+        ans.push(pitr.part[..].to_vec());
+        pitr.next();
     }
     ans
 }
 
 pub fn all_perms(n: i32) -> Vec<Vec<i32>> {
-    let ans = _all_perms(n);
-    if ans.is_null() {
-        panic!("Memory Error")
-    }
-    let ans = VectorList { data: ans };
-    (0..ans.len()).map(|i| ans.at(i).to_partition()).collect()
+    let ans = _all_perms(n).unwrap();
+    ivl_to_vec(ans, &|v| v.to_partition())
 }
 
 pub fn all_strings(dimvec: &[i32]) -> Vec<Vec<i32>> {
     let dimvec = IntVector::new(dimvec);
     debug_assert!(dimvec.is_dimvec());
-    let ans = _all_strings(&dimvec[..]);
-    if ans.is_null() {
-        panic!("Memory Error")
-    }
-    let ans = VectorList { data: ans };
-    (0..ans.len()).map(|i| ans.at(i).to_vec()).collect()
+    let ans = _all_strings(&dimvec[..]).unwrap();
+    ivl_to_vec(ans, &|v| v.to_vec())
 }

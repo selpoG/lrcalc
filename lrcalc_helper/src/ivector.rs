@@ -1,29 +1,50 @@
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
+use super::perm::perm_group;
 
 #[derive(Clone)]
 pub struct IntVector {
     pub length: u32,
-    pub array: *mut i32,
+    pub array: Vec<i32>,
+}
+
+impl std::fmt::Debug for IntVector {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "IntVector({:?})", self.array)
+    }
+}
+
+impl From<Vec<i32>> for IntVector {
+    fn from(from: Vec<i32>) -> IntVector {
+        IntVector {
+            length: from.len() as u32,
+            array: from,
+        }
+    }
 }
 
 impl IntVector {
-    pub fn from_box(mut buf: Box<[i32]>) -> IntVector {
-        if buf.len() == 0 {
-            return IntVector {
-                length: 0,
-                array: std::ptr::NonNull::dangling().as_ptr(),
-            };
-        }
-        let v = IntVector {
-            length: buf.len() as u32,
-            array: buf.as_mut_ptr(),
-        };
-        std::mem::forget(buf);
-        v
+    pub fn len(&self) -> usize {
+        self.length as usize
     }
-    pub fn from_vec(vec: Vec<i32>) -> *mut IntVector {
-        let buf = vec.into_boxed_slice();
-        Box::into_raw(Box::new(IntVector::from_box(buf)))
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+    pub fn rows(&self) -> usize {
+        let mut n = self.len();
+        let v = &self[..];
+        while n > 0 && v[n - 1] == 0 {
+            n -= 1
+        }
+        n
+    }
+    pub fn cols(&self) -> usize {
+        if self.is_empty() {
+            0
+        } else {
+            self[0] as usize
+        }
+    }
+    pub fn perm_group(&self) -> i32 {
+        perm_group(&self[..])
     }
 }
 
@@ -61,21 +82,19 @@ pub fn iv_cmp(v: &[i32], w: &[i32]) -> std::cmp::Ordering {
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::Index<I> for IntVector {
     type Output = I::Output;
     fn index(&self, index: I) -> &Self::Output {
-        let ptr = unsafe { std::slice::from_raw_parts(self.array, self.length as usize) };
-        std::ops::Index::index(ptr, index)
+        std::ops::Index::index(&self.array, index)
     }
 }
 
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for IntVector {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        let ptr = unsafe { std::slice::from_raw_parts_mut(self.array, self.length as usize) };
-        std::ops::IndexMut::index_mut(ptr, index)
+        std::ops::IndexMut::index_mut(&mut self.array, index)
     }
 }
 
 /// never returns null
-pub fn iv_new(length: u32) -> *mut IntVector {
-    IntVector::from_vec(vec![0; length as usize])
+pub fn iv_new(length: u32) -> IntVector {
+    vec![0; length as usize].into()
 }
 
 pub fn iv_hash(v: &[i32]) -> u32 {
@@ -88,20 +107,4 @@ pub fn iv_hash(v: &[i32]) -> u32 {
 
 pub fn iv_sum(v: &IntVector) -> i32 {
     (&v[..]).iter().sum()
-}
-
-pub fn iv_free(v: &mut IntVector) {
-    if v.length == 0 {
-        return;
-    }
-    let s = unsafe { std::slice::from_raw_parts_mut((*v).array, (*v).length as usize) };
-    unsafe { drop(Box::from_raw(s)) }
-}
-
-pub fn iv_free_ptr(v: *mut IntVector) {
-    if v.is_null() {
-        return;
-    }
-    iv_free(unsafe { &mut *v });
-    unsafe { drop(Box::from_raw(v)) }
 }

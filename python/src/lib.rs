@@ -5,68 +5,19 @@ use pyo3::{
 };
 
 use lrcalc_helper::{
-    ivector::{iv_free_ptr, IntVector},
-    ivlincomb::{ivlc_free_all, LinearCombination},
-    lriter::{lrit_free, lrit_good, lrit_new, lrit_next, LRTableauIterator},
+    ivlincomb::LinearCombination,
+    lriter::{lrit_good, lrit_new, lrit_next},
     part::{part_qdegree, part_qentry},
     schublib::{mult_schubert, mult_schubert_str, trans},
     schur::{schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew},
 };
 
-struct SafeIntVector {
-    data: *mut IntVector,
-    owned: bool,
-}
-
-impl From<Vec<i32>> for SafeIntVector {
-    fn from(v: Vec<i32>) -> Self {
-        SafeIntVector {
-            data: IntVector::from_vec(v),
-            owned: true,
-        }
+pub fn ivlc_to_dict_of_vecs(lc: LinearCombination) -> Vec<(Vec<i32>, i32)> {
+    let mut ans = Vec::new();
+    for (k, &v) in lc.map.iter() {
+        ans.push(((&k.ptr[..]).to_vec(), v))
     }
-}
-
-impl SafeIntVector {
-    pub fn deref(&self) -> &IntVector {
-        unsafe { &*self.data }
-    }
-    pub fn deref_mut(&mut self) -> &mut IntVector {
-        unsafe { &mut *self.data }
-    }
-}
-
-impl Drop for SafeIntVector {
-    fn drop(&mut self) {
-        if self.owned && !self.data.is_null() {
-            iv_free_ptr(self.data)
-        }
-    }
-}
-
-struct SafeLinearCombination {
-    data: *mut LinearCombination,
-    owned: bool,
-}
-
-impl SafeLinearCombination {
-    pub fn new(p: *mut LinearCombination) -> SafeLinearCombination {
-        SafeLinearCombination {
-            data: p,
-            owned: true,
-        }
-    }
-    pub fn into_dict_of_vecs(self) -> Vec<(Vec<i32>, i32)> {
-        let mut ans = Vec::new();
-        for kv in self.deref().iter() {
-            let key = unsafe { &*kv.key };
-            ans.push(((&key[..]).to_vec(), kv.value))
-        }
-        ans
-    }
-    pub fn deref(&self) -> &LinearCombination {
-        unsafe { &*self.data }
-    }
+    ans
 }
 
 fn to_py_dict_of_tuple(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {
@@ -157,50 +108,11 @@ fn to_py_dict_of_pair(py: Python, vals: Vec<(Vec<i32>, i32)>, rows: i32, cols: i
         .into_py_dict(py)
 }
 
-impl Drop for SafeLinearCombination {
-    fn drop(&mut self) {
-        if self.owned && !self.data.is_null() {
-            ivlc_free_all(self.data)
-        }
-    }
-}
-
-struct SafeLRTableauIterator {
-    data: *mut LRTableauIterator,
-    owned: bool,
-}
-
-impl SafeLRTableauIterator {
-    pub fn new(p: *mut LRTableauIterator) -> SafeLRTableauIterator {
-        SafeLRTableauIterator {
-            data: p,
-            owned: true,
-        }
-    }
-    pub fn deref(&self) -> &LRTableauIterator {
-        unsafe { &*self.data }
-    }
-    pub fn deref_mut(&mut self) -> &mut LRTableauIterator {
-        unsafe { &mut *self.data }
-    }
-}
-
-impl Drop for SafeLRTableauIterator {
-    fn drop(&mut self) {
-        if self.owned && !self.data.is_null() {
-            lrit_free(self.data)
-        }
-    }
-}
-
 #[pyfunction]
 #[text_signature = "(out, inn1, inn2)"]
 /// Compute a single Littlewood-Richardson coefficient.
 fn lrcoef(out: Vec<i32>, inn1: Vec<i32>, inn2: Vec<i32>) -> PyResult<i64> {
-    let out = SafeIntVector::from(out);
-    let inn1 = SafeIntVector::from(inn1);
-    let inn2 = SafeIntVector::from(inn2);
-    let ans = schur_lrcoef(out.deref(), inn1.deref(), inn2.deref());
+    let ans = schur_lrcoef(&out.into(), &inn1.into(), &inn2.into());
     Ok(ans)
 }
 
@@ -214,14 +126,11 @@ fn mult(
     rows: Option<i32>,
     cols: Option<i32>,
 ) -> PyResult<Py<PyDict>> {
-    let sh1 = SafeIntVector::from(sh1);
-    let sh2 = SafeIntVector::from(sh2);
     let rows = rows.unwrap_or(-1);
     let cols = cols.unwrap_or(-1);
     let dict = to_py_dict_of_part(
         py,
-        SafeLinearCombination::new(schur_mult(sh1.deref(), sh2.deref(), rows, cols, -1))
-            .into_dict_of_vecs(),
+        ivlc_to_dict_of_vecs(schur_mult(&sh1.into(), &sh2.into(), rows, cols, -1)),
     );
     Ok(Py::from(dict))
 }
@@ -236,12 +145,9 @@ fn mult_fusion(
     rows: i32,
     level: i32,
 ) -> PyResult<Py<PyDict>> {
-    let sh1 = SafeIntVector::from(sh1);
-    let sh2 = SafeIntVector::from(sh2);
     let dict = to_py_dict_of_part(
         py,
-        SafeLinearCombination::new(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, level))
-            .into_dict_of_vecs(),
+        ivlc_to_dict_of_vecs(schur_mult_fusion(&sh1.into(), &sh2.into(), rows, level)),
     );
     Ok(Py::from(dict))
 }
@@ -257,12 +163,9 @@ fn mult_quantum(
     cols: i32,
     degrees: bool,
 ) -> PyResult<Py<PyDict>> {
-    let sh1 = SafeIntVector::from(sh1);
-    let sh2 = SafeIntVector::from(sh2);
     let dict = to_py_dict_of_quantum(
         py,
-        SafeLinearCombination::new(schur_mult_fusion(sh1.deref(), sh2.deref(), rows, cols))
-            .into_dict_of_vecs(),
+        ivlc_to_dict_of_vecs(schur_mult_fusion(&sh1.into(), &sh2.into(), rows, cols)),
         cols,
         degrees,
     );
@@ -273,13 +176,10 @@ fn mult_quantum(
 #[text_signature = "(outer, inner, rows=None)"]
 /// Compute the Schur expansion of a skew Schur function.
 fn skew(py: Python, outer: Vec<i32>, inner: Vec<i32>, rows: Option<i32>) -> PyResult<Py<PyDict>> {
-    let outer = SafeIntVector::from(outer);
-    let inner = SafeIntVector::from(inner);
     let rows = rows.unwrap_or(-1);
     let dict = to_py_dict_of_part(
         py,
-        SafeLinearCombination::new(schur_skew(outer.deref(), inner.deref(), rows, -1))
-            .into_dict_of_vecs(),
+        ivlc_to_dict_of_vecs(schur_skew(&outer.into(), &inner.into(), rows, -1)),
     );
     Ok(Py::from(dict))
 }
@@ -288,16 +188,14 @@ fn skew(py: Python, outer: Vec<i32>, inner: Vec<i32>, rows: Option<i32>) -> PyRe
 #[text_signature = "(sh, all=False)"]
 /// Compute the coproduct of a Schur function.
 fn coprod(py: Python, sh: Vec<i32>, all: bool) -> PyResult<Py<PyDict>> {
-    let sh = SafeIntVector::from(sh);
-    let mut row = sh.deref().length as usize;
-    while row > 0 && sh.deref()[row - 1] == 0 {
+    let mut row = sh.len();
+    while row > 0 && sh[row - 1] == 0 {
         row -= 1
     }
-    let col = if row == 0 { 0 } else { sh.deref()[0] };
+    let col = if row == 0 { 0 } else { sh[0] };
     let dict = to_py_dict_of_pair(
         py,
-        SafeLinearCombination::new(schur_coprod(sh.deref(), row as i32, col, -1, all))
-            .into_dict_of_vecs(),
+        ivlc_to_dict_of_vecs(schur_coprod(&sh.into(), row as i32, col, -1, all)),
         row as i32,
         col,
     );
@@ -308,11 +206,7 @@ fn coprod(py: Python, sh: Vec<i32>, all: bool) -> PyResult<Py<PyDict>> {
 #[text_signature = "(w)"]
 /// Compute the Schubert polynomial of a permutation.
 fn schubert_poly(py: Python, w: Vec<i32>) -> PyResult<Py<PyDict>> {
-    let w = SafeIntVector::from(w);
-    let dict = to_py_dict_of_tuple(
-        py,
-        SafeLinearCombination::new(trans(&w.deref()[..], 0)).into_dict_of_vecs(),
-    );
+    let dict = to_py_dict_of_tuple(py, ivlc_to_dict_of_vecs(trans(&w[..], 0)));
     Ok(Py::from(dict))
 }
 
@@ -320,12 +214,9 @@ fn schubert_poly(py: Python, w: Vec<i32>) -> PyResult<Py<PyDict>> {
 #[text_signature = "(w1, w2, rank=0)"]
 /// Compute the product of two Schubert polynomials.
 fn schubmult(py: Python, w1: Vec<i32>, w2: Vec<i32>, rank: i32) -> PyResult<Py<PyDict>> {
-    let mut w1 = SafeIntVector::from(w1);
-    let mut w2 = SafeIntVector::from(w2);
     let dict = to_py_dict_of_tuple(
         py,
-        SafeLinearCombination::new(mult_schubert(w1.deref_mut(), w2.deref_mut(), rank))
-            .into_dict_of_vecs(),
+        ivlc_to_dict_of_vecs(mult_schubert(&mut w1.into(), &mut w2.into(), rank)),
     );
     Ok(Py::from(dict))
 }
@@ -334,12 +225,9 @@ fn schubmult(py: Python, w1: Vec<i32>, w2: Vec<i32>, rank: i32) -> PyResult<Py<P
 #[text_signature = "(str1, str2)"]
 /// Compute product of Schubert polynomials using string notation.
 fn schubmult_str(py: Python, str1: Vec<i32>, str2: Vec<i32>) -> PyResult<Py<PyDict>> {
-    let mut str1 = SafeIntVector::from(str1);
-    let mut str2 = SafeIntVector::from(str2);
     let dict = to_py_dict_of_tuple(
         py,
-        SafeLinearCombination::new(mult_schubert_str(str1.deref_mut(), str2.deref_mut()))
-            .into_dict_of_vecs(),
+        ivlc_to_dict_of_vecs(mult_schubert_str(&str1.into(), &str2.into()).unwrap()),
     );
     Ok(Py::from(dict))
 }
@@ -353,23 +241,13 @@ fn lr_iterator(
     inner: Vec<i32>,
     rows: Option<i32>,
 ) -> PyResult<Py<PyList>> {
-    let outer = SafeIntVector::from(outer);
-    let inner = SafeIntVector::from(inner);
     let rows = rows.unwrap_or(-1);
-    let mut it = SafeLRTableauIterator::new(lrit_new(
-        outer.deref(),
-        inner.deref(),
-        std::ptr::null(),
-        rows,
-        -1,
-        -1,
-    ));
+    let mut it = lrit_new(&outer.into(), Some(&inner.into()), None, rows, -1, -1);
     let mut ans: Vec<Vec<i32>> = Vec::new();
-    while lrit_good(it.deref()) {
-        let array =
-            unsafe { std::slice::from_raw_parts(it.deref().array, it.deref().size as usize) };
+    while lrit_good(&it) {
+        let array = &it.array[0..it.size as usize];
         ans.push(array.iter().map(|b| b.value).collect());
-        lrit_next(it.deref_mut());
+        lrit_next(&mut it);
     }
     Ok(Py::from(PyList::new(
         py,

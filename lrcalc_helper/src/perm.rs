@@ -1,5 +1,4 @@
 use super::ivector::IntVector;
-use super::ivlist::IntVectorList;
 
 /// check w is a permutation of {1, 2, ..., n}
 pub fn perm_valid(w: &[i32]) -> bool {
@@ -76,14 +75,14 @@ pub(crate) fn bruhat_zero(w1: &[i32], w2: &[i32], rank: i32) -> bool {
     false
 }
 
-pub fn all_strings(dimvec: &[i32]) -> *mut IntVectorList {
+pub fn all_strings(dimvec: &[i32]) -> Option<Vec<IntVector>> {
     debug_assert!(dimvec_valid(dimvec));
 
     let ld = dimvec.len();
     let mut cntvec = vec![0; ld];
     let n = dimvec[ld - 1];
     if n < 0 {
-        return std::ptr::null_mut();
+        return None;
     }
     let n = n as u32;
 
@@ -97,23 +96,15 @@ pub fn all_strings(dimvec: &[i32]) -> *mut IntVectorList {
             }
         }
     }
-    let mut res: Vec<*mut IntVector> = Vec::with_capacity(200);
+    let mut res: Vec<IntVector> = Vec::with_capacity(200);
 
     if n == 0 {
-        res.push(IntVector::from_vec(str));
-        unsafe { res.set_len(res.capacity()) };
-        let mut buf = res.into_boxed_slice();
-        let ivl = IntVectorList {
-            length: 1,
-            allocated: buf.len() as u64,
-            array: buf.as_mut_ptr(),
-        };
-        std::mem::forget(buf);
-        return Box::into_raw(Box::new(ivl));
+        res.push(str.into());
+        return Some(res);
     }
 
     loop {
-        res.push(IntVector::from_vec(str.clone()));
+        res.push(str.clone().into());
         let mut j = n - 1;
         cntvec[str[j as usize] as usize] += 1;
         while j > 0 && str[(j - 1) as usize] >= str[j as usize] {
@@ -142,19 +133,10 @@ pub fn all_strings(dimvec: &[i32]) -> *mut IntVectorList {
         }
     }
 
-    let old_len = res.len();
-    unsafe { res.set_len(res.capacity()) };
-    let mut buf = res.into_boxed_slice();
-    let ivl = IntVectorList {
-        length: old_len as u64,
-        allocated: buf.len() as u64,
-        array: buf.as_mut_ptr(),
-    };
-    std::mem::forget(buf);
-    Box::into_raw(Box::new(ivl))
+    Some(res)
 }
 
-pub fn all_perms(n: i32) -> *mut IntVectorList {
+pub fn all_perms(n: i32) -> Option<Vec<IntVector>> {
     debug_assert!(n >= 0);
     let dimvec: Vec<_> = (0..=n).collect();
     all_strings(&dimvec[..])
@@ -181,7 +163,7 @@ pub(crate) fn string2perm(str: &IntVector) -> IntVector {
         perm[dimvec[j]] = (i + 1) as i32;
     }
 
-    IntVector::from_box(perm.into_boxed_slice())
+    perm.into()
 }
 
 pub fn str_iscompat(s1: &[i32], s2: &[i32]) -> bool {
@@ -229,10 +211,10 @@ pub(crate) fn str2dimvec(str: &IntVector) -> Option<IntVector> {
     for i in 1..n {
         res[i as usize] += res[(i - 1) as usize];
     }
-    Some(IntVector::from_box(res.into_boxed_slice()))
+    Some(res.into())
 }
 
-pub(crate) fn perm2string(perm: &[i32], dimvec: &[i32]) -> *mut IntVector {
+pub(crate) fn perm2string(perm: &[i32], dimvec: &[i32]) -> IntVector {
     let n = if !dimvec.is_empty() {
         dimvec[dimvec.len() - 1]
     } else {
@@ -251,5 +233,5 @@ pub(crate) fn perm2string(perm: &[i32], dimvec: &[i32]) -> *mut IntVector {
             j += 1;
         }
     }
-    IntVector::from_vec(res)
+    res.into()
 }
