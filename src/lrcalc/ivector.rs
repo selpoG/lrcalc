@@ -60,7 +60,7 @@ impl IntVector {
             }
         }
         ans.or(Some(std::cmp::Ordering::Equal))
-    }
+     }
     #[allow(dead_code)]
     pub fn leq_as_part(&self, other: &Self) -> bool {
         matches!(
