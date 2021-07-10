@@ -1,5 +1,7 @@
 # lrcalc
 
+[![Rust](https://github.com/selpoG/lrcalc/actions/workflows/rust.yml/badge.svg)](https://github.com/selpoG/lrcalc/actions/workflows/rust.yml)
+
 - [lrcalc](#lrcalc)
   - [Build](#build)
   - [Run](#run)
