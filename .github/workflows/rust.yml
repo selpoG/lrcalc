@@ -31,15 +31,12 @@ jobs:
           command: fmt
           args: --all --manifest-path python/Cargo.toml -- --check
       - name: Build
-        run: |
-          cargo build --verbose
-          cargo build --manifest-path lrcalc_helper/Cargo.toml
-          cargo build --manifest-path python/Cargo.toml
+        run: cargo build --verbose
       - name: Run clippy (main project)
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+          args: --all --all-features
       - name: Run clippy (helper project)
         uses: actions-rs/clippy-check@v1
         with:
