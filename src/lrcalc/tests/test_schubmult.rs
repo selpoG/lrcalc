@@ -20,7 +20,6 @@ pub fn test_mult_schubert(w1: &[i32], w2: &[i32]) -> Result<()> {
         .context("prd12 != prd21")?;
     drop(prd21);
     let maxrank = prd12
-        .0
         .map
         .iter()
         .map(|(sh, _)| sh.ptr.perm_group())

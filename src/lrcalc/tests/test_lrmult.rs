@@ -3,7 +3,7 @@
 use anyhow::{Context, Result};
 
 use super::super::{
-    func::_mult_schubert_str, func::_schur_mult, ivector::IntVector, lincomb::LinearCombination,
+    func::_mult_schubert_str, func::_schur_mult, ivector::IntVector, ivlincomb::LinearCombination,
     part::PartIter,
 };
 

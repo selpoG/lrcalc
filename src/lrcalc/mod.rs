@@ -1,7 +1,6 @@
 pub mod func;
 mod ivector;
 pub mod ivlincomb;
-mod lincomb;
 pub mod lrcoef;
 pub mod lriter;
 pub mod optim;

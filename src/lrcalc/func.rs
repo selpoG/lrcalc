@@ -1,6 +1,6 @@
 use super::{
     ivector::{ivl_to_vec, IntVector},
-    lincomb::LinearCombination,
+    ivlincomb::LinearCombination,
     lriter::LRTableauIterator,
     part::PartitionIterator,
     perm::{all_perms as _all_perms, all_strings as _all_strings},
@@ -19,7 +19,7 @@ pub(crate) fn _mult_poly_schubert(
     perm: &mut IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    mult_poly_schubert(&mut poly.0, perm, rank);
+    mult_poly_schubert(&mut poly, perm, rank);
     poly
 }
 
@@ -30,7 +30,7 @@ pub(crate) fn _schur_mult(
     cols: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult(&sh1, &sh2, rows, cols, partsz).into()
+    schur_mult(&sh1, &sh2, rows, cols, partsz)
 }
 
 pub(crate) fn _schur_mult_fusion(
@@ -39,7 +39,7 @@ pub(crate) fn _schur_mult_fusion(
     rows: ::std::os::raw::c_int,
     level: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult_fusion(&sh1, &sh2, rows, level).into()
+    schur_mult_fusion(&sh1, &sh2, rows, level)
 }
 
 pub(crate) fn _schur_skew(
@@ -48,15 +48,15 @@ pub(crate) fn _schur_skew(
     rows: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_skew(&outer, &inner, rows, partsz).into()
+    schur_skew(&outer, &inner, rows, partsz)
 }
 
 pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
-    schur_coprod(&sh, sh.rows() as i32, sh.cols() as i32, -1, all).into()
+    schur_coprod(&sh, sh.rows() as i32, sh.cols() as i32, -1, all)
 }
 
 pub(crate) fn _trans(w: &IntVector, vars: ::std::os::raw::c_int) -> LinearCombination {
-    trans(&w[..], vars).into()
+    trans(&w[..], vars)
 }
 
 pub(crate) fn _mult_schubert(
@@ -64,16 +64,16 @@ pub(crate) fn _mult_schubert(
     ww2: &mut IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    mult_schubert(ww1, ww2, rank).into()
+    mult_schubert(ww1, ww2, rank)
 }
 
 pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearCombination {
     let ans = mult_schubert_str(&ww1, &ww2);
-    ans.unwrap().into()
+    ans.unwrap()
 }
 
 pub(crate) fn _fusion_reduce_lc(lc: &mut LinearCombination, level: ::std::os::raw::c_int) {
-    fusion_reduce_lc(&mut lc.0, level);
+    fusion_reduce_lc(lc, level);
 }
 
 /// check that sh represents a partition, i.e., is weakly-decreasing and nonnegative
