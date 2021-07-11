@@ -4,8 +4,8 @@ use pyo3::{
     wrap_pyfunction,
 };
 
-use lrcalc::helper::ivlincomb::LinearCombination;
 use lrcalc::{
+    ivlincomb::LinearCombination,
     lriter::{lrit_good, lrit_new, lrit_next},
     part::{part_qdegree, part_qentry},
     schublib::{mult_schubert, mult_schubert_str, trans},

@@ -1,13 +1,12 @@
 use anyhow::anyhow;
 
-use super::helper::{
-    ivector::{iv_hash, IntVector as _IntVector},
+use super::helper::ivector::{iv_hash, IntVector as _IntVector};
+use super::{
+    ivector::IntVector,
     ivlincomb::{
         ivlc_insert, ivlc_lookup, ivlc_new_default, LinearCombination as _LinearCombination,
     },
 };
-
-use super::ivector::IntVector;
 
 pub struct LinearCombination(pub _LinearCombination);
 

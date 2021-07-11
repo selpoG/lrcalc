@@ -1,8 +1,8 @@
-use super::helper::{
-    ivector::{iv_hash, IntVector},
+use super::helper::ivector::{iv_hash, IntVector};
+use super::{
     ivlincomb::{ivlc_add_element, ivlc_new_default, LinearCombination, LC_COPY_KEY},
+    part::{part_decr, part_length, part_leq, part_valid},
 };
-use super::part::{part_decr, part_length, part_leq, part_valid};
 
 #[derive(Clone)]
 pub struct LRIteratorBox {

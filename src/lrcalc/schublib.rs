@@ -1,13 +1,13 @@
-use super::helper::{
-    ivector::{iv_hash, iv_new, IntVector},
+use super::helper::ivector::{iv_hash, iv_new, IntVector};
+
+use super::{
     ivlincomb::{
         _ivlc_insert, ivlc_add_element, ivlc_add_multiple, ivlc_new_default, LinearCombination,
         LC_FREE_ZERO,
     },
-};
-
-use super::perm::{
-    bruhat_zero, perm2string, perm_group, perm_length, str2dimvec, str_iscompat, string2perm,
+    perm::{
+        bruhat_zero, perm2string, perm_group, perm_length, str2dimvec, str_iscompat, string2perm,
+    },
 };
 
 pub fn trans(w: &[i32], vars: i32) -> LinearCombination {

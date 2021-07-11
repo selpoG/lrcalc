@@ -1,6 +1,6 @@
 use hashbrown::{hash_map::RawEntryMut, HashMap};
 
-use super::ivector::{iv_cmp, iv_hash, IntVector};
+use super::helper::ivector::{iv_cmp, iv_hash, IntVector};
 
 pub struct LinearCombinationElement<'a> {
     pub key: &'a mut IntVector,
