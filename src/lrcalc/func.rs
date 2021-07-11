@@ -1,15 +1,17 @@
 use super::helper::{
     part::PartitionIterator,
     perm::{all_perms as _all_perms, all_strings as _all_strings},
+};
+
+use super::{
+    ivector::{ivl_to_vec, IntVector},
+    lincomb::LinearCombination,
+    lriter::LRTableauIterator,
+    schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},
     schur::{
         fusion_reduce_lc, schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew,
     },
 };
-
-use super::ivector::{ivl_to_vec, IntVector};
-use super::lincomb::LinearCombination;
-use super::lriter::LRTableauIterator;
-use super::schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans};
 
 pub(crate) fn _schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
     schur_lrcoef(&outer.0, &inner1.0, &inner2.0)
