@@ -1,4 +1,4 @@
-use super::perm::perm_group;
+use super::super::perm::perm_group;
 
 #[derive(Clone)]
 pub struct IntVector {

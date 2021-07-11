@@ -6,6 +6,7 @@ pub mod lrcoef;
 pub mod lriter;
 pub mod optim;
 mod part;
+pub mod perm;
 pub mod schublib;
 pub mod schur;
 

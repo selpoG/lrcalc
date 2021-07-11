@@ -1,4 +1,4 @@
-use super::ivector::IntVector;
+use super::helper::ivector::IntVector;
 
 /// check w is a permutation of {1, 2, ..., n}
 pub fn perm_valid(w: &[i32]) -> bool {

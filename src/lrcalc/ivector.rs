@@ -2,9 +2,9 @@ use super::helper::{
     ivector::iv_new,
     ivector::IntVector as _IntVector,
     part::{part_qdegree, part_qentry, part_valid},
-    perm::{dimvec_valid, perm_valid, str_iscompat},
 };
 
+use super::perm::{dimvec_valid, perm_valid, str_iscompat};
 pub struct IntVector(pub _IntVector);
 
 impl IntVector {
