@@ -220,7 +220,7 @@ impl<'a> LinearCombination {
     }
     #[allow(dead_code)]
     pub fn find(&self, key: &[i32]) -> Option<i32> {
-        let kv = ivlc_lookup(&self, key, iv_hash(key) as u32);
+        let kv = ivlc_lookup(self, key, iv_hash(key) as u32);
         kv.map(|v| *v.1)
     }
     #[allow(dead_code)]
