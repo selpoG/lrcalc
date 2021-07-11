@@ -3,8 +3,8 @@
 use anyhow::{Context, Result};
 
 use super::super::{
-    func::_mult_schubert_str, func::_schur_mult, ivector::IntVector, ivlincomb::LinearCombination,
-    part::PartIter,
+    ivector::IntVector, ivlincomb::LinearCombination, part::PartIter, schublib::mult_schubert_str,
+    schur::schur_mult,
 };
 
 fn part_to_string(p: &IntVector, rows: i32, cols: i32) -> IntVector {
@@ -34,19 +34,20 @@ pub fn test_schur_mult(p1: &IntVector, p2: &IntVector) -> Result<()> {
     let rows = (p1.rows() + p2.rows()) as i32;
     let cols = (p1.cols() + p2.cols()) as i32;
     let prd = LinearCombination::new(
-        _mult_schubert_str(
+        mult_schubert_str(
             &part_to_string(p1, rows, cols),
             &part_to_string(p2, rows, cols),
         )
+        .unwrap()
         .map(&|k, v| (string_to_part(&k, rows), v)),
     );
-    _schur_mult(&p1, &p2, -1, -1, -1)
+    schur_mult(&p1, &p2, -1, -1, -1)
         .diff(&prd, |_, _| true)
         .expect_equals()
         .context("prd_sm != prd")?;
     for r in -1..=rows {
         for c in -1..=cols {
-            _schur_mult(&p1, &p2, r, c, rows)
+            schur_mult(&p1, &p2, r, c, rows)
                 .diff(&prd, |key, _| {
                     (r == -1 || key.rows() <= r as usize) && (c == -1 || key.cols() <= c as usize)
                 })

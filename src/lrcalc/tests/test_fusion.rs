@@ -3,15 +3,15 @@
 use anyhow::{Context, Result};
 
 use super::super::{
-    func::{_fusion_reduce_lc, _schur_mult, _schur_mult_fusion},
     ivector::IntVector,
     part::PartIter,
+    schur::{fusion_reduce_lc, schur_mult, schur_mult_fusion},
 };
 
 pub fn test_mult_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32) -> Result<()> {
-    let prd_f = _schur_mult_fusion(&sh1, &sh2, rows, level);
-    let mut prd_s = _schur_mult(&sh1, &sh2, rows, -1, rows);
-    _fusion_reduce_lc(&mut prd_s, level);
+    let prd_f = schur_mult_fusion(&sh1, &sh2, rows, level);
+    let mut prd_s = schur_mult(&sh1, &sh2, rows, -1, rows);
+    fusion_reduce_lc(&mut prd_s, level);
     prd_f
         .diff(&prd_s, |_, _| true)
         .expect_equals()

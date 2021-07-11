@@ -202,11 +202,3 @@ pub fn iv_hash(v: &[i32]) -> u32 {
 pub fn iv_sum(v: &IntVector) -> i32 {
     (&v[..]).iter().sum()
 }
-
-pub fn ivl_to_vec<Output, F: Fn(IntVector) -> Output>(v: Vec<IntVector>, f: &F) -> Vec<Output> {
-    let mut ans = Vec::with_capacity(v.len());
-    for k in v {
-        ans.push(f(k));
-    }
-    ans
-}

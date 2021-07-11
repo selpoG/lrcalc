@@ -3,17 +3,17 @@
 use anyhow::{ensure, Context, Result};
 
 use super::super::{
-    func::{_schur_lrcoef, _schur_mult},
     ivector::IntVector,
     part::PartIter,
+    schur::{schur_lrcoef, schur_mult},
 };
 
 pub fn test_schur_lrcoef(p1: &IntVector, p2: &IntVector, rows: i32, cols: i32) -> Result<()> {
-    let prd = _schur_mult(p1, p2, rows, cols, rows);
+    let prd = schur_mult(p1, p2, rows, cols, rows);
 
     let pitr = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
     for outer in pitr {
-        let coef = _schur_lrcoef(&outer, p1, p2);
+        let coef = schur_lrcoef(&outer, p1, p2);
         ensure!(coef >= 0, "memory error: outer={:?}", outer.to_vec());
         let expected = if let Some(d) = prd.find(&outer[..]) {
             d as i64

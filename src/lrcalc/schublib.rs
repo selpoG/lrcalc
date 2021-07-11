@@ -147,11 +147,11 @@ struct Poly {
     val: i32,
 }
 
-pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mut rank: i32) {
+pub fn mult_poly_schubert(mut poly: LinearCombination, perm: &mut IntVector, mut rank: i32) -> LinearCombination {
     let n = poly.map.len();
     if n == 0 {
         poly.clear();
-        return;
+        return poly;
     }
 
     if rank == 0 {
@@ -176,8 +176,9 @@ pub fn mult_poly_schubert(poly: &mut LinearCombination, perm: &mut IntVector, mu
 
     let svlen = perm.length;
     perm.length = perm_group(&perm[..]) as u32;
-    _mult_ps(&mut p[..], n as u32, maxvar, perm, rank, poly);
+    _mult_ps(&mut p[..], n as u32, maxvar, perm, rank, &mut poly);
     perm.length = svlen;
+    poly
 }
 
 fn _mult_ps(
@@ -250,8 +251,8 @@ pub fn mult_schubert(w1: &mut IntVector, w2: &mut IntVector, mut rank: i32) -> L
         return ivlc_new_default();
     }
 
-    let mut lc = trans(&w1[..], 0);
-    mult_poly_schubert(&mut lc, w2, rank);
+    let lc = trans(&w1[..], 0);
+    let lc = mult_poly_schubert(lc, w2, rank);
 
     w1.length = svlen1;
     w2.length = svlen2;
