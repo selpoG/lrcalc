@@ -2,6 +2,7 @@ pub mod func;
 pub mod helper;
 mod ivector;
 mod lincomb;
+pub mod lrcoef;
 pub mod lriter;
 pub mod optim;
 mod part;

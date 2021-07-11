@@ -1,5 +1,7 @@
-use super::ivector::{iv_sum, IntVector};
-use super::part::{part_entry, part_length, part_leq, part_valid};
+use super::helper::{
+    ivector::{iv_sum, IntVector},
+    part::{part_entry, part_length, part_leq, part_valid},
+};
 
 #[derive(Clone)]
 struct LRCoefBox {
