@@ -1,5 +1,7 @@
-use super::ivector::IntVector;
-use super::part::{part_entry, part_length, part_leq, part_valid};
+use super::helper::{
+    ivector::IntVector,
+    part::{part_entry, part_length, part_leq, part_valid},
+};
 
 pub struct SkewShape {
     pub outer: Option<IntVector>,

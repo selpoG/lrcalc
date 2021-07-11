@@ -1,12 +1,16 @@
-use super::super::lriter::{lrit_expand, lrit_good, lrit_new, lrit_next, LRTableauIterator};
-use super::ivector::{iv_hash, IntVector};
-use super::ivlincomb::{
-    ivlc_add_element, ivlc_new, ivlc_new_default, LinearCombination, LC_COPY_KEY, LC_FREE_KEY,
-    LC_FREE_ZERO,
+use super::super::{
+    lriter::{lrit_expand, lrit_good, lrit_new, lrit_next, LRTableauIterator},
+    optim::{optim_coef, optim_fusion, optim_mult, optim_skew},
 };
-use super::lrcoef::lrcoef_count;
-use super::optim::{optim_coef, optim_fusion, optim_mult, optim_skew};
-use super::part::{part_entry, part_valid};
+use super::{
+    ivector::{iv_hash, IntVector},
+    ivlincomb::{
+        ivlc_add_element, ivlc_new, ivlc_new_default, LinearCombination, LC_COPY_KEY, LC_FREE_KEY,
+        LC_FREE_ZERO,
+    },
+    lrcoef::lrcoef_count,
+    part::{part_entry, part_valid},
+};
 
 pub fn schur_mult(
     sh1: &IntVector,
