@@ -5,7 +5,7 @@ use super::{
         LC_FREE_ZERO,
     },
     lrcoef::lrcoef_count,
-    lriter::{lrit_expand, lrit_good, lrit_new, lrit_next, LRTableauIterator},
+    lriter::LRTableauIterator,
     optim::{optim_coef, optim_fusion, optim_mult, optim_skew},
     part::{part_entry, part_valid},
 };
@@ -19,7 +19,7 @@ pub fn schur_mult(
 ) -> LinearCombination {
     let ss = optim_mult(sh1, Some(sh2), rows, cols);
     if ss.sign != 0 {
-        lrit_expand(
+        LRTableauIterator::expand(
             ss.outer.as_ref().unwrap(),
             None,
             ss.cont.as_ref(),
@@ -161,7 +161,7 @@ pub fn schur_mult_fusion(
 
     let ss = optim_fusion(sh1, sh2, rows, level);
     let mut lc = if ss.sign != 0 {
-        lrit_expand(
+        LRTableauIterator::expand(
             ss.outer.as_ref().unwrap(),
             None,
             ss.cont.as_ref(),
@@ -192,7 +192,7 @@ pub fn schur_skew(
 ) -> LinearCombination {
     let ss = optim_skew(outer, Some(inner), None, rows);
     if ss.sign != 0 {
-        lrit_expand(
+        LRTableauIterator::expand(
             ss.outer.as_ref().unwrap(),
             ss.inner.as_ref(),
             ss.cont.as_ref(),
@@ -228,9 +228,9 @@ fn _schur_coprod_isredundant(cont: &IntVector, rows: i32, cols: i32) -> bool {
 
 fn _schur_coprod_count(lrit: &mut LRTableauIterator, rows: i32, cols: i32) -> LinearCombination {
     let mut lc = ivlc_new_default();
-    while lrit_good(lrit) {
+    while lrit.is_good() {
         if _schur_coprod_isredundant(&lrit.cont, rows, cols) {
-            lrit_next(lrit);
+            lrit.next();
             continue;
         }
         ivlc_add_element(
@@ -240,7 +240,7 @@ fn _schur_coprod_count(lrit: &mut LRTableauIterator, rows: i32, cols: i32) -> Li
             iv_hash(&lrit.cont[..]),
             LC_COPY_KEY,
         );
-        lrit_next(lrit);
+        lrit.next();
     }
     lc
 }
@@ -252,7 +252,7 @@ fn _schur_coprod_expand(
     cols: i32,
     partsz: i32,
 ) -> LinearCombination {
-    let mut lrit = lrit_new(outer, None, content, -1, -1, partsz);
+    let mut lrit = LRTableauIterator::new(outer, None, content, -1, -1, partsz);
     _schur_coprod_count(&mut lrit, rows, cols)
 }
 

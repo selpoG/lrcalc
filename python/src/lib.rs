@@ -6,7 +6,7 @@ use pyo3::{
 
 use lrcalc::{
     ivlincomb::LinearCombination,
-    lriter::{lrit_good, lrit_new, lrit_next},
+    lriter::LRTableauIterator,
     part::{part_qdegree, part_qentry},
     schublib::{mult_schubert, mult_schubert_str, trans},
     schur::{schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew},
@@ -242,12 +242,11 @@ fn lr_iterator(
     rows: Option<i32>,
 ) -> PyResult<Py<PyList>> {
     let rows = rows.unwrap_or(-1);
-    let mut it = lrit_new(&outer.into(), Some(&inner.into()), None, rows, -1, -1);
+    let mut it = LRTableauIterator::new(&outer.into(), Some(&inner.into()), None, rows, -1, -1);
     let mut ans: Vec<Vec<i32>> = Vec::new();
-    while lrit_good(&it) {
-        let array = &it.array[0..it.size as usize];
-        ans.push(array.iter().map(|b| b.value).collect());
-        lrit_next(&mut it);
+    while it.is_good() {
+        ans.push(it.get_array());
+        it.next();
     }
     Ok(Py::from(PyList::new(
         py,
