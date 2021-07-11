@@ -4,12 +4,10 @@ use pyo3::{
     wrap_pyfunction,
 };
 
-use lrcalc::helper::{
-    ivlincomb::LinearCombination,
-    part::{part_qdegree, part_qentry},
-};
+use lrcalc::helper::ivlincomb::LinearCombination;
 use lrcalc::{
     lriter::{lrit_good, lrit_new, lrit_next},
+    part::{part_qdegree, part_qentry},
     schublib::{mult_schubert, mult_schubert_str, trans},
     schur::{schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew},
 };

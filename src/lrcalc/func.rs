@@ -1,9 +1,8 @@
-use super::helper::part::PartitionIterator;
-
 use super::{
     ivector::{ivl_to_vec, IntVector},
     lincomb::LinearCombination,
     lriter::LRTableauIterator,
+    part::PartitionIterator,
     perm::{all_perms as _all_perms, all_strings as _all_strings},
     schublib::{mult_poly_schubert, mult_schubert, mult_schubert_str, trans},
     schur::{

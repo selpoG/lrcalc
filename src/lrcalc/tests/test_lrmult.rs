@@ -58,10 +58,10 @@ pub fn test_schur_mult(p1: &IntVector, p2: &IntVector) -> Result<()> {
 }
 
 pub fn run_test_lrmult(rows: i32, cols: i32) -> Result<()> {
-    let mut pitr1 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
-    while let Some(p1) = pitr1.next() {
-        let mut pitr2 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
-        while let Some(p2) = pitr2.next() {
+    let pitr1 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
+    for p1 in pitr1 {
+        let pitr2 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
+        for p2 in pitr2 {
             test_schur_mult(&p1, &p2)
                 .with_context(|| format!("p1={:?}, p2={:?}", p1.to_vec(), p2.to_vec()))?;
         }

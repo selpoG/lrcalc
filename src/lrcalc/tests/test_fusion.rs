@@ -20,10 +20,10 @@ pub fn test_mult_fusion(sh1: &IntVector, sh2: &IntVector, rows: i32, level: i32)
 }
 
 pub fn run_test_mult_fusion(rows: i32, cols: i32) -> Result<()> {
-    let mut pitr1 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
-    while let Some(p1) = pitr1.next() {
-        let mut pitr2 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
-        while let Some(p2) = pitr2.next() {
+    let pitr1 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
+    for p1 in pitr1 {
+        let pitr2 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
+        for p2 in pitr2 {
             for level in 0..=cols {
                 test_mult_fusion(&p1, &p2, rows, level).with_context(|| {
                     format!(
