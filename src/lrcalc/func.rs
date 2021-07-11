@@ -11,7 +11,7 @@ use super::{
 };
 
 pub(crate) fn _schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -> i64 {
-    schur_lrcoef(&outer.0, &inner1.0, &inner2.0)
+    schur_lrcoef(outer, inner1, inner2)
 }
 
 pub(crate) fn _mult_poly_schubert(
@@ -19,7 +19,7 @@ pub(crate) fn _mult_poly_schubert(
     perm: &mut IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    mult_poly_schubert(&mut poly.0, &mut perm.0, rank);
+    mult_poly_schubert(&mut poly.0, perm, rank);
     poly
 }
 
@@ -30,7 +30,7 @@ pub(crate) fn _schur_mult(
     cols: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult(&sh1.0, &sh2.0, rows, cols, partsz).into()
+    schur_mult(&sh1, &sh2, rows, cols, partsz).into()
 }
 
 pub(crate) fn _schur_mult_fusion(
@@ -39,7 +39,7 @@ pub(crate) fn _schur_mult_fusion(
     rows: ::std::os::raw::c_int,
     level: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_mult_fusion(&sh1.0, &sh2.0, rows, level).into()
+    schur_mult_fusion(&sh1, &sh2, rows, level).into()
 }
 
 pub(crate) fn _schur_skew(
@@ -48,11 +48,11 @@ pub(crate) fn _schur_skew(
     rows: ::std::os::raw::c_int,
     partsz: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    schur_skew(&outer.0, &inner.0, rows, partsz).into()
+    schur_skew(&outer, &inner, rows, partsz).into()
 }
 
 pub(crate) fn _schur_coprod(sh: &IntVector, all: bool) -> LinearCombination {
-    schur_coprod(&sh.0, sh.rows() as i32, sh.cols() as i32, -1, all).into()
+    schur_coprod(&sh, sh.rows() as i32, sh.cols() as i32, -1, all).into()
 }
 
 pub(crate) fn _trans(w: &IntVector, vars: ::std::os::raw::c_int) -> LinearCombination {
@@ -64,11 +64,11 @@ pub(crate) fn _mult_schubert(
     ww2: &mut IntVector,
     rank: ::std::os::raw::c_int,
 ) -> LinearCombination {
-    mult_schubert(&mut ww1.0, &mut ww2.0, rank).into()
+    mult_schubert(ww1, ww2, rank).into()
 }
 
 pub(crate) fn _mult_schubert_str(ww1: &IntVector, ww2: &IntVector) -> LinearCombination {
-    let ans = mult_schubert_str(&ww1.0, &ww2.0);
+    let ans = mult_schubert_str(&ww1, &ww2);
     ans.unwrap().into()
 }
 
@@ -164,7 +164,7 @@ pub fn skew_tab(outer: &[i32], inner: &[i32], rows: Option<i32>) -> Vec<Vec<i32>
     let inner = IntVector::new(inner);
     debug_assert!(outer.is_partition());
     debug_assert!(inner.is_partition());
-    LRTableauIterator::new(&outer.0, Some(&inner.0), rows.unwrap_or(-1), -1, -1).collect()
+    LRTableauIterator::new(&outer, Some(&inner), rows.unwrap_or(-1), -1, -1).collect()
 }
 
 /// sh must be a partition
@@ -202,7 +202,7 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
 pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
     let mut ans = Vec::new();
     let p = IntVector::default(rows as u32);
-    let pitr = PartitionIterator::new(p.0, rows, cols, None, None, 0, 0);
+    let pitr = PartitionIterator::new(p, rows, cols, None, None, 0, 0);
     let mut pitr = match pitr {
         None => return ans,
         Some(x) => x,

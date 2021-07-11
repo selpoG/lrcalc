@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 
-use super::ivector::{IntVector, _IntVector};
+use super::ivector::IntVector;
 
 /// General partition iterator that the compiler will optimize when opt is known at compile time.
 pub struct PartitionIterator<'a> {
-    pub part: _IntVector,
-    outer: Option<&'a _IntVector>,
-    inner: Option<&'a _IntVector>,
+    pub part: IntVector,
+    outer: Option<&'a IntVector>,
+    inner: Option<&'a IntVector>,
     length: i32,
     rows: i32,
     opt: i32,
@@ -54,7 +54,7 @@ pub fn part_entry(p: &[i32], i: i32) -> i32 {
     }
 }
 
-pub fn part_leq(p1: &_IntVector, p2: &_IntVector) -> bool {
+pub fn part_leq(p1: &IntVector, p2: &IntVector) -> bool {
     let len = p1.length as usize;
     if len > p2.length as usize {
         return false;
@@ -87,15 +87,11 @@ pub fn part_qentry(p: &[i32], i: i32, d: i32, level: i32) -> i32 {
 }
 
 impl<'a> PartitionIterator<'a> {
-    pub fn new_box_first(
-        p: _IntVector,
-        rows: i32,
-        cols: i32,
-    ) -> Option<PartitionIterator<'static>> {
+    pub fn new_box_first(p: IntVector, rows: i32, cols: i32) -> Option<PartitionIterator<'static>> {
         PartitionIterator::new(p, rows, cols, None, None, 0, 0)
     }
     pub fn new_box_sz_first(
-        p: _IntVector,
+        p: IntVector,
         rows: i32,
         cols: i32,
         size: i32,
@@ -103,11 +99,11 @@ impl<'a> PartitionIterator<'a> {
         PartitionIterator::new(p, rows, cols, None, None, size, PITR_USE_SIZE)
     }
     pub fn new(
-        p: _IntVector,
+        p: IntVector,
         mut rows: i32,
         cols: i32,
-        outer: Option<&'a _IntVector>,
-        inner: Option<&'a _IntVector>,
+        outer: Option<&'a IntVector>,
+        inner: Option<&'a IntVector>,
         mut size: i32,
         opt: i32,
     ) -> Option<PartitionIterator<'a>> {
@@ -338,29 +334,21 @@ impl<'a> PartIter<'a> {
         size: i32,
         opt: i32,
     ) -> PartIter<'a> {
-        let it = PartitionIterator::new(
-            p.0,
-            rows,
-            cols,
-            outer.map(|x| &x.0),
-            inner.map(|x| &x.0),
-            size,
-            opt,
-        );
+        let it = PartitionIterator::new(p, rows, cols, outer, inner, size, opt);
         PartIter {
             it,
             initialized: false,
         }
     }
     pub fn new_box(p: IntVector, rows: i32, cols: i32) -> PartIter<'static> {
-        let it = PartitionIterator::new_box_first(p.0, rows, cols);
+        let it = PartitionIterator::new_box_first(p, rows, cols);
         PartIter {
             it,
             initialized: false,
         }
     }
     pub fn new_box_sz(p: IntVector, rows: i32, cols: i32, size: i32) -> PartIter<'static> {
-        let it = PartitionIterator::new_box_sz_first(p.0, rows, cols, size);
+        let it = PartitionIterator::new_box_sz_first(p, rows, cols, size);
         PartIter {
             it,
             initialized: false,
@@ -381,7 +369,7 @@ impl<'a> Iterator for PartIter<'a> {
                     it.next();
                 }
                 if it.is_good() {
-                    Some(IntVector(it.part.clone()))
+                    Some(it.part.clone())
                 } else {
                     None
                 }

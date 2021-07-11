@@ -4,27 +4,27 @@ use super::{
 };
 
 #[derive(Clone)]
-pub struct _IntVector {
+pub struct IntVector {
     pub length: u32,
     pub array: Vec<i32>,
 }
 
-impl std::fmt::Debug for _IntVector {
+impl std::fmt::Debug for IntVector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "IntVector({:?})", self.array)
     }
 }
 
-impl From<Vec<i32>> for _IntVector {
-    fn from(from: Vec<i32>) -> _IntVector {
-        _IntVector {
+impl From<Vec<i32>> for IntVector {
+    fn from(from: Vec<i32>) -> IntVector {
+        IntVector {
             length: from.len() as u32,
             array: from,
         }
     }
 }
 
-impl _IntVector {
+impl IntVector {
     pub fn len(&self) -> usize {
         self.length as usize
     }
@@ -49,99 +49,15 @@ impl _IntVector {
     pub fn perm_group(&self) -> i32 {
         perm_group(&self[..])
     }
-}
-
-impl std::cmp::Ord for _IntVector {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        iv_cmp(&self[..], &other[..])
-    }
-}
-impl std::cmp::PartialOrd for _IntVector {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl std::cmp::PartialEq for _IntVector {
-    fn eq(&self, other: &Self) -> bool {
-        self.cmp(other) == std::cmp::Ordering::Equal
-    }
-}
-impl Eq for _IntVector {}
-
-pub fn iv_cmp(v: &[i32], w: &[i32]) -> std::cmp::Ordering {
-    match v.len().cmp(&w.len()) {
-        std::cmp::Ordering::Equal => {}
-        c => return c,
-    }
-    for i in 0..v.len() {
-        match v[i].cmp(&w[i]) {
-            std::cmp::Ordering::Equal => {}
-            c => return c,
-        }
-    }
-    std::cmp::Ordering::Equal
-}
-
-impl<I: std::slice::SliceIndex<[i32]>> std::ops::Index<I> for _IntVector {
-    type Output = I::Output;
-    fn index(&self, index: I) -> &Self::Output {
-        std::ops::Index::index(&self.array, index)
-    }
-}
-
-impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for _IntVector {
-    fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        std::ops::IndexMut::index_mut(&mut self.array, index)
-    }
-}
-
-/// never returns null
-pub fn iv_new(length: u32) -> _IntVector {
-    vec![0; length as usize].into()
-}
-
-pub fn iv_hash(v: &[i32]) -> u32 {
-    let mut h = std::num::Wrapping(v.len() as u32);
-    for x in v {
-        h = ((h << 5) ^ (h >> 27)) + std::num::Wrapping(*x as u32);
-    }
-    h.0
-}
-
-pub fn iv_sum(v: &_IntVector) -> i32 {
-    (&v[..]).iter().sum()
-}
-
-pub struct IntVector(pub _IntVector);
-
-impl IntVector {
     pub fn default(len: u32) -> IntVector {
-        IntVector(iv_new(len))
+        iv_new(len)
     }
     pub fn new(v: &[i32]) -> IntVector {
-        IntVector(v.to_vec().into())
-    }
-    pub fn len(&self) -> usize {
-        self.0.len()
+        v.to_vec().into()
     }
     #[allow(dead_code)]
     pub fn size(&self) -> i32 {
         self[..].iter().sum()
-    }
-    pub fn rows(&self) -> usize {
-        let mut n = self.len();
-        let v = &self[..];
-        while n > 0 && v[n - 1] == 0 {
-            n -= 1
-        }
-        n
-    }
-    pub fn cols(&self) -> usize {
-        if self.len() == 0 {
-            0
-        } else {
-            self[0] as usize
-        }
     }
     #[allow(dead_code)]
     pub fn cmp_as_part(&self, other: &Self) -> Option<std::cmp::Ordering> {
@@ -213,38 +129,84 @@ impl IntVector {
         )
     }
     pub fn to_quantum(&self, level: i32) -> (i32, Vec<i32>) {
-        let p = &self.0;
-        let d = part_qdegree(&p[..], level);
+        let d = part_qdegree(&self[..], level);
         let mut n = self.len();
-        while n > 0 && part_qentry(&p[..], (n - 1) as i32, d, level) == 0 {
+        while n > 0 && part_qentry(&self[..], (n - 1) as i32, d, level) == 0 {
             n -= 1
         }
         (
             d,
             (0..n)
-                .map(|i| part_qentry(&p[..], i as i32, d, level))
+                .map(|i| part_qentry(&self[..], i as i32, d, level))
                 .collect(),
         )
     }
 }
 
+impl std::cmp::Ord for IntVector {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        iv_cmp(&self[..], &other[..])
+    }
+}
+impl std::cmp::PartialOrd for IntVector {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl std::cmp::PartialEq for IntVector {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == std::cmp::Ordering::Equal
+    }
+}
+impl Eq for IntVector {}
+
+pub fn iv_cmp(v: &[i32], w: &[i32]) -> std::cmp::Ordering {
+    match v.len().cmp(&w.len()) {
+        std::cmp::Ordering::Equal => {}
+        c => return c,
+    }
+    for i in 0..v.len() {
+        match v[i].cmp(&w[i]) {
+            std::cmp::Ordering::Equal => {}
+            c => return c,
+        }
+    }
+    std::cmp::Ordering::Equal
+}
+
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::Index<I> for IntVector {
     type Output = I::Output;
     fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
+        std::ops::Index::index(&self.array, index)
     }
 }
 
 impl<I: std::slice::SliceIndex<[i32]>> std::ops::IndexMut<I> for IntVector {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        &mut self.0[index]
+        std::ops::IndexMut::index_mut(&mut self.array, index)
     }
 }
 
-pub fn ivl_to_vec<Output, F: Fn(IntVector) -> Output>(v: Vec<_IntVector>, f: &F) -> Vec<Output> {
+pub fn iv_new(length: u32) -> IntVector {
+    vec![0; length as usize].into()
+}
+
+pub fn iv_hash(v: &[i32]) -> u32 {
+    let mut h = std::num::Wrapping(v.len() as u32);
+    for x in v {
+        h = ((h << 5) ^ (h >> 27)) + std::num::Wrapping(*x as u32);
+    }
+    h.0
+}
+
+pub fn iv_sum(v: &IntVector) -> i32 {
+    (&v[..]).iter().sum()
+}
+
+pub fn ivl_to_vec<Output, F: Fn(IntVector) -> Output>(v: Vec<IntVector>, f: &F) -> Vec<Output> {
     let mut ans = Vec::with_capacity(v.len());
     for k in v {
-        ans.push(f(IntVector(k)));
+        ans.push(f(k));
     }
     ans
 }

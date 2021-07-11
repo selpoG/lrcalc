@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 
 use super::{
-    ivector::{IntVector, _IntVector, iv_hash},
+    ivector::{iv_hash, IntVector},
     ivlincomb::{
         ivlc_insert, ivlc_lookup, ivlc_new_default, LinearCombination as _LinearCombination,
     },
@@ -86,8 +86,7 @@ impl<'a> LinearCombination {
     pub fn map<Output, F: Fn(IntVector, i32) -> Output>(mut self, f: &F) -> Vec<Output> {
         let mut ans = Vec::with_capacity(self.0.map.len());
         for (k, v) in self.0.map.drain() {
-            let iv = IntVector(k.ptr);
-            ans.push(f(iv, v));
+            ans.push(f(k.ptr, v));
         }
         ans
     }
@@ -97,11 +96,7 @@ impl<'a> LinearCombination {
         kv.map(|v| *v.1)
     }
     #[allow(dead_code)]
-    fn diff_helper<F: Fn(&_IntVector, &i32) -> bool>(
-        &self,
-        other: &Self,
-        filter: &F,
-    ) -> DiffResult {
+    fn diff_helper<F: Fn(&IntVector, &i32) -> bool>(&self, other: &Self, filter: &F) -> DiffResult {
         for (sh, &n) in self.0.map.iter() {
             let sh = &sh.ptr;
             if !filter(sh, &n) {
@@ -121,7 +116,7 @@ impl<'a> LinearCombination {
         DiffResult::Equals
     }
     #[allow(dead_code)]
-    pub(crate) fn diff<F: Fn(&_IntVector, &i32) -> bool>(
+    pub(crate) fn diff<F: Fn(&IntVector, &i32) -> bool>(
         &self,
         other: &Self,
         filter: F,

@@ -1,5 +1,5 @@
 use super::{
-    ivector::{_IntVector as IntVector, iv_sum},
+    ivector::{iv_sum, IntVector},
     part::{part_entry, part_length, part_leq, part_valid},
 };
 
