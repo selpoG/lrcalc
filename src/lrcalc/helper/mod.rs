@@ -4,5 +4,4 @@ pub mod lrcoef;
 pub mod optim;
 pub mod part;
 pub mod perm;
-pub mod schublib;
 pub mod schur;
