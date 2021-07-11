@@ -2,7 +2,7 @@ pub mod func;
 pub mod helper;
 mod ivector;
 mod lincomb;
-mod lriter;
+pub mod lriter;
 mod part;
 
 mod tests;
