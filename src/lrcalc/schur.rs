@@ -4,7 +4,7 @@ use super::{
         ivlc_add_element, ivlc_new, ivlc_new_default, LinearCombination, LC_COPY_KEY, LC_FREE_KEY,
         LC_FREE_ZERO,
     },
-    lrcoef::lrcoef_count,
+    lrcoef::count,
     lriter::LRTableauIterator,
     optim::{optim_coef, optim_fusion, optim_mult, optim_skew},
     part::{part_entry, part_valid},
@@ -285,7 +285,7 @@ pub fn schur_lrcoef(outer: &IntVector, inner1: &IntVector, inner2: &IntVector) -
     if ss.sign <= 1 {
         ss.sign as i64
     } else {
-        lrcoef_count(
+        count(
             ss.outer.as_ref().unwrap(),
             ss.inner.as_ref().unwrap(),
             ss.cont.as_ref().unwrap(),
