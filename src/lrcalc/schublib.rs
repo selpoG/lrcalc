@@ -147,7 +147,11 @@ struct Poly {
     val: i32,
 }
 
-pub fn mult_poly_schubert(mut poly: LinearCombination, perm: &mut IntVector, mut rank: i32) -> LinearCombination {
+pub fn mult_poly_schubert(
+    mut poly: LinearCombination,
+    perm: &mut IntVector,
+    mut rank: i32,
+) -> LinearCombination {
     let n = poly.map.len();
     if n == 0 {
         poly.clear();
