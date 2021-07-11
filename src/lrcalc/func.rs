@@ -1,7 +1,7 @@
 use super::{
     ivector::IntVector,
     lriter::LRTableauIterator,
-    part::PartitionIterator,
+    part::PartIter,
     perm::{all_perms as _all_perms, all_strings as _all_strings},
     schublib::{mult_schubert, mult_schubert_str, trans},
     schur::{schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew},
@@ -140,18 +140,17 @@ pub fn schubmult_str(w1: &[i32], w2: &[i32]) -> Vec<(Vec<i32>, i32)> {
 }
 
 pub fn all_parts(rows: i32, cols: i32) -> Vec<Vec<i32>> {
-    let mut ans = Vec::new();
-    let p = IntVector::default(rows as u32);
-    let pitr = PartitionIterator::new(p, rows, cols, None, None, 0, 0);
-    let mut pitr = match pitr {
-        None => return ans,
-        Some(x) => x,
-    };
-    while pitr.is_good() {
-        ans.push(pitr.part[..].to_vec());
-        pitr.next();
-    }
-    ans
+    PartIter::new(
+        IntVector::default(rows as u32),
+        rows,
+        cols,
+        None,
+        None,
+        0,
+        0,
+    )
+    .map(|v| v[..].to_vec())
+    .collect()
 }
 
 pub fn all_perms(n: i32) -> Vec<Vec<i32>> {

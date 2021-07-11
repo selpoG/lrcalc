@@ -2,16 +2,6 @@
 
 use super::ivector::IntVector;
 
-/// General partition iterator that the compiler will optimize when opt is known at compile time.
-pub struct PartitionIterator<'a> {
-    pub part: IntVector,
-    outer: Option<&'a IntVector>,
-    inner: Option<&'a IntVector>,
-    length: i32,
-    rows: i32,
-    opt: i32,
-}
-
 pub const PITR_USE_OUTER: i32 = 1;
 pub const PITR_USE_INNER: i32 = 2;
 pub const PITR_USE_SIZE: i32 = 4;
@@ -84,6 +74,16 @@ pub fn part_qentry(p: &[i32], i: i32, d: i32, level: i32) -> i32 {
     let rows = p.len() as i32;
     let k = (i + d) % rows;
     p[k as usize] - ((i + d) / rows) * level - d
+}
+
+/// General partition iterator that the compiler will optimize when opt is known at compile time.
+struct PartitionIterator<'a> {
+    pub part: IntVector,
+    outer: Option<&'a IntVector>,
+    inner: Option<&'a IntVector>,
+    length: i32,
+    rows: i32,
+    opt: i32,
 }
 
 impl<'a> PartitionIterator<'a> {
