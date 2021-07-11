@@ -1,5 +1,5 @@
-use super::helper::ivector::{iv_hash, IntVector};
 use super::{
+    ivector::{_IntVector as IntVector, iv_hash},
     ivlincomb::{
         ivlc_add_element, ivlc_new, ivlc_new_default, LinearCombination, LC_COPY_KEY, LC_FREE_KEY,
         LC_FREE_ZERO,

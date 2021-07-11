@@ -1,8 +1,6 @@
 #![allow(dead_code)]
 
-use super::ivector::IntVector;
-
-use super::helper::ivector::IntVector as _IntVector;
+use super::ivector::{IntVector, _IntVector};
 
 /// General partition iterator that the compiler will optimize when opt is known at compile time.
 pub struct PartitionIterator<'a> {

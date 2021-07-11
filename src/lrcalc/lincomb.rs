@@ -1,8 +1,7 @@
 use anyhow::anyhow;
 
-use super::helper::ivector::{iv_hash, IntVector as _IntVector};
 use super::{
-    ivector::IntVector,
+    ivector::{IntVector, _IntVector, iv_hash},
     ivlincomb::{
         ivlc_insert, ivlc_lookup, ivlc_new_default, LinearCombination as _LinearCombination,
     },

@@ -2,8 +2,10 @@
 
 use anyhow::{ensure, Context, Result};
 
-use super::super::part::{PITR_USE_INNER, PITR_USE_OUTER, PITR_USE_SIZE};
-use super::super::{ivector::IntVector, part::PartIter};
+use super::super::{
+    ivector::IntVector,
+    part::{PartIter, PITR_USE_INNER, PITR_USE_OUTER, PITR_USE_SIZE},
+};
 
 fn test_part_iter_box(rows: i32, cols: i32) -> Result<()> {
     let mut np = 1;

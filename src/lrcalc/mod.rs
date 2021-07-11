@@ -1,5 +1,4 @@
 pub mod func;
-pub mod helper;
 mod ivector;
 pub mod ivlincomb;
 mod lincomb;
