@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use super::ivector::IntVector;
 
 pub const PITR_USE_OUTER: i32 = 1;

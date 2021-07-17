@@ -55,11 +55,9 @@ impl IntVector {
     pub fn new(v: &[i32]) -> IntVector {
         v.to_vec().into()
     }
-    #[allow(dead_code)]
     pub fn size(&self) -> i32 {
         self[..].iter().sum()
     }
-    #[allow(dead_code)]
     pub fn cmp_as_part(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let r1 = self.rows();
         let r2 = other.rows();
@@ -84,7 +82,6 @@ impl IntVector {
         }
         ans.or(Some(std::cmp::Ordering::Equal))
     }
-    #[allow(dead_code)]
     pub fn leq_as_part(&self, other: &Self) -> bool {
         matches!(
             self.cmp_as_part(other),

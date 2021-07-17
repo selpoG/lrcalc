@@ -144,21 +144,19 @@ pub(crate) fn ivlc_add_multiple(
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
-pub(crate) enum Which {
+pub enum Which {
     Left,
     Right,
 }
-#[allow(dead_code)]
-pub(crate) enum DiffResult {
+
+pub enum DiffResult {
     Equals,
     KeyMismatch(IntVector, Which),
     ValueMismatch(IntVector, i32, i32),
 }
 
 impl DiffResult {
-    #[allow(dead_code)]
     pub fn flip(self) -> Self {
         match self {
             DiffResult::KeyMismatch(sh, w) => DiffResult::KeyMismatch(
@@ -172,7 +170,6 @@ impl DiffResult {
             _ => self,
         }
     }
-    #[allow(dead_code)]
     pub fn expect_equals(self) -> anyhow::Result<()> {
         match self {
             DiffResult::Equals => Ok(()),
@@ -203,7 +200,6 @@ impl std::fmt::Display for DiffResult {
 }
 
 impl<'a> LinearCombination {
-    #[allow(dead_code)]
     pub fn new<T: IntoIterator<Item = (Vec<i32>, i32)>>(it: T) -> LinearCombination {
         let mut lc = ivlc_new_default();
         for (key, val) in it {
@@ -218,12 +214,10 @@ impl<'a> LinearCombination {
         }
         ans
     }
-    #[allow(dead_code)]
     pub fn find(&self, key: &[i32]) -> Option<i32> {
         let kv = ivlc_lookup(self, key, iv_hash(key) as u32);
         kv.map(|v| *v.1)
     }
-    #[allow(dead_code)]
     fn diff_helper<F: Fn(&IntVector, &i32) -> bool>(&self, other: &Self, filter: &F) -> DiffResult {
         for (sh, &n) in self.map.iter() {
             let sh = &sh.ptr;
@@ -243,12 +237,7 @@ impl<'a> LinearCombination {
         }
         DiffResult::Equals
     }
-    #[allow(dead_code)]
-    pub(crate) fn diff<F: Fn(&IntVector, &i32) -> bool>(
-        &self,
-        other: &Self,
-        filter: F,
-    ) -> DiffResult {
+    pub fn diff<F: Fn(&IntVector, &i32) -> bool>(&self, other: &Self, filter: F) -> DiffResult {
         match self.diff_helper(other, &filter) {
             DiffResult::Equals => other.diff_helper(self, &filter).flip(),
             x => x,
