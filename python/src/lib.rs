@@ -7,7 +7,7 @@ use pyo3::{
 use lrcalc::{
     ivlincomb::LinearCombination,
     lriter::LRTableauIterator,
-    part::{part_qdegree, part_qentry},
+    part::{part_length, part_qdegree, part_qentry},
     schublib::{mult_schubert, mult_schubert_str, trans},
     schur::{schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew},
 };
@@ -27,16 +27,8 @@ fn to_py_dict_of_tuple(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {
         .into_py_dict(py)
 }
 
-fn part_len(v: &[i32]) -> usize {
-    let mut l = v.len();
-    while l > 0 && v[l - 1] == 0 {
-        l -= 1
-    }
-    l
-}
-
 fn as_part(v: &[i32]) -> &[i32] {
-    &v[..part_len(v)]
+    &v[..part_length(v) as usize]
 }
 
 fn to_py_dict_of_part(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {

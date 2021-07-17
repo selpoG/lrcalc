@@ -11,9 +11,9 @@ pub struct SkewShape {
 }
 
 pub(crate) fn _sksh_print(outer: &[i32], inner: Option<&[i32]>, cont: Option<&[i32]>) {
-    let mut len = part_length(outer);
+    let mut len = part_length(outer) as u32;
     let mut ilen = inner.map(|v| v.len()).unwrap_or(0) as u32;
-    let clen = cont.map(|v| part_length(v)).unwrap_or(0);
+    let clen = cont.map(|v| part_length(v) as u32).unwrap_or(0);
     if len <= ilen {
         while len > 0 && inner.unwrap()[(len - 1) as usize] == outer[(len - 1) as usize] {
             len -= 1;

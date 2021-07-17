@@ -40,14 +40,14 @@ impl LRTableauIterator {
             };
         }
 
-        let len = part_length(&outer[..]);
+        let len = part_length(&outer[..]) as u32;
         let outer = &outer[..];
         let inner = inner.map(|v| &v[..]);
         let mut ilen = inner.map(|v| v.len() as u32).unwrap_or(0);
         if ilen > len {
             ilen = len;
         }
-        let clen = content.map(|v| part_length(&v[..])).unwrap_or(0);
+        let clen = content.map(|v| part_length(&v[..]) as u32).unwrap_or(0);
         let out0 = if len == 0 { 0 } else { outer[0] };
         debug_assert!(maxcols < 0 || ilen == 0 || inner.unwrap()[0] == 0);
 

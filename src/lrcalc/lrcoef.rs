@@ -36,7 +36,7 @@ impl LRCoefContent {
         debug_assert!(part_valid(&mu[..]));
         debug_assert!(part_length(&mu[..]) > 0);
 
-        let n = part_length(&mu[..]) as usize;
+        let n = part_length(&mu[..]);
         let mu = &mu[..];
         let mut res = vec![LRCoefContent { cont: 0, supply: 0 }; n + 1];
         res[0] = LRCoefContent {

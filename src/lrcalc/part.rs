@@ -27,12 +27,12 @@ pub(crate) fn part_decr(p: &[i32]) -> bool {
     true
 }
 
-pub fn part_length(v: &[i32]) -> u32 {
+pub fn part_length(v: &[i32]) -> usize {
     let mut n = v.len();
     while n > 0 && v[n - 1] == 0 {
         n -= 1
     }
-    n as u32
+    n
 }
 
 pub fn part_entry(p: &[i32], i: i32) -> i32 {
