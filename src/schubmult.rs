@@ -1,11 +1,13 @@
 use std::fmt::{self, Display, Formatter};
 
 use anyhow::{ensure, Context, Result};
-use clap::AppSettings::{AllowLeadingHyphen, DeriveDisplayOrder};
-use clap::{crate_version, Clap};
+use clap::{
+    crate_version,
+    AppSettings::{AllowLeadingHyphen, DeriveDisplayOrder},
+    Clap,
+};
 
-use lrcalc::{is_permutation, schubmult, schubmult_str};
-use lrcalc_helper::perm::str_iscompat;
+use lrcalc::{is_permutation, perm::str_iscompat, schubmult, schubmult_str};
 
 fn check_non_negative(num_str: &str) -> Result<()> {
     let num = num_str

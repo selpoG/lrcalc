@@ -2,9 +2,10 @@
 
 use anyhow::{ensure, Context, Result};
 
-use lrcalc_helper::part::{PITR_USE_INNER, PITR_USE_OUTER, PITR_USE_SIZE};
-
-use super::super::{ivector::IntVector, part::PartIter};
+use super::super::{
+    ivector::IntVector,
+    part::{PartIter, PITR_USE_INNER, PITR_USE_OUTER, PITR_USE_SIZE},
+};
 
 fn test_part_iter_box(rows: i32, cols: i32) -> Result<()> {
     let mut np = 1;
@@ -12,8 +13,8 @@ fn test_part_iter_box(rows: i32, cols: i32) -> Result<()> {
         np = np * (cols + i) / i;
     }
     let mut np1 = 0;
-    let mut pitr = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
-    while let Some(p) = pitr.next() {
+    let pitr = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
+    for p in pitr {
         ensure!(
             p.is_partition(),
             "not a partition from new_box: p={:?}",
@@ -29,8 +30,8 @@ fn test_part_iter_box(rows: i32, cols: i32) -> Result<()> {
     );
     np1 = 0;
     for size in 0..(rows * cols + 2) {
-        let mut pitr = PartIter::new_box_sz(IntVector::default(rows as u32), rows, cols, size);
-        while let Some(p) = pitr.next() {
+        let pitr = PartIter::new_box_sz(IntVector::default(rows as u32), rows, cols, size);
+        for p in pitr {
             ensure!(
                 p.is_partition(),
                 "not a partition from new_box: size={}, p={:?}",
@@ -76,14 +77,14 @@ fn test_part_iter_between(
         None => rows * cols + 2,
     };
     let mut count = vec![0; size_bound as usize];
-    let mut pitr = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
-    while let Some(p) = pitr.next() {
+    let pitr = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
+    for p in pitr {
         if check_inner(&p) && check_outer(&p) {
             count[p.size() as usize] += 1
         }
     }
     let mut np = 0;
-    let mut pitr = PartIter::new(
+    let pitr = PartIter::new(
         IntVector::default(rows as u32),
         rows,
         cols,
@@ -92,7 +93,7 @@ fn test_part_iter_between(
         0,
         pitr_flag,
     );
-    while let Some(p) = pitr.next() {
+    for p in pitr {
         ensure!(p.is_partition(), "invalid partition: p={:?}", p.to_vec());
         ensure!(
             check_inner(&p) && check_outer(&p),
@@ -156,8 +157,8 @@ pub fn run_test_partiter(rows: i32, cols: i32) -> Result<()> {
     let rows0 = if rows > 0 { rows - 1 } else { 0 };
     let cols0 = if cols > 0 { cols - 1 } else { 0 };
     test_part_iter_box(rows, cols).context("partiter_box")?;
-    let mut pitr2 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
-    while let Some(p2) = pitr2.next() {
+    let pitr2 = PartIter::new_box(IntVector::default(rows as u32), rows, cols);
+    for p2 in pitr2 {
         let test_sub = |r: i32, c: i32| -> Result<()> {
             test_part_iter_between(r, c, Some(&p2), None)
                 .with_context(|| format!("rows={}, cols={}, outer={:?}", r, c, p2.to_vec()))
@@ -176,7 +177,7 @@ pub fn run_test_partiter(rows: i32, cols: i32) -> Result<()> {
         test_super(rows0, cols)?;
         test_super(rows, cols0)?;
         test_super(rows, cols + 2)?;
-        let mut pitr1 = PartIter::new(
+        let pitr1 = PartIter::new(
             IntVector::default(rows as u32),
             rows,
             cols,
@@ -185,7 +186,7 @@ pub fn run_test_partiter(rows: i32, cols: i32) -> Result<()> {
             0,
             PITR_USE_OUTER,
         );
-        while let Some(p1) = pitr1.next() {
+        for p1 in pitr1 {
             let test_between = |r: i32, c: i32| -> Result<()> {
                 test_part_iter_between(r, c, Some(&p2), Some(&p1))
                     .with_context(|| {

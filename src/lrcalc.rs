@@ -1,8 +1,11 @@
 use std::fmt::{self, Display, Formatter};
 
 use anyhow::{ensure, Context, Result};
-use clap::AppSettings::{AllowLeadingHyphen, DeriveDisplayOrder};
-use clap::{crate_version, Clap};
+use clap::{
+    crate_version,
+    AppSettings::{AllowLeadingHyphen, DeriveDisplayOrder},
+    Clap,
+};
 
 use lrcalc::{coprod, is_partition, lrcoef, mult, mult_fusion, mult_quantum, skew, skew_tab};
 

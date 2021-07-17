@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use hashbrown::{hash_map::RawEntryMut, HashMap};
 
 use super::ivector::{iv_cmp, iv_hash, IntVector};
@@ -140,5 +141,106 @@ pub(crate) fn ivlc_add_multiple(
 ) {
     for kv in src.map.drain() {
         ivlc_add_element(dst, c * kv.1, kv.0.ptr, kv.0.hash, opt);
+    }
+}
+
+#[derive(Debug)]
+pub enum Which {
+    Left,
+    Right,
+}
+
+pub enum DiffResult {
+    Equals,
+    KeyMismatch(IntVector, Which),
+    ValueMismatch(IntVector, i32, i32),
+}
+
+impl DiffResult {
+    pub fn flip(self) -> Self {
+        match self {
+            DiffResult::KeyMismatch(sh, w) => DiffResult::KeyMismatch(
+                sh,
+                match w {
+                    Which::Left => Which::Right,
+                    Which::Right => Which::Left,
+                },
+            ),
+            DiffResult::ValueMismatch(sh, n1, n2) => DiffResult::ValueMismatch(sh, n2, n1),
+            _ => self,
+        }
+    }
+    pub fn expect_equals(self) -> anyhow::Result<()> {
+        match self {
+            DiffResult::Equals => Ok(()),
+            _ => Err(anyhow!("{}", self)),
+        }
+    }
+}
+
+impl std::fmt::Display for DiffResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DiffResult::KeyMismatch(sh, w) => write!(
+                f,
+                "Key {:?} in {:?} was not found in the other",
+                sh.to_vec(),
+                w
+            ),
+            DiffResult::ValueMismatch(sh, n1, n2) => write!(
+                f,
+                "Values for Key {:?} differ: {} in left but {} in right",
+                sh.to_vec(),
+                n1,
+                n2
+            ),
+            _ => write!(f, "Equals"),
+        }
+    }
+}
+
+impl<'a> LinearCombination {
+    pub fn new<T: IntoIterator<Item = (Vec<i32>, i32)>>(it: T) -> LinearCombination {
+        let mut lc = ivlc_new_default();
+        for (key, val) in it {
+            ivlc_insert(&mut lc, &key[..], val)
+        }
+        lc
+    }
+    pub fn map<Output, F: Fn(IntVector, i32) -> Output>(mut self, f: &F) -> Vec<Output> {
+        let mut ans = Vec::with_capacity(self.map.len());
+        for (k, v) in self.map.drain() {
+            ans.push(f(k.ptr, v));
+        }
+        ans
+    }
+    pub fn find(&self, key: &[i32]) -> Option<i32> {
+        let kv = ivlc_lookup(self, key, iv_hash(key) as u32);
+        kv.map(|v| *v.1)
+    }
+    fn diff_helper<F: Fn(&IntVector, &i32) -> bool>(&self, other: &Self, filter: &F) -> DiffResult {
+        for (sh, &n) in self.map.iter() {
+            let sh = &sh.ptr;
+            if !filter(sh, &n) {
+                continue;
+            }
+            match other.find(&sh[..]) {
+                None => {
+                    return DiffResult::KeyMismatch(IntVector::new(&sh[..]), Which::Left);
+                }
+                Some(kv) => {
+                    if kv != n {
+                        return DiffResult::ValueMismatch(IntVector::new(&sh[..]), n, kv);
+                    }
+                }
+            }
+        }
+        DiffResult::Equals
+    }
+    pub fn diff<F: Fn(&IntVector, &i32) -> bool>(&self, other: &Self, filter: F) -> DiffResult {
+        match self.diff_helper(other, &filter) {
+            DiffResult::Equals => other.diff_helper(self, &filter).flip(),
+            x => x,
+        }
     }
 }

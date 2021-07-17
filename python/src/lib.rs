@@ -4,10 +4,10 @@ use pyo3::{
     wrap_pyfunction,
 };
 
-use lrcalc_helper::{
+use lrcalc::{
     ivlincomb::LinearCombination,
-    lriter::{lrit_good, lrit_new, lrit_next},
-    part::{part_qdegree, part_qentry},
+    lriter::LRTableauIterator,
+    part::{part_length, part_qdegree, part_qentry},
     schublib::{mult_schubert, mult_schubert_str, trans},
     schur::{schur_coprod, schur_lrcoef, schur_mult, schur_mult_fusion, schur_skew},
 };
@@ -27,16 +27,8 @@ fn to_py_dict_of_tuple(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {
         .into_py_dict(py)
 }
 
-fn part_len(v: &[i32]) -> usize {
-    let mut l = v.len();
-    while l > 0 && v[l - 1] == 0 {
-        l -= 1
-    }
-    l
-}
-
 fn as_part(v: &[i32]) -> &[i32] {
-    &v[..part_len(v)]
+    &v[..part_length(v) as usize]
 }
 
 fn to_py_dict_of_part(py: Python, vals: Vec<(Vec<i32>, i32)>) -> &PyDict {
@@ -242,12 +234,11 @@ fn lr_iterator(
     rows: Option<i32>,
 ) -> PyResult<Py<PyList>> {
     let rows = rows.unwrap_or(-1);
-    let mut it = lrit_new(&outer.into(), Some(&inner.into()), None, rows, -1, -1);
+    let mut it = LRTableauIterator::new(&outer.into(), Some(&inner.into()), None, rows, -1, -1);
     let mut ans: Vec<Vec<i32>> = Vec::new();
-    while lrit_good(&it) {
-        let array = &it.array[0..it.size as usize];
-        ans.push(array.iter().map(|b| b.value).collect());
-        lrit_next(&mut it);
+    while it.is_good() {
+        ans.push(it.get_array());
+        it.next();
     }
     Ok(Py::from(PyList::new(
         py,

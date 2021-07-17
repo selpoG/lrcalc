@@ -16,7 +16,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-lrcalc_helper = { path="../lrcalc_helper", version="2.1.0" }
+lrcalc = { path="..", version="2.1.0" }
 
 [dependencies.pyo3]
 version = "0.13.2"

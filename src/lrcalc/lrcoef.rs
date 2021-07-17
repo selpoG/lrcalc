@@ -1,5 +1,7 @@
-use super::ivector::{iv_sum, IntVector};
-use super::part::{part_entry, part_length, part_leq, part_valid};
+use super::{
+    ivector::{iv_sum, IntVector},
+    part::{part_entry, part_length, part_leq, part_valid},
+};
 
 #[derive(Clone)]
 struct LRCoefBox {
@@ -29,95 +31,97 @@ struct LRCoefContent {
     supply: i32,
 }
 
-fn lrcoef_new_content(mu: &IntVector) -> Vec<LRCoefContent> {
-    debug_assert!(part_valid(&mu[..]));
-    debug_assert!(part_length(&mu[..]) > 0);
+impl LRCoefContent {
+    fn new_content(mu: &IntVector) -> Vec<LRCoefContent> {
+        debug_assert!(part_valid(&mu[..]));
+        debug_assert!(part_length(&mu[..]) > 0);
 
-    let n = part_length(&mu[..]) as usize;
-    let mu = &mu[..];
-    let mut res = vec![LRCoefContent { cont: 0, supply: 0 }; n + 1];
-    res[0] = LRCoefContent {
-        cont: mu[0],
-        supply: mu[0],
-    };
-    for i in 0..n {
-        res[i + 1] = LRCoefContent {
-            cont: 0,
-            supply: mu[i],
-        }
-    }
-    res
-}
-
-fn lrcoef_new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRCoefBox> {
-    debug_assert!(part_valid(&nu[..]));
-    debug_assert!(part_valid(&la[..]));
-    debug_assert!(part_leq(la, nu));
-    debug_assert!(part_entry(&nu[..], 0) > 0);
-
-    let n = (iv_sum(nu) - iv_sum(la)) as usize;
-    let nu = &nu[..];
-    let la = &la[..];
-    let mut array = vec![
-        LRCoefBox {
-            value: 0,
-            north: 0,
-            max: 0,
-            east: 0,
-            se_supply: 0,
-            se_sz: 0,
-            west_sz: 0,
-            _padding: 0
+        let n = part_length(&mu[..]);
+        let mu = &mu[..];
+        let mut res = vec![LRCoefContent { cont: 0, supply: 0 }; n + 1];
+        res[0] = LRCoefContent {
+            cont: mu[0],
+            supply: mu[0],
         };
-        n + 2
-    ];
-
-    let mut pos = n as i32;
-    for r in (0..nu.len()).rev() {
-        let nu_0 = if r == 0 { nu[0] } else { nu[r - 1] };
-        let la_0 = if r == 0 {
-            nu[0]
-        } else {
-            part_entry(la, r as i32 - 1)
-        };
-        let nu_r = nu[r];
-        let la_r = part_entry(la, r as i32);
-        let nu_1 = part_entry(nu, r as i32 + 1);
-        for c in la_r..nu_r {
-            pos -= 1;
-            let mut b = array[pos as usize].clone();
-            b.north = if la_0 <= c && c < nu_0 {
-                pos - nu_r + la_0
-            } else {
-                n as i32
-            };
-            b.east = if c + 1 < nu_r { pos - 1 } else { n as i32 + 1 };
-            b.west_sz = c - la_r;
-            if c >= nu_1 {
-                b.max = max_value;
-                b.se_sz = 0;
-            } else {
-                let below = pos + nu_1 - la_r;
-                b.max = array[below as usize].max - 1;
-                b.se_sz = array[below as usize].se_sz + nu_1 - c;
+        for i in 0..n {
+            res[i + 1] = LRCoefContent {
+                cont: 0,
+                supply: mu[i],
             }
-            array[pos as usize] = b;
         }
+        res
     }
-    array[n].value = 0;
-    array[n + 1].value = max_value;
-    array[n + 1].se_supply = 0;
-    array
+
+    fn new_skewtab(nu: &IntVector, la: &IntVector, max_value: i32) -> Vec<LRCoefBox> {
+        debug_assert!(part_valid(&nu[..]));
+        debug_assert!(part_valid(&la[..]));
+        debug_assert!(part_leq(la, nu));
+        debug_assert!(part_entry(&nu[..], 0) > 0);
+
+        let n = (iv_sum(nu) - iv_sum(la)) as usize;
+        let nu = &nu[..];
+        let la = &la[..];
+        let mut array = vec![
+            LRCoefBox {
+                value: 0,
+                north: 0,
+                max: 0,
+                east: 0,
+                se_supply: 0,
+                se_sz: 0,
+                west_sz: 0,
+                _padding: 0
+            };
+            n + 2
+        ];
+
+        let mut pos = n as i32;
+        for r in (0..nu.len()).rev() {
+            let nu_0 = if r == 0 { nu[0] } else { nu[r - 1] };
+            let la_0 = if r == 0 {
+                nu[0]
+            } else {
+                part_entry(la, r as i32 - 1)
+            };
+            let nu_r = nu[r];
+            let la_r = part_entry(la, r as i32);
+            let nu_1 = part_entry(nu, r as i32 + 1);
+            for c in la_r..nu_r {
+                pos -= 1;
+                let mut b = array[pos as usize].clone();
+                b.north = if la_0 <= c && c < nu_0 {
+                    pos - nu_r + la_0
+                } else {
+                    n as i32
+                };
+                b.east = if c + 1 < nu_r { pos - 1 } else { n as i32 + 1 };
+                b.west_sz = c - la_r;
+                if c >= nu_1 {
+                    b.max = max_value;
+                    b.se_sz = 0;
+                } else {
+                    let below = pos + nu_1 - la_r;
+                    b.max = array[below as usize].max - 1;
+                    b.se_sz = array[below as usize].se_sz + nu_1 - c;
+                }
+                array[pos as usize] = b;
+            }
+        }
+        array[n].value = 0;
+        array[n + 1].value = max_value;
+        array[n + 1].se_supply = 0;
+        array
+    }
 }
 
 /// This is a low level function called from schur_lrcoef().
-pub(crate) fn lrcoef_count(outer: &IntVector, inner: &IntVector, content: &IntVector) -> i64 {
+pub(crate) fn count(outer: &IntVector, inner: &IntVector, content: &IntVector) -> i64 {
     debug_assert!(iv_sum(outer) == iv_sum(inner) + iv_sum(content));
     debug_assert!(iv_sum(content) > 1);
 
-    let mut t =
-        lrcoef_new_skewtab(outer, inner, part_length(&content[..]) as i32).into_boxed_slice();
-    let mut cont = lrcoef_new_content(content).into_boxed_slice();
+    let mut t = LRCoefContent::new_skewtab(outer, inner, part_length(&content[..]) as i32)
+        .into_boxed_slice();
+    let mut cont = LRCoefContent::new_content(content).into_boxed_slice();
 
     let n = iv_sum(content);
     let mut pos = 0;
