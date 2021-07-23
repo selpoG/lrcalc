@@ -45,7 +45,7 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
       - name: Run testsuits
-        run: ./testsuite
+        run: ./testsuite.sh
   python:
     runs-on: ubuntu-latest
     strategy:
